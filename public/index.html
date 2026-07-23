@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Capital Records</title>
+  <link rel="stylesheet" href="styles.css?v=17">
+</head>
+<body>
+  <div class="app viz-root">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1>Capital Records</h1>
+        <nav class="page-nav">
+          <a href="#/members" data-view="members" class="nav-link">Members</a>
+          <a href="#/queue" data-view="queue" class="nav-link">Insignia Queue</a>
+          <a href="#/loot" data-view="loot" class="nav-link">Loot Log</a>
+        </nav>
+      </div>
+      <button id="logoutBtn" class="btn small">Logout</button>
+    </header>
+
+    <!-- ===================== MEMBERS VIEW ===================== -->
+    <div id="view-members" class="view hidden">
+      <div class="view-header">
+        <button id="addMemberBtn" class="btn primary">+ Add Member</button>
+      </div>
+
+      <div class="dashboard-grid">
+        <aside class="sidebar">
+          <div class="stat-tile">
+            <span class="stat-label">Members</span>
+            <span class="stat-value" id="statTotal">0</span>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-label">Avg Latest Growth</span>
+            <span class="stat-value" id="statAvg">–</span>
+          </div>
+          <div class="stat-tile gold">
+            <span class="stat-label">Top Grower</span>
+            <span class="stat-value" id="statTop">–</span>
+          </div>
+        </aside>
+
+        <main class="main-panel panel">
+          <div class="table-toolbar">
+            <input id="membersSearchInput" type="search" placeholder="Search members…">
+            <select id="classFilter">
+              <option value="">All Classes</option>
+            </select>
+          </div>
+          <div class="table-scroll">
+            <table class="members-table">
+              <thead>
+                <tr>
+                  <th data-sort="name">Name</th>
+                  <th data-sort="className">Class</th>
+                  <th class="col-right" data-sort="latest">Latest Growth</th>
+                  <th class="col-center">Trend</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="membersBody"></tbody>
+            </table>
+          </div>
+          <p id="membersEmptyState" class="empty-state hidden">No members yet — add your first guild member above.</p>
+        </main>
+      </div>
+
+      <section class="panel">
+        <h2>Members by Class</h2>
+        <div id="classChart" class="chart-root"></div>
+      </section>
+    </div>
+
+    <!-- ===================== INSIGNIA QUEUE VIEW ===================== -->
+    <div id="view-queue" class="view hidden">
+      <div class="queue-banner">
+        <strong>Legendary Insignia Queue</strong>
+        <div class="queue-banner-note">⚠ Subject to change, depending on GR (growth rate) ranking.</div>
+      </div>
+
+      <section class="panel">
+        <div class="table-scroll">
+          <div id="queueColumns" class="queue-columns"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ===================== LOOT LOG VIEW ===================== -->
+    <div id="view-loot" class="view hidden">
+      <div class="view-header">
+        <button id="manageItemsBtnLoot" class="btn small">Manage Items</button>
+        <button id="addSessionBtn" class="btn primary">+ Log a Date</button>
+      </div>
+
+      <section class="panel">
+        <div class="table-toolbar">
+          <input id="lootSearchInput" type="search" placeholder="Search by date, run, item, or recipient…">
+        </div>
+        <div class="table-scroll">
+          <table class="members-table">
+            <thead>
+              <tr>
+                <th data-sort="date">Date</th>
+                <th data-sort="run">Run</th>
+                <th class="col-right">Records</th>
+                <th class="col-right">Total Qty</th>
+                <th>Notes</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="sessionsBody"></tbody>
+          </table>
+        </div>
+        <p id="lootEmptyState" class="empty-state hidden">No dates logged yet — click "Log a Date" to start recording loot.</p>
+      </section>
+    </div>
+
+    <!-- ===================== LOOT SESSION DETAIL VIEW ===================== -->
+    <div id="view-loot-session" class="view hidden">
+      <div class="view-header space-between">
+        <a href="#/loot" class="back-link">← Back to Loot Log</a>
+        <button id="manageItemsBtnSession" class="btn small">Manage Items</button>
+      </div>
+
+      <section class="panel">
+        <div id="sessionContent">Loading…</div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ===================== MODALS (shared across views) ===================== -->
+
+  <div id="memberModal" class="modal-overlay hidden">
+    <div class="modal modal-wide">
+      <button class="modal-close" data-close="memberModal" aria-label="Close">×</button>
+      <div id="memberModalContent"></div>
+    </div>
+  </div>
+
+  <div id="addModal" class="modal-overlay hidden">
+    <div class="modal">
+      <button class="modal-close" data-close="addModal" aria-label="Close">×</button>
+      <h2>Add Member</h2>
+      <form id="addMemberForm">
+        <label>Name
+          <input required name="name" type="text" maxlength="40" placeholder="e.g. Ashwing">
+        </label>
+        <label>Class
+          <select required name="className" id="classSelect"></select>
+        </label>
+        <label>Notes
+          <textarea name="notes" rows="2" placeholder="optional"></textarea>
+        </label>
+        <button type="submit" class="btn primary">Add Member</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="addSessionModal" class="modal-overlay hidden">
+    <div class="modal">
+      <button class="modal-close" data-close="addSessionModal" aria-label="Close">×</button>
+      <h2>Log a Date</h2>
+      <form id="addSessionForm">
+        <label>Date
+          <input type="date" name="date" required>
+        </label>
+        <label>Dungeon Run <span style="color:var(--text-muted); font-weight:400;">(optional)</span>
+          <input type="text" name="run" placeholder="e.g. Weekly Dungeon 7/23">
+        </label>
+        <label>Notes <span style="color:var(--text-muted); font-weight:400;">(optional)</span>
+          <textarea name="notes" rows="2"></textarea>
+        </label>
+        <button type="submit" class="btn primary">Create & Add Loot</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="manageItemsModal" class="modal-overlay hidden">
+    <div class="modal">
+      <button class="modal-close" data-close="manageItemsModal" aria-label="Close">×</button>
+      <h2>Manage Loot Items</h2>
+      <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;">
+        These are the item names suggested when logging loot. Rename or remove any, or add new ones.
+      </p>
+      <ul id="itemCategoryList" style="list-style:none; padding:0; margin:14px 0; display:flex; flex-direction:column; gap:8px;"></ul>
+      <form id="addItemCategoryForm" style="display:flex; gap:8px;">
+        <input type="text" name="name" placeholder="New item name…" required style="flex:1;">
+        <button type="submit" class="btn primary small">Add</button>
+      </form>
+    </div>
+  </div>
+
+  <datalist id="memberNamesList"></datalist>
+  <datalist id="itemCategoriesList"></datalist>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="common.js?v=17"></script>
+  <script src="item-categories.js?v=17"></script>
+  <script src="members-view.js?v=17"></script>
+  <script src="queue-view.js?v=17"></script>
+  <script src="loot-view.js?v=17"></script>
+  <script src="loot-session-view.js?v=17"></script>
+  <script src="auth.js?v=17"></script>
+  <script src="router.js?v=17"></script>
+</body>
+</html>
