@@ -15,6 +15,7 @@
           <a href="#/members" data-view="members" class="nav-link">Members</a>
           <a href="#/queue" data-view="queue" class="nav-link">Insignia Queue</a>
           <a href="#/loot" data-view="loot" class="nav-link">Loot Log</a>
+          <a href="#/items" data-view="items" class="nav-link">Item Report</a>
         </nav>
       </div>
       <button id="logoutBtn" class="btn small">Logout</button>
@@ -117,6 +118,31 @@
       </section>
     </div>
 
+    <!-- ===================== ITEM REPORT VIEW ===================== -->
+    <div id="view-items" class="view hidden">
+      <div class="view-header">
+        <label style="display:flex; align-items:center; gap:8px;">
+          Item
+          <select id="itemReportSelect"></select>
+        </label>
+      </div>
+
+      <section class="panel">
+        <div class="table-scroll">
+          <table class="members-table">
+            <thead>
+              <tr>
+                <th>Member</th>
+                <th id="itemReportColumnLabel">Given:</th>
+              </tr>
+            </thead>
+            <tbody id="itemReportBody"></tbody>
+          </table>
+        </div>
+        <p id="itemReportEmptyState" class="empty-state hidden">No records for this item yet.</p>
+      </section>
+    </div>
+
     <!-- ===================== LOOT SESSION DETAIL VIEW ===================== -->
     <div id="view-loot-session" class="view hidden">
       <div class="view-header space-between">
@@ -203,6 +229,7 @@
   <script src="queue-view.js?v=17"></script>
   <script src="loot-view.js?v=17"></script>
   <script src="loot-session-view.js?v=17"></script>
+  <script src="item-report-view.js?v=17"></script>
   <script src="auth.js?v=17"></script>
   <script src="router.js?v=17"></script>
 </body>

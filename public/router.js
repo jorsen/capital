@@ -3,8 +3,9 @@ const VIEW_TITLES = {
   queue: 'Insignia Queue — Capital Records',
   loot: 'Guild Dungeon Loot — Capital Records',
   'loot-session': 'Loot Details — Capital Records',
+  items: 'Item Report — Capital Records',
 };
-const VALID_VIEWS = ['members', 'queue', 'loot', 'loot-session'];
+const VALID_VIEWS = ['members', 'queue', 'loot', 'loot-session', 'items'];
 
 function showView(name) {
   document.querySelectorAll('.view').forEach((v) => v.classList.add('hidden'));
@@ -28,6 +29,7 @@ function parseRoute() {
   if (activeView === 'queue') loadQueueData().catch((err) => toast(err.message));
   if (activeView === 'loot') loadLootData().catch((err) => toast(err.message));
   if (activeView === 'loot-session') loadSessionData(param);
+  if (activeView === 'items') loadItemReportData().catch((err) => toast(err.message));
 }
 
 window.addEventListener('hashchange', parseRoute);
