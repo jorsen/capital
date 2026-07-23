@@ -36,6 +36,7 @@ function getItemReportRows() {
           member: record.recipientName || '(unassigned)',
           quantity: record.quantity,
           date: session.date,
+          sessionId: session.id,
         });
       }
     });
@@ -51,15 +52,18 @@ function renderItemReportView() {
     ? `${itemReportState.selectedItem} Given:`
     : 'Given:';
 
-  body.innerHTML = rows
-    .map(
-      (row) => `
-      <tr>
-        <td>${escapeHtml(row.member)}</td>
-        <td>${row.quantity} - ${formatShortDate(row.date)}</td>
-      </tr>`
-    )
-    .join('');
+  body.innerHTML = '';
+  rows.forEach((row) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(row.member)}</td>
+      <td>${row.quantity} - ${formatShortDate(row.date)}</td>
+    `;
+    tr.addEventListener('click', () => {
+      window.location.hash = `#/loot-session/${row.sessionId}`;
+    });
+    body.appendChild(tr);
+  });
 
   document.getElementById('itemReportEmptyState').classList.toggle('hidden', rows.length !== 0);
 }
