@@ -11,7 +11,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
       body: JSON.stringify({ password }),
     });
     if (res.ok) {
-      window.location.href = 'index.html';
+      window.location.href = '/';
       return;
     }
     errorEl.textContent = 'Incorrect password.';
