@@ -515,7 +515,7 @@ document.querySelectorAll('#view-members th[data-sort]').forEach((th) => {
       membersState.sortDir *= -1;
     } else {
       membersState.sortKey = key;
-      membersState.sortDir = 1;
+      membersState.sortDir = key === 'latest' ? -1 : 1;
     }
     renderTable();
   });
