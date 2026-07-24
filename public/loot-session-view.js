@@ -72,6 +72,34 @@ function raffleWinnersRowsHtml(session) {
     .join('');
 }
 
+// Items excluded from the raffle sit here so they can be manually handed
+// out to a specific member (with an optional partial quantity), instead of
+// only being reachable via the "Assign to…" multi-assign modal further down.
+function reservationRowsHtml(reservationRecords, sortedMembers) {
+  if (!reservationRecords.length) {
+    return '<tr><td colspan="4" style="color:var(--text-muted)">No items excluded from the raffle.</td></tr>';
+  }
+  const memberOptions = sortedMembers
+    .map((m) => `<option value="${m.id}">${escapeHtml(m.name)}</option>`)
+    .join('');
+  return reservationRecords
+    .map(
+      (r) => `
+    <tr>
+      <td style="font-weight:600;">${itemLabel(r.item)}</td>
+      <td class="col-right"><input type="number" class="reservation-qty-input" data-record-id="${r.id}" value="${r.quantity}" min="1" max="${r.quantity}" step="1" style="width:70px; text-align:right;"></td>
+      <td>
+        <select class="reservation-member-select" data-record-id="${r.id}">
+          <option value="">Select member…</option>
+          ${memberOptions}
+        </select>
+      </td>
+      <td><button type="button" class="btn small primary" data-reserve-assign="${r.id}">Assign</button></td>
+    </tr>`
+    )
+    .join('');
+}
+
 // Wires a text input + filterable dropdown for picking a known item, reused by
 // both the Add Loot form and the Raffle item picker.
 function wireItemDropdown({ inputId, menuId, iconId, iconSize }) {
@@ -258,6 +286,7 @@ function renderSessionContent() {
   const allRecords = session.records.slice().reverse();
   const unassignedRecords = allRecords.filter((r) => !r.recipientId);
   const raffleEligibleRecords = unassignedRecords.filter((r) => !r.excludedFromRaffle);
+  const reservationRecords = unassignedRecords.filter((r) => r.excludedFromRaffle);
 
   // Raffle-drawn items float to the top, sorted alphabetically among
   // themselves; everything else keeps its original (newest-first) order.
@@ -388,6 +417,15 @@ function renderSessionContent() {
         }
       </div>
       <div id="raffleLogList" class="raffle-log-list">${raffleLogItemsHtml(session)}</div>
+    </div>
+
+    <h3 style="margin-bottom:6px;">📦 Reservation</h3>
+    <p style="color:var(--text-muted); font-size:13px; margin:-4px 0 8px;">Items excluded from the raffle — assign each straight to a member (partial quantities split the rest back into Loot Records).</p>
+    <div class="table-scroll" style="margin-bottom:20px;">
+      <table class="growth-table">
+        <thead><tr><th>Item</th><th class="col-right">Qty</th><th>Assign to</th><th></th></tr></thead>
+        <tbody id="reservationBody">${reservationRowsHtml(reservationRecords, sortedMembers)}</tbody>
+      </table>
     </div>
 
     <h3 style="margin-bottom:6px;">Add Loot</h3>
@@ -656,6 +694,51 @@ function renderSessionContent() {
         Object.assign(record, updated);
         renderSessionContent();
         toast(record.excludedFromRaffle ? 'Excluded from raffle' : 'Included in raffle again');
+      } catch (err) {
+        toast(err.message);
+      }
+    });
+  });
+
+  content.querySelectorAll('[data-reserve-assign]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const recordId = btn.getAttribute('data-reserve-assign');
+      const record = session.records.find((r) => r.id === recordId);
+      if (!record) return;
+      const qtyInput = content.querySelector(`.reservation-qty-input[data-record-id="${recordId}"]`);
+      const memberSelect = content.querySelector(`.reservation-member-select[data-record-id="${recordId}"]`);
+      const memberId = memberSelect.value;
+      if (!memberId) {
+        toast('Select a member to assign to');
+        return;
+      }
+      const qty = Number(qtyInput.value);
+      if (!Number.isFinite(qty) || qty < 1 || qty > record.quantity) {
+        toast(`Quantity must be between 1 and ${record.quantity}`);
+        return;
+      }
+      const member = sortedMembers.find((m) => m.id === memberId);
+      try {
+        if (qty === record.quantity) {
+          const updated = await api(`/api/loot/${session.id}/records/${recordId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ recipientId: memberId }),
+          });
+          Object.assign(record, updated);
+        } else {
+          const newRecord = await api(`/api/loot/${session.id}/records`, {
+            method: 'POST',
+            body: JSON.stringify({ recipientId: memberId, item: record.item, quantity: qty }),
+          });
+          session.records.push(newRecord);
+          const updated = await api(`/api/loot/${session.id}/records/${recordId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ quantity: record.quantity - qty }),
+          });
+          Object.assign(record, updated);
+        }
+        renderSessionContent();
+        toast(`Assigned ${record.item} (x${qty}) to ${member.name}`);
       } catch (err) {
         toast(err.message);
       }
