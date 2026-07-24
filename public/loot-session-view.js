@@ -218,17 +218,20 @@ function renderSessionContent() {
   const assignedRecords = allRecords.filter((r) => r.recipientId);
 
   const unassignedRows = unassignedRecords
-    .map(
-      (r) => `
-      <tr>
-        <td style="font-weight:600;">${itemLabel(r.item)}</td>
+    .map((r) => {
+      const alreadyRaffled = session.records.some(
+        (other) => other.viaRaffle && other.item.toLowerCase() === r.item.toLowerCase()
+      );
+      return `
+      <tr class="${alreadyRaffled ? 'raffled-partial' : ''}">
+        <td style="font-weight:600;">${itemLabel(r.item)}${alreadyRaffled ? ' <span class="raffled-badge" title="Already has raffle winners">🎲</span>' : ''}</td>
         <td class="col-right"><input type="number" class="qty-input" data-record-id="${r.id}" value="${r.quantity}" min="1" step="1" style="width:100px; text-align:right;"></td>
         <td>
           <button type="button" class="btn small" data-multi-assign="${r.id}">Assign to…</button>
         </td>
         <td><button class="icon-btn" data-del-record="${r.id}" title="Delete record">✕</button></td>
-      </tr>`
-    )
+      </tr>`;
+    })
     .join('');
 
   const assignedRows = assignedRecords
