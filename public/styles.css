@@ -55,7 +55,7 @@ body {
 ::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
 
 .app {
-  max-width: 1400px;
+  max-width: 1600px;
   margin: 0 auto;
   padding: 0 20px 64px;
   animation: view-fade-in 0.35s ease;
@@ -619,21 +619,19 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
   border: none;
   min-width: 0;
 }
-#lootRecordsTableWrap .growth-table td:first-child { flex: 1 1 auto; min-width: 0; overflow: hidden; }
+#lootRecordsTableWrap .growth-table td:first-child { flex: 1 1 auto; min-width: 0; }
 #lootRecordsTableWrap .growth-table td:nth-child(2) { flex: 0 0 60px; }
 #lootRecordsTableWrap .growth-table td:nth-child(3) {
-  flex: 0 0 130px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  flex: 0 0 220px;
+  white-space: normal;
+  word-break: break-word;
   display: inline-block;
 }
 #lootRecordsTableWrap .growth-table td:nth-child(4) { flex: 0 0 60px; }
 #lootRecordsTableWrap .growth-table td:nth-child(5) { flex: 0 0 56px; justify-content: flex-end; }
 #lootRecordsTableWrap .item-label-text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  word-break: break-word;
   min-width: 0;
 }
 #lootRecordsTableWrap .item-icon { width: 28px !important; height: 28px !important; }
