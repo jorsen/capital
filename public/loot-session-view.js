@@ -272,6 +272,12 @@ function renderSessionContent() {
           <td class="col-right"><input type="number" class="qty-input" data-record-id="${r.id}" value="${r.quantity}" min="1" step="1" style="width:100px; text-align:right;"></td>
           <td>${escapeHtml(r.recipientName)}</td>
           <td>
+            <label class="sent-check-label" title="Mark as sent">
+              <input type="checkbox" class="sent-check" data-record-id="${r.id}" ${r.sent ? 'checked' : ''}>
+              Sent
+            </label>
+          </td>
+          <td>
             <button class="icon-btn" data-unassign="${r.id}" title="Unassign">↩</button>
             <button class="icon-btn" data-del-record="${r.id}" title="Delete record">✕</button>
           </td>
@@ -290,6 +296,7 @@ function renderSessionContent() {
         <td>
           <button type="button" class="btn small" data-multi-assign="${r.id}">Assign to…</button>
         </td>
+        <td></td>
         <td>
           <button class="icon-btn" data-toggle-raffle-exclude="${r.id}" title="${r.excludedFromRaffle ? 'Include in raffle' : 'Exclude from raffle'}">${r.excludedFromRaffle ? '🎲' : '🚫'}</button>
           <button class="icon-btn" data-del-record="${r.id}" title="Delete record">✕</button>
@@ -402,10 +409,10 @@ function renderSessionContent() {
     </form>
 
     <h3>Loot Records</h3>
-    <div class="table-scroll">
+    <div id="lootRecordsTableWrap" class="table-scroll">
       <table class="growth-table">
-        <thead><tr><th>Item</th><th class="col-right">Qty</th><th>Recipient</th><th></th></tr></thead>
-        <tbody>${lootRecordsRows || '<tr><td colspan="4" style="color:var(--text-muted)">No loot logged yet.</td></tr>'}</tbody>
+        <thead><tr><th>Item</th><th class="col-right">Qty</th><th>Recipient</th><th>Sent</th><th></th></tr></thead>
+        <tbody>${lootRecordsRows || '<tr><td colspan="5" style="color:var(--text-muted)">No loot logged yet.</td></tr>'}</tbody>
       </table>
     </div>
   `;
@@ -646,6 +653,25 @@ function renderSessionContent() {
         renderSessionContent();
         toast(record.excludedFromRaffle ? 'Excluded from raffle' : 'Included in raffle again');
       } catch (err) {
+        toast(err.message);
+      }
+    });
+  });
+
+  content.querySelectorAll('.sent-check').forEach((cb) => {
+    cb.addEventListener('change', async () => {
+      const recordId = cb.getAttribute('data-record-id');
+      const record = session.records.find((r) => r.id === recordId);
+      if (!record) return;
+      try {
+        const updated = await api(`/api/loot/${session.id}/records/${recordId}`, {
+          method: 'PUT',
+          body: JSON.stringify({ sent: cb.checked }),
+        });
+        Object.assign(record, updated);
+        renderSessionContent();
+      } catch (err) {
+        cb.checked = !cb.checked;
         toast(err.message);
       }
     });

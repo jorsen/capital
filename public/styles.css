@@ -588,6 +588,51 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
 #raffleWinnersTableWrap .growth-table td:first-child { flex: 1; min-width: 0; }
 #raffleWinnersTableWrap .growth-table td:nth-child(2) { flex-shrink: 0; white-space: nowrap; }
 
+/* Loot Records: same 2-column reflow. Rows have more content (qty input,
+   recipient, action buttons) than Raffle Winners, so the item name takes
+   its own full-width line within the row and the rest wraps below it. */
+#lootRecordsTableWrap {
+  column-count: 2;
+  column-gap: 18px;
+}
+#lootRecordsTableWrap .growth-table { display: block; width: 100%; }
+#lootRecordsTableWrap .growth-table thead { display: none; }
+#lootRecordsTableWrap .growth-table tbody { display: block; }
+#lootRecordsTableWrap .growth-table tr {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  padding: 8px;
+  break-inside: avoid-column;
+  border-bottom: 1px solid var(--gridline);
+}
+#lootRecordsTableWrap .growth-table td {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: none;
+  background: none;
+}
+#lootRecordsTableWrap .growth-table td:first-child { flex: 1 1 100%; min-width: 0; }
+#lootRecordsTableWrap .growth-table td:nth-child(2) { flex-shrink: 0; }
+#lootRecordsTableWrap .growth-table td:nth-child(3) { flex: 1; min-width: 0; }
+#lootRecordsTableWrap .growth-table td:nth-child(4) { flex-shrink: 0; }
+#lootRecordsTableWrap .growth-table td:nth-child(5) { flex-shrink: 0; margin-left: auto; }
+
+.sent-check-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.sent-check-label:has(input:checked) { color: var(--series-1); font-weight: 600; }
+.sent-check { accent-color: var(--series-1); cursor: pointer; }
+
 .print-only { display: none; }
 
 @media print {
