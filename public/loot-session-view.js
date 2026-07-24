@@ -259,7 +259,13 @@ function renderSessionContent() {
   const unassignedRecords = allRecords.filter((r) => !r.recipientId);
   const raffleEligibleRecords = unassignedRecords.filter((r) => !r.excludedFromRaffle);
 
-  const displayRecords = allRecords.slice().sort((a, b) => a.item.localeCompare(b.item));
+  // Raffle-drawn items float to the top, sorted alphabetically among
+  // themselves; everything else keeps its original (newest-first) order.
+  const displayRecords = allRecords.slice().sort((a, b) => {
+    if (a.viaRaffle !== b.viaRaffle) return a.viaRaffle ? -1 : 1;
+    if (a.viaRaffle) return a.item.localeCompare(b.item);
+    return 0;
+  });
 
   const lootRecordsRows = displayRecords
     .map((r) => {
