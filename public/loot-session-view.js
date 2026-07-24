@@ -351,7 +351,7 @@ function renderSessionContent() {
       <h2 class="print-only">${escapeHtml(session.date)}${session.run ? ` — ${escapeHtml(session.run)}` : ''} — Raffle Results</h2>
 
       <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-        <h3 style="margin-bottom:6px;">🏆 Raffle Winners</h3>
+        <h3 class="print-heading-winners" style="margin-bottom:6px;">🏆 Raffle Winners</h3>
         <div class="no-print" style="display:flex; gap:8px;">
           <button type="button" class="btn small" id="printRaffleBtn" style="margin-bottom:6px;">🖨️ Print</button>
           ${
@@ -369,7 +369,7 @@ function renderSessionContent() {
       </div>
 
       <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-        <h3 style="margin-bottom:6px;">📜 Raffle Activity Log</h3>
+        <h3 class="print-heading-log" style="margin-bottom:6px;">📜 Raffle Activity Log</h3>
         ${
           session.raffleLog.length
             ? '<button type="button" class="btn small no-print" id="clearRaffleLogBtn" style="margin-bottom:6px;">Clear Log</button>'

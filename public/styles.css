@@ -592,18 +592,66 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
     color: var(--text-primary);
   }
   body.printing-raffle .no-print { display: none !important; }
-  body.printing-raffle .print-only { display: block; margin: 0 0 10px; font-size: 16px; }
+  body.printing-raffle .print-only { display: block; margin: 0 0 8px; font-size: 15px; color: var(--text-primary); }
 
-  /* Compact spacing/type so winners + log fit on a single printed page. */
-  body.printing-raffle #rafflePrintSection h3 { font-size: 13px; margin: 10px 0 4px; }
-  body.printing-raffle #rafflePrintSection .growth-table { font-size: 11px; margin-top: 2px; }
-  body.printing-raffle #rafflePrintSection .growth-table th,
-  body.printing-raffle #rafflePrintSection .growth-table td { padding: 3px 6px; }
-  body.printing-raffle #rafflePrintSection .growth-table tr { page-break-inside: avoid; }
-  body.printing-raffle #rafflePrintSection .table-scroll { margin-bottom: 8px !important; }
-  body.printing-raffle #rafflePrintSection .item-icon { width: 16px !important; height: 16px !important; }
-  body.printing-raffle #rafflePrintSection .raffle-log-list { padding: 4px 8px; gap: 0; margin-bottom: 0 !important; }
-  body.printing-raffle #rafflePrintSection .raffle-log-entry { padding: 2px 0; font-size: 11px; page-break-inside: avoid; }
+  /* Compact spacing/type so winners + log fit on as few pages as possible. */
+  body.printing-raffle #rafflePrintSection h3 { font-size: 12px; margin: 8px 0 3px; }
+  body.printing-raffle #rafflePrintSection .print-heading-winners { color: var(--gold); }
+  body.printing-raffle #rafflePrintSection .print-heading-log { color: var(--series-1-strong); }
+
+  body.printing-raffle #rafflePrintSection .item-icon { width: 14px !important; height: 14px !important; }
+
+  /* Winners table: reflow rows into a 2-column newspaper layout instead of
+     one long list, so a big roster fits in far fewer pages. Table box types
+     don't break across CSS columns, so rows switch to flex/block first. */
+  body.printing-raffle #rafflePrintSection .table-scroll {
+    margin-bottom: 6px !important;
+    column-count: 2;
+    column-gap: 18px;
+  }
+  body.printing-raffle #rafflePrintSection .growth-table { font-size: 10px; margin-top: 2px; display: block; width: 100%; }
+  body.printing-raffle #rafflePrintSection .growth-table thead { display: none; }
+  body.printing-raffle #rafflePrintSection .growth-table tbody { display: block; }
+  body.printing-raffle #rafflePrintSection .growth-table tr {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 2px 4px;
+    break-inside: avoid-column;
+    page-break-inside: avoid;
+    border-bottom: 1px solid var(--gridline);
+  }
+  body.printing-raffle #rafflePrintSection .growth-table tbody tr:nth-child(even) { background: var(--surface-2); }
+  body.printing-raffle #rafflePrintSection .growth-table td {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 !important;
+    border: none !important;
+    background: none !important;
+  }
+  body.printing-raffle #rafflePrintSection .growth-table td:first-child { flex: 1; min-width: 0; color: var(--gold); }
+  body.printing-raffle #rafflePrintSection .growth-table td:nth-child(2) { flex-shrink: 0; white-space: nowrap; color: var(--series-1-strong); font-weight: 600; }
+
+  /* Activity log: same 2-column reflow, using CSS multi-column since these
+     are plain block rows (not a table). */
+  body.printing-raffle #rafflePrintSection .raffle-log-list {
+    display: block;
+    padding: 3px 8px;
+    margin-bottom: 0 !important;
+    border: 1px solid var(--series-1-soft);
+    column-count: 2;
+    column-gap: 18px;
+  }
+  body.printing-raffle #rafflePrintSection .raffle-log-entry {
+    padding: 1px 0;
+    font-size: 10px;
+    line-height: 1.3;
+    break-inside: avoid-column;
+    page-break-inside: avoid;
+  }
+  body.printing-raffle #rafflePrintSection .raffle-log-time { color: var(--series-1-strong); font-weight: 600; }
 }
 
 .attendance-grid {
