@@ -361,7 +361,7 @@ function renderSessionContent() {
           }
         </div>
       </div>
-      <div class="table-scroll" style="margin-bottom:20px;">
+      <div id="raffleWinnersTableWrap" class="table-scroll" style="margin-bottom:20px;">
         <table class="growth-table">
           <thead><tr><th>Item</th><th>Winner</th><th class="no-print"></th></tr></thead>
           <tbody id="raffleWinnersBody">${raffleWinnersRowsHtml(session)}</tbody>
