@@ -627,7 +627,7 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
   word-break: break-word;
   display: inline-block;
 }
-#lootRecordsTableWrap .growth-table td:nth-child(4) { flex: 0 0 60px; }
+#lootRecordsTableWrap .growth-table td:nth-child(4) { flex: 0 0 78px; }
 #lootRecordsTableWrap .growth-table td:nth-child(5) { flex: 0 0 56px; justify-content: flex-end; }
 #lootRecordsTableWrap .item-label-text {
   white-space: normal;
@@ -654,8 +654,20 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
   color: var(--text-muted);
   cursor: pointer;
   white-space: nowrap;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
 }
-.sent-check-label:has(input:checked) { color: var(--series-1); font-weight: 600; }
+.sent-check-label:hover { border-color: var(--border-strong); }
+.sent-check-label:has(input:checked) {
+  border-color: var(--series-1);
+  background: rgba(34, 197, 94, 0.16);
+  color: #6ee7a8;
+  font-weight: 600;
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.3), 0 2px 10px rgba(34, 197, 94, 0.22);
+}
 .sent-check { accent-color: var(--series-1); cursor: pointer; }
 
 .print-only { display: none; }
