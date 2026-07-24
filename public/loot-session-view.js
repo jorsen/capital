@@ -1,16 +1,76 @@
 const sessionState = { id: null, session: null, members: [] };
 
-function raffleWinnerHtml(session, sortedMembers) {
-  if (!session.raffleWinnerId) {
-    return '<span style="color:var(--text-muted); font-size:13px;">No winner drawn yet.</span>';
+function raffleDrawsRowsHtml(session) {
+  const draws = session.raffleDraws.slice().reverse(); // newest on top
+  if (!draws.length) {
+    return '<tr><td colspan="3" style="color:var(--text-muted)">No draws yet.</td></tr>';
   }
-  const winner = sortedMembers.find((m) => m.id === session.raffleWinnerId);
-  const name = winner ? winner.name : 'Unknown member';
-  return `<span class="raffle-winner">🏆 ${escapeHtml(name)}</span>`;
+  return draws
+    .map(
+      (d) => `
+    <tr>
+      <td style="font-weight:600;">${itemLabel(d.item)}</td>
+      <td><span class="raffle-winner">🏆 ${escapeHtml(d.winnerName)}</span></td>
+      <td><button class="icon-btn" data-del-raffle-draw="${d.id}" title="Remove draw">✕</button></td>
+    </tr>`
+    )
+    .join('');
 }
 
 function getPresentMembers(session, sortedMembers) {
   return sortedMembers.filter((m) => !session.absentees.includes(m.id));
+}
+
+// Wires a text input + filterable dropdown for picking a known item, reused by
+// both the Add Loot form and the Raffle item picker.
+function wireItemDropdown({ inputId, menuId, iconId, iconSize }) {
+  const input = document.getElementById(inputId);
+  const menu = document.getElementById(menuId);
+  const iconEl = iconId ? document.getElementById(iconId) : null;
+
+  function updateIcon() {
+    if (!iconEl) return;
+    const category = itemCategoriesState.list.find((c) => c.name.toLowerCase() === input.value.trim().toLowerCase());
+    iconEl.innerHTML = category ? itemIconImg(category.iconUrl, category.name, iconSize || 32) : '';
+  }
+
+  function renderMenu() {
+    const query = input.value.trim().toLowerCase();
+    const matches = itemCategoriesState.list
+      .filter((c) => !query || c.name.toLowerCase().includes(query))
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    if (!matches.length) {
+      menu.classList.add('hidden');
+      return;
+    }
+
+    menu.innerHTML = matches
+      .map(
+        (c) => `
+        <div class="icon-select-option" data-name="${escapeHtml(c.name)}">
+          ${itemIconImg(c.iconUrl, c.name, 28)}
+          <span>${escapeHtml(c.name)}</span>
+        </div>`
+      )
+      .join('');
+    menu.classList.remove('hidden');
+
+    menu.querySelectorAll('.icon-select-option').forEach((el) => {
+      el.addEventListener('click', () => {
+        input.value = el.getAttribute('data-name');
+        menu.classList.add('hidden');
+        updateIcon();
+      });
+    });
+  }
+
+  input.addEventListener('input', () => {
+    updateIcon();
+    renderMenu();
+  });
+  input.addEventListener('focus', renderMenu);
+  updateIcon();
 }
 
 function itemLabel(itemName) {
@@ -215,9 +275,23 @@ function renderSessionContent() {
     </div>
 
     <h3 style="margin-bottom:6px;">🎲 Raffle</h3>
-    <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:20px;">
-      <span id="raffleWinnerDisplay">${raffleWinnerHtml(session, sortedMembers)}</span>
-      <button type="button" class="btn small" id="raffleBtn">${session.raffleWinnerId ? 'Re-roll' : 'Draw Winner'}</button>
+    <div class="growth-form-row" style="margin-top:0;">
+      <label style="flex:1.5;">Item
+        <div class="icon-select" id="raffleItemDropdown" style="display:block; width:100%;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <input type="text" id="raffleItemInput" autocomplete="off" placeholder="e.g. Morion" style="flex:1;">
+            <span id="raffleItemIcon"></span>
+          </div>
+          <div class="icon-select-menu hidden" id="raffleItemMenu"></div>
+        </div>
+      </label>
+      <button type="button" class="btn primary small" id="raffleDrawBtn">Draw</button>
+    </div>
+    <div class="table-scroll" style="margin-bottom:20px;">
+      <table class="growth-table">
+        <thead><tr><th>Item</th><th>Winner</th><th></th></tr></thead>
+        <tbody id="raffleDrawsBody">${raffleDrawsRowsHtml(session)}</tbody>
+      </table>
     </div>
 
     <h3 style="margin-bottom:6px;">Add Loot</h3>
@@ -296,7 +370,13 @@ function renderSessionContent() {
     }
   });
 
-  content.querySelector('#raffleBtn').addEventListener('click', async () => {
+  content.querySelector('#raffleDrawBtn').addEventListener('click', async () => {
+    const itemInput = document.getElementById('raffleItemInput');
+    const item = itemInput.value.trim();
+    if (!item) {
+      toast('Enter an item to raffle');
+      return;
+    }
     const present = getPresentMembers(session, sortedMembers);
     if (!present.length) {
       toast('No present members to raffle');
@@ -304,18 +384,33 @@ function renderSessionContent() {
     }
     const winner = present[Math.floor(Math.random() * present.length)];
     try {
-      const updated = await api(`/api/loot/${session.id}`, {
-        method: 'PUT',
-        body: JSON.stringify({ raffleWinnerId: winner.id }),
+      const draw = await api(`/api/loot/${session.id}/raffle-draws`, {
+        method: 'POST',
+        body: JSON.stringify({ item, winnerId: winner.id }),
       });
-      session.raffleWinnerId = updated.raffleWinnerId;
-      document.getElementById('raffleWinnerDisplay').innerHTML = raffleWinnerHtml(session, sortedMembers);
-      document.getElementById('raffleBtn').textContent = 'Re-roll';
-      toast(`🏆 ${winner.name} wins the raffle!`);
+      session.raffleDraws.push(draw);
+      document.getElementById('raffleDrawsBody').innerHTML = raffleDrawsRowsHtml(session);
+      wireRaffleDrawDeleteButtons();
+      itemInput.value = '';
+      document.getElementById('raffleItemIcon').innerHTML = '';
+      toast(`🏆 ${winner.name} wins ${item}!`);
     } catch (err) {
       toast(err.message);
     }
   });
+
+  function wireRaffleDrawDeleteButtons() {
+    content.querySelectorAll('[data-del-raffle-draw]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const drawId = btn.getAttribute('data-del-raffle-draw');
+        await api(`/api/loot/${session.id}/raffle-draws/${drawId}`, { method: 'DELETE' });
+        session.raffleDraws = session.raffleDraws.filter((d) => d.id !== drawId);
+        document.getElementById('raffleDrawsBody').innerHTML = raffleDrawsRowsHtml(session);
+        wireRaffleDrawDeleteButtons();
+      });
+    });
+  }
+  wireRaffleDrawDeleteButtons();
 
   content.querySelectorAll('.absence-check').forEach((cb) => {
     cb.addEventListener('change', async () => {
@@ -338,51 +433,8 @@ function renderSessionContent() {
     });
   });
 
-  function updateAddRecordItemIcon() {
-    const input = document.getElementById('addRecordItemInput');
-    const category = itemCategoriesState.list.find((c) => c.name.toLowerCase() === input.value.trim().toLowerCase());
-    document.getElementById('addRecordItemIcon').innerHTML = category ? itemIconImg(category.iconUrl, category.name, 32) : '';
-  }
-
-  function renderAddRecordItemMenu() {
-    const input = document.getElementById('addRecordItemInput');
-    const menu = document.getElementById('addRecordItemMenu');
-    const query = input.value.trim().toLowerCase();
-    const matches = itemCategoriesState.list
-      .filter((c) => !query || c.name.toLowerCase().includes(query))
-      .sort((a, b) => a.name.localeCompare(b.name));
-
-    if (!matches.length) {
-      menu.classList.add('hidden');
-      return;
-    }
-
-    menu.innerHTML = matches
-      .map(
-        (c) => `
-        <div class="icon-select-option" data-name="${escapeHtml(c.name)}">
-          ${itemIconImg(c.iconUrl, c.name, 28)}
-          <span>${escapeHtml(c.name)}</span>
-        </div>`
-      )
-      .join('');
-    menu.classList.remove('hidden');
-
-    menu.querySelectorAll('.icon-select-option').forEach((el) => {
-      el.addEventListener('click', () => {
-        input.value = el.getAttribute('data-name');
-        menu.classList.add('hidden');
-        updateAddRecordItemIcon();
-      });
-    });
-  }
-
-  content.querySelector('#addRecordItemInput').addEventListener('input', () => {
-    updateAddRecordItemIcon();
-    renderAddRecordItemMenu();
-  });
-
-  content.querySelector('#addRecordItemInput').addEventListener('focus', renderAddRecordItemMenu);
+  wireItemDropdown({ inputId: 'addRecordItemInput', menuId: 'addRecordItemMenu', iconId: 'addRecordItemIcon', iconSize: 32 });
+  wireItemDropdown({ inputId: 'raffleItemInput', menuId: 'raffleItemMenu', iconId: 'raffleItemIcon', iconSize: 28 });
 
   content.querySelector('#addRecordForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -459,11 +511,16 @@ function renderSessionContent() {
   });
 }
 
-// Bound once at script load (not per-render) since the dropdown's DOM is
+// Bound once at script load (not per-render) since the dropdowns' DOM is
 // rebuilt every time renderSessionContent() runs.
 document.addEventListener('click', (e) => {
-  const dropdown = document.getElementById('addRecordItemDropdown');
-  if (dropdown && !dropdown.contains(e.target)) {
-    document.getElementById('addRecordItemMenu').classList.add('hidden');
-  }
+  [
+    ['addRecordItemDropdown', 'addRecordItemMenu'],
+    ['raffleItemDropdown', 'raffleItemMenu'],
+  ].forEach(([dropdownId, menuId]) => {
+    const dropdown = document.getElementById(dropdownId);
+    if (dropdown && !dropdown.contains(e.target)) {
+      document.getElementById(menuId).classList.add('hidden');
+    }
+  });
 });
