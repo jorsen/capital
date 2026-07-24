@@ -42,7 +42,6 @@ body {
     radial-gradient(1100px 520px at 15% -12%, rgba(242,169,60,0.09), transparent 60%),
     radial-gradient(900px 500px at 100% 0%, rgba(34,197,94,0.08), transparent 55%),
     var(--bg);
-  background-attachment: fixed;
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
@@ -78,10 +77,10 @@ body {
   margin-bottom: 28px;
   position: sticky;
   top: 0;
-  background: rgba(10,15,26,0.72);
-  backdrop-filter: blur(14px);
-  border-bottom: 1px solid var(--border);
   z-index: 10;
+  transform: translateZ(0);
+  background: rgba(10,15,26,0.94);
+  border-bottom: 1px solid var(--border);
 }
 .topbar-left {
   display: flex;
