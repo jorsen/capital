@@ -1,5 +1,11 @@
 const sessionState = { id: null, session: null, members: [] };
 
+function itemLabel(itemName) {
+  const category = itemCategoriesState.list.find((c) => c.name.toLowerCase() === itemName.toLowerCase());
+  const icon = itemIconImg(category ? category.iconUrl : null, itemName, 20);
+  return `<span style="display:inline-flex; align-items:center; gap:6px;">${icon}${escapeHtml(itemName)}</span>`;
+}
+
 async function loadSessionData(id) {
   sessionState.id = id;
   const content = document.getElementById('sessionContent');
@@ -38,7 +44,7 @@ function renderSessionContent() {
         .join('');
       return `
       <tr>
-        <td style="font-weight:600;">${escapeHtml(r.item)}</td>
+        <td style="font-weight:600;">${itemLabel(r.item)}</td>
         <td class="col-right"><input type="number" class="qty-input" data-record-id="${r.id}" value="${r.quantity}" min="1" step="1" style="width:60px; text-align:right;"></td>
         <td style="color:var(--text-muted); font-size:13px;">${escapeHtml(r.notes)}</td>
         <td>
@@ -56,7 +62,7 @@ function renderSessionContent() {
     .map(
       (r) => `
       <tr>
-        <td style="font-weight:600;">${escapeHtml(r.item)}</td>
+        <td style="font-weight:600;">${itemLabel(r.item)}</td>
         <td class="col-right"><input type="number" class="qty-input" data-record-id="${r.id}" value="${r.quantity}" min="1" step="1" style="width:60px; text-align:right;"></td>
         <td>${escapeHtml(r.recipientName)}</td>
         <td>

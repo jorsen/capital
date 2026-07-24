@@ -23,8 +23,10 @@ function renderItemCategoryList() {
   list.innerHTML = sorted
     .map(
       (c) => `
-      <li style="display:flex; gap:8px;" data-category-id="${c.id}">
+      <li style="display:flex; gap:8px; align-items:center;" data-category-id="${c.id}">
+        <span class="item-icon-preview">${itemIconImg(c.iconUrl, c.name)}</span>
         <input type="text" value="${escapeHtml(c.name)}" class="category-name-input" style="flex:1;">
+        <input type="text" value="${escapeHtml(c.iconUrl || '')}" class="category-icon-input" placeholder="Icon URL (optional)" style="flex:1;">
         <button class="btn small" data-save-category="${c.id}">Save</button>
         <button class="icon-btn" data-delete-category="${c.id}" title="Delete item">✕</button>
       </li>`
@@ -36,10 +38,11 @@ function renderItemCategoryList() {
       const li = btn.closest('[data-category-id]');
       const id = li.getAttribute('data-category-id');
       const name = li.querySelector('.category-name-input').value;
+      const iconUrl = li.querySelector('.category-icon-input').value;
       try {
         const updated = await api(`/api/item-categories/${id}`, {
           method: 'PUT',
-          body: JSON.stringify({ name }),
+          body: JSON.stringify({ name, iconUrl }),
         });
         const cat = itemCategoriesState.list.find((c) => c.id === id);
         Object.assign(cat, updated);

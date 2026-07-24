@@ -29,6 +29,15 @@ function totalQty(session) {
   return session.records.reduce((sum, r) => sum + r.quantity, 0);
 }
 
+function itemIconImg(iconUrl, name, size) {
+  const px = size || 20;
+  const style = `width:${px}px; height:${px}px;`;
+  if (iconUrl) {
+    return `<img src="${escapeHtml(iconUrl)}" alt="" class="item-icon" style="${style}">`;
+  }
+  return `<span class="item-icon item-icon-placeholder" style="${style}" title="${escapeHtml(name || '')}"></span>`;
+}
+
 // Delegated once for every modal on the page, regardless of which view rendered it.
 document.addEventListener('click', (e) => {
   const closeBtn = e.target.closest('[data-close]');

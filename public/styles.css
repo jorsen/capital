@@ -340,6 +340,19 @@ select:focus, input:focus, textarea:focus {
   font-weight: 700;
   flex-shrink: 0;
 }
+.item-icon {
+  display: inline-block;
+  border-radius: 6px;
+  object-fit: cover;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+.item-icon-placeholder {
+  background: var(--surface-2);
+  border: 1px dashed var(--border-strong);
+}
+.item-icon-preview { display: inline-flex; }
+
 .class-badge {
   display: inline-block;
   padding: 3px 9px;

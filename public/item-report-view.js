@@ -23,6 +23,7 @@ async function loadItemReportData() {
   }
   select.value = itemReportState.selectedItem;
 
+  renderItemReportIcon();
   renderItemReportView();
 }
 
@@ -43,6 +44,13 @@ function getItemReportRows() {
   });
   rows.sort((a, b) => a.date.localeCompare(b.date));
   return rows;
+}
+
+function renderItemReportIcon() {
+  const category = itemReportState.categories.find((c) => c.name === itemReportState.selectedItem);
+  document.getElementById('itemReportIcon').innerHTML = category
+    ? itemIconImg(category.iconUrl, category.name, 24)
+    : '';
 }
 
 function renderItemReportView() {
@@ -70,5 +78,6 @@ function renderItemReportView() {
 
 document.getElementById('itemReportSelect').addEventListener('change', (e) => {
   itemReportState.selectedItem = e.target.value;
+  renderItemReportIcon();
   renderItemReportView();
 });
