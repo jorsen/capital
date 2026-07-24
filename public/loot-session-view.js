@@ -259,9 +259,7 @@ function renderSessionContent() {
   const unassignedRecords = allRecords.filter((r) => !r.recipientId);
   const raffleEligibleRecords = unassignedRecords.filter((r) => !r.excludedFromRaffle);
 
-  // Raffle-drawn items float to the top of Loot Records so it's easy to see
-  // what's already been won vs. what's still up for grabs at a glance.
-  const displayRecords = allRecords.slice().sort((a, b) => (b.viaRaffle ? 1 : 0) - (a.viaRaffle ? 1 : 0));
+  const displayRecords = allRecords.slice().sort((a, b) => a.item.localeCompare(b.item));
 
   const lootRecordsRows = displayRecords
     .map((r) => {
