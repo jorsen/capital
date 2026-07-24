@@ -2,7 +2,7 @@ const sessionState = { id: null, session: null, members: [] };
 
 function itemLabel(itemName) {
   const category = itemCategoriesState.list.find((c) => c.name.toLowerCase() === itemName.toLowerCase());
-  const icon = itemIconImg(category ? category.iconUrl : null, itemName, 20);
+  const icon = itemIconImg(category ? category.iconUrl : null, itemName, 32);
   return `<span style="display:inline-flex; align-items:center; gap:6px;">${icon}${escapeHtml(itemName)}</span>`;
 }
 

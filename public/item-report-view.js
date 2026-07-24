@@ -49,7 +49,7 @@ function getItemReportRows() {
 function renderItemReportIcon() {
   const category = itemReportState.categories.find((c) => c.name === itemReportState.selectedItem);
   document.getElementById('itemReportIcon').innerHTML = category
-    ? itemIconImg(category.iconUrl, category.name, 24)
+    ? itemIconImg(category.iconUrl, category.name, 44)
     : '';
 }
 

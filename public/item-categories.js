@@ -24,7 +24,7 @@ function renderItemCategoryList() {
     .map(
       (c) => `
       <li style="display:flex; gap:8px; align-items:center;" data-category-id="${c.id}">
-        <span class="item-icon-preview">${itemIconImg(c.iconUrl, c.name)}</span>
+        <span class="item-icon-preview">${itemIconImg(c.iconUrl, c.name, 36)}</span>
         <input type="text" value="${escapeHtml(c.name)}" class="category-name-input" style="flex:1;">
         <input type="text" value="${escapeHtml(c.iconUrl || '')}" class="category-icon-input" placeholder="Icon URL (optional)" style="flex:1;">
         <button class="btn small" data-save-category="${c.id}">Save</button>

@@ -30,7 +30,7 @@ function totalQty(session) {
 }
 
 function itemIconImg(iconUrl, name, size) {
-  const px = size || 20;
+  const px = size || 32;
   const style = `width:${px}px; height:${px}px;`;
   if (iconUrl) {
     return `<img src="${escapeHtml(iconUrl)}" alt="" class="item-icon" style="${style}">`;
