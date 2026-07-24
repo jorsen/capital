@@ -137,11 +137,14 @@
     <!-- ===================== ITEM REPORT VIEW ===================== -->
     <div id="view-items" class="view hidden">
       <div class="view-header">
-        <label style="display:flex; align-items:center; gap:8px;">
-          Item
-          <select id="itemReportSelect"></select>
-          <span id="itemReportIcon"></span>
-        </label>
+        <div class="icon-select" id="itemReportDropdown">
+          <button type="button" class="icon-select-trigger" id="itemReportTrigger">
+            <span id="itemReportTriggerIcon"></span>
+            <span id="itemReportTriggerLabel">Select item</span>
+            <span class="icon-select-caret">▾</span>
+          </button>
+          <div class="icon-select-menu hidden" id="itemReportMenu"></div>
+        </div>
       </div>
 
       <section class="panel">

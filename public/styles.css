@@ -353,6 +353,50 @@ select:focus, input:focus, textarea:focus {
 }
 .item-icon-preview { display: inline-flex; }
 
+/* Custom icon-aware dropdown (native <select> can't render images in its options) */
+.icon-select { position: relative; display: inline-block; }
+.icon-select-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: inherit;
+  color: var(--text-primary);
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  padding: 7px 10px;
+  cursor: pointer;
+  min-width: 220px;
+}
+.icon-select-trigger:hover { border-color: rgba(255,255,255,0.22); }
+.icon-select-trigger span:nth-child(2) { flex: 1; text-align: left; }
+.icon-select-caret { color: var(--text-muted); font-size: 11px; }
+.icon-select-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 100%;
+  max-height: 320px;
+  overflow-y: auto;
+  background: var(--surface-modal);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  box-shadow: var(--shadow-lg);
+  padding: 6px;
+  z-index: 15;
+}
+.icon-select-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.icon-select-option:hover { background: var(--surface-2); }
+.icon-select-option.active { background: var(--series-1-soft); color: var(--series-1); }
+
 .class-badge {
   display: inline-block;
   padding: 3px 9px;

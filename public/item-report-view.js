@@ -14,17 +14,44 @@ async function loadItemReportData() {
   itemReportState.loot = loot;
   itemReportState.categories = categories;
 
-  const select = document.getElementById('itemReportSelect');
   const names = categories.map((c) => c.name);
-  select.innerHTML = names.map((n) => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
-
   if (!itemReportState.selectedItem || !names.includes(itemReportState.selectedItem)) {
     itemReportState.selectedItem = names.find((n) => n.toLowerCase() === 'morion') || names[0] || '';
   }
-  select.value = itemReportState.selectedItem;
 
-  renderItemReportIcon();
+  renderItemReportMenu();
+  renderItemReportTrigger();
   renderItemReportView();
+}
+
+function renderItemReportMenu() {
+  const menu = document.getElementById('itemReportMenu');
+  const sorted = itemReportState.categories.slice().sort((a, b) => a.name.localeCompare(b.name));
+  menu.innerHTML = sorted
+    .map(
+      (c) => `
+      <div class="icon-select-option${c.name === itemReportState.selectedItem ? ' active' : ''}" data-name="${escapeHtml(c.name)}">
+        ${itemIconImg(c.iconUrl, c.name, 28)}
+        <span>${escapeHtml(c.name)}</span>
+      </div>`
+    )
+    .join('');
+
+  menu.querySelectorAll('.icon-select-option').forEach((el) => {
+    el.addEventListener('click', () => {
+      itemReportState.selectedItem = el.getAttribute('data-name');
+      menu.classList.add('hidden');
+      renderItemReportMenu();
+      renderItemReportTrigger();
+      renderItemReportView();
+    });
+  });
+}
+
+function renderItemReportTrigger() {
+  const category = itemReportState.categories.find((c) => c.name === itemReportState.selectedItem);
+  document.getElementById('itemReportTriggerIcon').innerHTML = category ? itemIconImg(category.iconUrl, category.name, 24) : '';
+  document.getElementById('itemReportTriggerLabel').textContent = itemReportState.selectedItem || 'Select item';
 }
 
 function getItemReportRows() {
@@ -44,13 +71,6 @@ function getItemReportRows() {
   });
   rows.sort((a, b) => a.date.localeCompare(b.date));
   return rows;
-}
-
-function renderItemReportIcon() {
-  const category = itemReportState.categories.find((c) => c.name === itemReportState.selectedItem);
-  document.getElementById('itemReportIcon').innerHTML = category
-    ? itemIconImg(category.iconUrl, category.name, 44)
-    : '';
 }
 
 function renderItemReportView() {
@@ -76,8 +96,14 @@ function renderItemReportView() {
   document.getElementById('itemReportEmptyState').classList.toggle('hidden', rows.length !== 0);
 }
 
-document.getElementById('itemReportSelect').addEventListener('change', (e) => {
-  itemReportState.selectedItem = e.target.value;
-  renderItemReportIcon();
-  renderItemReportView();
+document.getElementById('itemReportTrigger').addEventListener('click', (e) => {
+  e.stopPropagation();
+  document.getElementById('itemReportMenu').classList.toggle('hidden');
+});
+
+document.addEventListener('click', (e) => {
+  const dropdown = document.getElementById('itemReportDropdown');
+  if (!dropdown.contains(e.target)) {
+    document.getElementById('itemReportMenu').classList.add('hidden');
+  }
 });
