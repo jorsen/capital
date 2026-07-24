@@ -73,28 +73,19 @@ function raffleWinnersRowsHtml(session) {
 }
 
 // Items excluded from the raffle sit here so they can be manually handed
-// out to a specific member (with an optional partial quantity), instead of
-// only being reachable via the "Assign to…" multi-assign modal further down.
-function reservationRowsHtml(reservationRecords, sortedMembers) {
+// out to one or more members (each with their own quantity) via the same
+// multi-assign modal used by the "Assign to…" button in Loot Records.
+function reservationRowsHtml(reservationRecords) {
   if (!reservationRecords.length) {
-    return '<tr><td colspan="4" style="color:var(--text-muted)">No items excluded from the raffle.</td></tr>';
+    return '<tr><td colspan="3" style="color:var(--text-muted)">No items excluded from the raffle.</td></tr>';
   }
-  const memberOptions = sortedMembers
-    .map((m) => `<option value="${m.id}">${escapeHtml(m.name)}</option>`)
-    .join('');
   return reservationRecords
     .map(
       (r) => `
     <tr>
       <td style="font-weight:600;">${itemLabel(r.item)}</td>
-      <td class="col-right"><input type="number" class="reservation-qty-input" data-record-id="${r.id}" value="${r.quantity}" min="1" max="${r.quantity}" step="1" style="width:70px; text-align:right;"></td>
-      <td>
-        <select class="reservation-member-select" data-record-id="${r.id}">
-          <option value="">Select member…</option>
-          ${memberOptions}
-        </select>
-      </td>
-      <td><button type="button" class="btn small primary" data-reserve-assign="${r.id}">Assign</button></td>
+      <td class="col-right">${r.quantity}</td>
+      <td><button type="button" class="btn small primary" data-reservation-assign="${r.id}">Assign to…</button></td>
     </tr>`
     )
     .join('');
@@ -176,7 +167,7 @@ function openMultiAssignModal(sessionId, record, members) {
       <label style="display:flex; flex-direction:row; align-items:center; gap:8px;">
         <input type="checkbox" class="multi-assign-check" data-member-id="${m.id}">
         <span style="flex:1;">${escapeHtml(m.name)}</span>
-        <input type="number" class="multi-assign-qty" data-member-id="${m.id}" min="1" step="1" value="1" style="width:80px; display:none;">
+        <input type="number" class="multi-assign-qty" data-member-id="${m.id}" min="1" step="1" value="1" style="width:120px; display:none;">
       </label>`
     )
     .join('');
@@ -420,11 +411,11 @@ function renderSessionContent() {
     </div>
 
     <h3 style="margin-bottom:6px;">📦 Reservation</h3>
-    <p style="color:var(--text-muted); font-size:13px; margin:-4px 0 8px;">Items excluded from the raffle — assign each straight to a member (partial quantities split the rest back into Loot Records).</p>
+    <p style="color:var(--text-muted); font-size:13px; margin:-4px 0 8px;">Items excluded from the raffle — split each across one or more members with their own quantities.</p>
     <div class="table-scroll" style="margin-bottom:20px;">
       <table class="growth-table">
-        <thead><tr><th>Item</th><th class="col-right">Qty</th><th>Assign to</th><th></th></tr></thead>
-        <tbody id="reservationBody">${reservationRowsHtml(reservationRecords, sortedMembers)}</tbody>
+        <thead><tr><th>Item</th><th class="col-right">Qty</th><th></th></tr></thead>
+        <tbody id="reservationBody">${reservationRowsHtml(reservationRecords)}</tbody>
       </table>
     </div>
 
@@ -700,48 +691,12 @@ function renderSessionContent() {
     });
   });
 
-  content.querySelectorAll('[data-reserve-assign]').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      const recordId = btn.getAttribute('data-reserve-assign');
+  content.querySelectorAll('[data-reservation-assign]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const recordId = btn.getAttribute('data-reservation-assign');
       const record = session.records.find((r) => r.id === recordId);
       if (!record) return;
-      const qtyInput = content.querySelector(`.reservation-qty-input[data-record-id="${recordId}"]`);
-      const memberSelect = content.querySelector(`.reservation-member-select[data-record-id="${recordId}"]`);
-      const memberId = memberSelect.value;
-      if (!memberId) {
-        toast('Select a member to assign to');
-        return;
-      }
-      const qty = Number(qtyInput.value);
-      if (!Number.isFinite(qty) || qty < 1 || qty > record.quantity) {
-        toast(`Quantity must be between 1 and ${record.quantity}`);
-        return;
-      }
-      const member = sortedMembers.find((m) => m.id === memberId);
-      try {
-        if (qty === record.quantity) {
-          const updated = await api(`/api/loot/${session.id}/records/${recordId}`, {
-            method: 'PUT',
-            body: JSON.stringify({ recipientId: memberId }),
-          });
-          Object.assign(record, updated);
-        } else {
-          const newRecord = await api(`/api/loot/${session.id}/records`, {
-            method: 'POST',
-            body: JSON.stringify({ recipientId: memberId, item: record.item, quantity: qty }),
-          });
-          session.records.push(newRecord);
-          const updated = await api(`/api/loot/${session.id}/records/${recordId}`, {
-            method: 'PUT',
-            body: JSON.stringify({ quantity: record.quantity - qty }),
-          });
-          Object.assign(record, updated);
-        }
-        renderSessionContent();
-        toast(`Assigned ${record.item} (x${qty}) to ${member.name}`);
-      } catch (err) {
-        toast(err.message);
-      }
+      openMultiAssignModal(session.id, record, sortedMembers);
     });
   });
 
