@@ -237,6 +237,13 @@ select:focus, input:focus, textarea:focus {
   white-space: nowrap;
 }
 .members-table th:hover { color: var(--text-secondary); }
+.sort-icon {
+  display: inline-block;
+  width: 10px;
+  margin-left: 4px;
+  color: var(--gold);
+  font-size: 10px;
+}
 .members-table td {
   padding: 9px 10px;
   border-bottom: 1px solid var(--gridline);

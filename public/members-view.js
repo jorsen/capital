@@ -3,8 +3,8 @@ const membersState = {
   classes: [],
   search: '',
   classFilter: '',
-  sortKey: 'name',
-  sortDir: 1,
+  sortKey: 'latest',
+  sortDir: -1,
   loaded: false,
 };
 
@@ -85,10 +85,6 @@ function renderMembersView() {
 function renderStats() {
   const members = membersState.members;
   document.getElementById('statTotal').textContent = members.length;
-
-  const rates = members.map((m) => latestGrowth(m)?.rate).filter((r) => r !== null && r !== undefined);
-  const avg = rates.length ? rates.reduce((a, b) => a + b, 0) / rates.length : null;
-  document.getElementById('statAvg').textContent = avg === null ? '–' : Math.round(avg).toLocaleString();
 
   let top = null;
   members.forEach((m) => {
@@ -179,11 +175,20 @@ function renderClassChart() {
 
 // ---------- Members table ----------
 
+function updateSortIndicators() {
+  document.querySelectorAll('#view-members th[data-sort]').forEach((th) => {
+    const icon = th.querySelector('.sort-icon');
+    if (!icon) return;
+    icon.textContent = th.getAttribute('data-sort') === membersState.sortKey ? (membersState.sortDir === 1 ? '▲' : '▼') : '';
+  });
+}
+
 function renderTable() {
   const list = getFilteredSortedMembers();
   const body = document.getElementById('membersBody');
   body.innerHTML = '';
   document.getElementById('membersEmptyState').classList.toggle('hidden', membersState.members.length !== 0);
+  updateSortIndicators();
 
   list.forEach((m) => {
     const tr = document.createElement('tr');
