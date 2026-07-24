@@ -13,6 +13,23 @@ function getPresentMembers(session, sortedMembers) {
   return sortedMembers.filter((m) => !session.absentees.includes(m.id));
 }
 
+function raffleWinnersRowsHtml(session) {
+  const winners = session.records.filter((r) => r.viaRaffle).slice().reverse();
+  if (!winners.length) {
+    return '<tr><td colspan="3" style="color:var(--text-muted)">No raffle winners yet.</td></tr>';
+  }
+  return winners
+    .map(
+      (r) => `
+    <tr>
+      <td style="font-weight:600;">${itemLabel(r.item)} (x${r.quantity})</td>
+      <td>${escapeHtml(r.recipientName)}</td>
+      <td><button class="icon-btn" data-remove-raffle-winner="${r.id}" title="Remove winner">✕</button></td>
+    </tr>`
+    )
+    .join('');
+}
+
 // Wires a text input + filterable dropdown for picking a known item, reused by
 // both the Add Loot form and the Raffle item picker.
 function wireItemDropdown({ inputId, menuId, iconId, iconSize }) {
@@ -275,6 +292,14 @@ function renderSessionContent() {
       <button type="button" class="btn primary small" id="raffleDrawBtn" ${unassignedRecords.length ? '' : 'disabled'}>Draw</button>
     </div>
 
+    <h3 style="margin-bottom:6px;">🏆 Raffle Winners</h3>
+    <div class="table-scroll" style="margin-bottom:20px;">
+      <table class="growth-table">
+        <thead><tr><th>Item</th><th>Winner</th><th></th></tr></thead>
+        <tbody id="raffleWinnersBody">${raffleWinnersRowsHtml(session)}</tbody>
+      </table>
+    </div>
+
     <h3 style="margin-bottom:6px;">Add Loot</h3>
 
     <form id="addRecordForm" class="growth-form-row">
@@ -367,7 +392,7 @@ function renderSessionContent() {
     try {
       const updated = await api(`/api/loot/${session.id}/records/${recordId}`, {
         method: 'PUT',
-        body: JSON.stringify({ recipientId: winner.id }),
+        body: JSON.stringify({ recipientId: winner.id, viaRaffle: true }),
       });
       Object.assign(record, updated);
       renderSessionContent();
@@ -375,6 +400,20 @@ function renderSessionContent() {
     } catch (err) {
       toast(err.message);
     }
+  });
+
+  content.querySelectorAll('[data-remove-raffle-winner]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const recordId = btn.getAttribute('data-remove-raffle-winner');
+      const updated = await api(`/api/loot/${session.id}/records/${recordId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ recipientId: '' }),
+      });
+      const record = session.records.find((r) => r.id === recordId);
+      Object.assign(record, updated);
+      renderSessionContent();
+      toast('Removed from raffle winners — loot is unassigned again');
+    });
   });
 
   content.querySelectorAll('.absence-check').forEach((cb) => {
