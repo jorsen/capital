@@ -66,7 +66,7 @@ function raffleWinnersRowsHtml(session) {
     <tr>
       <td style="font-weight:600;">${itemLabel(g.item)} (x${g.quantity})</td>
       <td>${escapeHtml(g.recipientName)}</td>
-      <td><button class="icon-btn" data-remove-raffle-winner="${g.recordIds.join(',')}" title="Remove winner">✕</button></td>
+      <td class="no-print"><button class="icon-btn" data-remove-raffle-winner="${g.recordIds.join(',')}" title="Remove winner">✕</button></td>
     </tr>`
     )
     .join('');
@@ -259,7 +259,11 @@ function renderSessionContent() {
   const unassignedRecords = allRecords.filter((r) => !r.recipientId);
   const raffleEligibleRecords = unassignedRecords.filter((r) => !r.excludedFromRaffle);
 
-  const lootRecordsRows = allRecords
+  // Raffle-drawn items float to the top of Loot Records so it's easy to see
+  // what's already been won vs. what's still up for grabs at a glance.
+  const displayRecords = allRecords.slice().sort((a, b) => (b.viaRaffle ? 1 : 0) - (a.viaRaffle ? 1 : 0));
+
+  const lootRecordsRows = displayRecords
     .map((r) => {
       if (r.recipientId) {
         return `
@@ -343,30 +347,37 @@ function renderSessionContent() {
       <button type="button" class="btn primary small" id="raffleDrawBtn" ${raffleEligibleRecords.length ? '' : 'disabled'}>Draw</button>
     </div>
 
-    <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-      <h3 style="margin-bottom:6px;">🏆 Raffle Winners</h3>
-      ${
-        session.records.some((r) => r.viaRaffle)
-          ? '<button type="button" class="btn small danger" id="clearAllWinnersBtn" style="margin-bottom:6px;">Clear All Winners</button>'
-          : ''
-      }
-    </div>
-    <div class="table-scroll" style="margin-bottom:20px;">
-      <table class="growth-table">
-        <thead><tr><th>Item</th><th>Winner</th><th></th></tr></thead>
-        <tbody id="raffleWinnersBody">${raffleWinnersRowsHtml(session)}</tbody>
-      </table>
-    </div>
+    <div id="rafflePrintSection">
+      <h2 class="print-only">${escapeHtml(session.date)}${session.run ? ` — ${escapeHtml(session.run)}` : ''} — Raffle Results</h2>
 
-    <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-      <h3 style="margin-bottom:6px;">📜 Raffle Activity Log</h3>
-      ${
-        session.raffleLog.length
-          ? '<button type="button" class="btn small" id="clearRaffleLogBtn" style="margin-bottom:6px;">Clear Log</button>'
-          : ''
-      }
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+        <h3 style="margin-bottom:6px;">🏆 Raffle Winners</h3>
+        <div class="no-print" style="display:flex; gap:8px;">
+          <button type="button" class="btn small" id="printRaffleBtn" style="margin-bottom:6px;">🖨️ Print</button>
+          ${
+            session.records.some((r) => r.viaRaffle)
+              ? '<button type="button" class="btn small danger" id="clearAllWinnersBtn" style="margin-bottom:6px;">Clear All Winners</button>'
+              : ''
+          }
+        </div>
+      </div>
+      <div class="table-scroll" style="margin-bottom:20px;">
+        <table class="growth-table">
+          <thead><tr><th>Item</th><th>Winner</th><th class="no-print"></th></tr></thead>
+          <tbody id="raffleWinnersBody">${raffleWinnersRowsHtml(session)}</tbody>
+        </table>
+      </div>
+
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+        <h3 style="margin-bottom:6px;">📜 Raffle Activity Log</h3>
+        ${
+          session.raffleLog.length
+            ? '<button type="button" class="btn small no-print" id="clearRaffleLogBtn" style="margin-bottom:6px;">Clear Log</button>'
+            : ''
+        }
+      </div>
+      <div id="raffleLogList" class="raffle-log-list">${raffleLogItemsHtml(session)}</div>
     </div>
-    <div id="raffleLogList" class="raffle-log-list">${raffleLogItemsHtml(session)}</div>
 
     <h3 style="margin-bottom:6px;">Add Loot</h3>
 
@@ -421,6 +432,11 @@ function renderSessionContent() {
     if (!confirm(`Delete ${session.date} and all its loot records?`)) return;
     await api(`/api/loot/${session.id}`, { method: 'DELETE' });
     window.location.hash = '#/loot';
+  });
+
+  content.querySelector('#printRaffleBtn').addEventListener('click', () => {
+    document.body.classList.add('printing-raffle');
+    window.print();
   });
 
   content.querySelector('#copyPresentBtn').addEventListener('click', async () => {
@@ -689,4 +705,8 @@ document.addEventListener('click', (e) => {
   if (dropdown && !dropdown.contains(e.target)) {
     document.getElementById('addRecordItemMenu').classList.add('hidden');
   }
+});
+
+window.addEventListener('afterprint', () => {
+  document.body.classList.remove('printing-raffle');
 });

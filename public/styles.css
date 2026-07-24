@@ -557,6 +557,35 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
   flex-shrink: 0;
 }
 
+.print-only { display: none; }
+
+@media print {
+  body.printing-raffle { background: #fff !important; }
+  body.printing-raffle * { visibility: hidden; }
+  body.printing-raffle #rafflePrintSection,
+  body.printing-raffle #rafflePrintSection * { visibility: visible; }
+  body.printing-raffle #rafflePrintSection {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: #fff;
+  }
+  body.printing-raffle #rafflePrintSection * {
+    color: #000 !important;
+    background: none !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  body.printing-raffle .no-print { display: none !important; }
+  body.printing-raffle .print-only { display: block; }
+  body.printing-raffle .raffle-log-list { border: 1px solid #999; }
+  body.printing-raffle .raffle-log-entry,
+  body.printing-raffle .growth-table th,
+  body.printing-raffle .growth-table td {
+    border-color: #999 !important;
+  }
+}
 
 .attendance-grid {
   display: grid;
