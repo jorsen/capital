@@ -215,18 +215,19 @@ function renderSessionContent() {
 
   const allRecords = session.records.slice().reverse();
   const unassignedRecords = allRecords.filter((r) => !r.recipientId);
-  const assignedRecords = allRecords.filter((r) => r.recipientId);
 
   const lootRecordsRows = allRecords
     .map((r) => {
       if (r.recipientId) {
-        // Fully assigned/drawn — shown here as a read-only status row (manage it in Assigned Loot).
         return `
         <tr class="loot-status-done">
           <td style="font-weight:600;">${itemLabel(r.item)}</td>
-          <td class="col-right">${r.quantity}</td>
+          <td class="col-right"><input type="number" class="qty-input" data-record-id="${r.id}" value="${r.quantity}" min="1" step="1" style="width:100px; text-align:right;"></td>
           <td>${escapeHtml(r.recipientName)}</td>
-          <td></td>
+          <td>
+            <button class="icon-btn" data-unassign="${r.id}" title="Unassign">↩</button>
+            <button class="icon-btn" data-del-record="${r.id}" title="Delete record">✕</button>
+          </td>
         </tr>`;
       }
       const inProgress = session.records.some(
@@ -242,21 +243,6 @@ function renderSessionContent() {
         <td><button class="icon-btn" data-del-record="${r.id}" title="Delete record">✕</button></td>
       </tr>`;
     })
-    .join('');
-
-  const assignedRows = assignedRecords
-    .map(
-      (r) => `
-      <tr>
-        <td style="font-weight:600;">${itemLabel(r.item)}</td>
-        <td class="col-right"><input type="number" class="qty-input" data-record-id="${r.id}" value="${r.quantity}" min="1" step="1" style="width:100px; text-align:right;"></td>
-        <td>${escapeHtml(r.recipientName)}</td>
-        <td>
-          <button class="icon-btn" data-unassign="${r.id}" title="Unassign">↩</button>
-          <button class="icon-btn" data-del-record="${r.id}" title="Delete record">✕</button>
-        </td>
-      </tr>`
-    )
     .join('');
 
   content.innerHTML = `
@@ -338,22 +324,12 @@ function renderSessionContent() {
       <button type="submit" class="btn primary small">Add</button>
     </form>
 
-    <div class="loot-columns">
-      <div class="loot-column">
-        <h3>Loot Records</h3>
-        <table class="growth-table">
-          <thead><tr><th>Item</th><th class="col-right">Qty</th><th>Assign to</th><th></th></tr></thead>
-          <tbody>${lootRecordsRows || '<tr><td colspan="4" style="color:var(--text-muted)">No loot logged yet.</td></tr>'}</tbody>
-        </table>
-      </div>
-
-      <div class="loot-column">
-        <h3>Assigned Loot</h3>
-        <table class="growth-table">
-          <thead><tr><th>Item</th><th class="col-right">Qty</th><th>Recipient</th><th></th></tr></thead>
-          <tbody>${assignedRows || '<tr><td colspan="4" style="color:var(--text-muted)">Nothing assigned yet.</td></tr>'}</tbody>
-        </table>
-      </div>
+    <h3>Loot Records</h3>
+    <div class="table-scroll">
+      <table class="growth-table">
+        <thead><tr><th>Item</th><th class="col-right">Qty</th><th>Recipient</th><th></th></tr></thead>
+        <tbody>${lootRecordsRows || '<tr><td colspan="4" style="color:var(--text-muted)">No loot logged yet.</td></tr>'}</tbody>
+      </table>
     </div>
   `;
 

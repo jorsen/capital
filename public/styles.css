@@ -533,23 +533,6 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
 .growth-table tr.loot-status-progress td { background: var(--gold-soft); }
 .growth-table tr.loot-status-progress td:first-child { box-shadow: inset 3px 0 0 var(--gold); }
 
-.loot-columns {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  align-items: start;
-  margin-top: 16px;
-}
-@media (max-width: 720px) {
-  .loot-columns { grid-template-columns: 1fr; }
-}
-.loot-column {
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 14px 16px;
-}
-.loot-column h3 { margin: 0 0 6px; }
 
 .attendance-grid {
   display: grid;
