@@ -189,7 +189,7 @@ function renderSessionContent() {
         sortedMembers
           .map(
             (m) => `
-        <label class="attendance-item">
+        <label class="attendance-item" title="${escapeHtml(m.name)}">
           <input type="checkbox" class="absence-check" data-member-id="${m.id}" ${session.absentees.includes(m.id) ? 'checked' : ''}>
           <span>${escapeHtml(m.name)}</span>
         </label>`

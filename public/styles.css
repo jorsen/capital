@@ -566,6 +566,12 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
   cursor: pointer;
   transition: background 0.12s, border-color 0.12s, color 0.12s;
 }
+.attendance-item input { flex-shrink: 0; }
+.attendance-item span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
 .attendance-item:hover { border-color: var(--border-strong); }
 .attendance-item:has(input:checked) {
   border-color: var(--bad);
