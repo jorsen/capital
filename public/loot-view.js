@@ -76,6 +76,7 @@ const addSessionForm = document.getElementById('addSessionForm');
 document.getElementById('addSessionBtn').addEventListener('click', () => {
   addSessionForm.reset();
   addSessionForm.date.value = new Date().toISOString().slice(0, 10);
+  addSessionForm.run.value = 'Guild Dungeon';
   addSessionModal.classList.remove('hidden');
 });
 
