@@ -13,8 +13,24 @@ function getPresentMembers(session, sortedMembers) {
   return sortedMembers.filter((m) => !session.absentees.includes(m.id));
 }
 
+function raffleLogItemsHtml(session) {
+  const entries = session.raffleLog.slice().reverse(); // newest first
+  if (!entries.length) {
+    return '<p style="color:var(--text-muted); font-size:13px;">No raffle activity yet.</p>';
+  }
+  return entries
+    .map(
+      (e) => `
+    <div class="raffle-log-entry">
+      <span class="raffle-log-time">${new Date(e.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+      <span>${escapeHtml(e.message)}</span>
+    </div>`
+    )
+    .join('');
+}
+
 function raffleWinnersRowsHtml(session) {
-  const winners = session.records.filter((r) => r.viaRaffle).slice().reverse();
+  const winners = session.records.filter((r) => r.viaRaffle).slice().sort((a, b) => a.item.localeCompare(b.item));
   if (!winners.length) {
     return '<tr><td colspan="3" style="color:var(--text-muted)">No raffle winners yet.</td></tr>';
   }
@@ -302,6 +318,9 @@ function renderSessionContent() {
       </table>
     </div>
 
+    <h3 style="margin-bottom:6px;">📜 Raffle Activity Log</h3>
+    <div id="raffleLogList" class="raffle-log-list">${raffleLogItemsHtml(session)}</div>
+
     <h3 style="margin-bottom:6px;">Add Loot</h3>
 
     <form id="addRecordForm" class="growth-form-row">
@@ -413,6 +432,15 @@ function renderSessionContent() {
         });
         Object.assign(record, updated);
       }
+      try {
+        const logEntry = await api(`/api/loot/${session.id}/raffle-log`, {
+          method: 'POST',
+          body: JSON.stringify({ message: `🏆 ${winner.name} won ${record.item} (x${qty})` }),
+        });
+        session.raffleLog.push(logEntry);
+      } catch (logErr) {
+        // non-fatal — the draw itself already succeeded
+      }
       renderSessionContent();
       toast(`🏆 ${winner.name} wins ${record.item} (x${qty})!`);
     } catch (err) {
@@ -423,12 +451,24 @@ function renderSessionContent() {
   content.querySelectorAll('[data-remove-raffle-winner]').forEach((btn) => {
     btn.addEventListener('click', async () => {
       const recordId = btn.getAttribute('data-remove-raffle-winner');
+      const record = session.records.find((r) => r.id === recordId);
+      const removedItem = record.item;
+      const removedQty = record.quantity;
+      const removedName = record.recipientName;
       const updated = await api(`/api/loot/${session.id}/records/${recordId}`, {
         method: 'PUT',
         body: JSON.stringify({ recipientId: '' }),
       });
-      const record = session.records.find((r) => r.id === recordId);
       Object.assign(record, updated);
+      try {
+        const logEntry = await api(`/api/loot/${session.id}/raffle-log`, {
+          method: 'POST',
+          body: JSON.stringify({ message: `↩ Removed ${removedName} from ${removedItem} (x${removedQty})` }),
+        });
+        session.raffleLog.push(logEntry);
+      } catch (logErr) {
+        // non-fatal
+      }
       renderSessionContent();
       toast('Removed from raffle winners — loot is unassigned again');
     });

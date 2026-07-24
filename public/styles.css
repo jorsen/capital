@@ -533,6 +533,32 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
 .growth-table tr.loot-status-progress td { background: var(--gold-soft); }
 .growth-table tr.loot-status-progress td:first-child { box-shadow: inset 3px 0 0 var(--gold); }
 
+.raffle-log-list {
+  max-height: 220px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 20px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+.raffle-log-entry {
+  display: flex;
+  gap: 10px;
+  padding: 4px 0;
+  font-size: 13px;
+  border-bottom: 1px solid var(--gridline);
+}
+.raffle-log-entry:last-child { border-bottom: none; }
+.raffle-log-time {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
 
 .attendance-grid {
   display: grid;
