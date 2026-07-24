@@ -56,7 +56,7 @@ body {
 ::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
 
 .app {
-  max-width: 1180px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 0 20px 64px;
   animation: view-fade-in 0.35s ease;
