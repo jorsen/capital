@@ -5,18 +5,36 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Capital Records</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="stylesheet" href="styles.css?v=17">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=18">
 </head>
 <body>
   <div class="app viz-root">
     <header class="topbar">
       <div class="topbar-left">
-        <h1>Capital Records</h1>
+        <div class="brand">
+          <img class="brand-mark" src="favicon.svg" alt="">
+          <h1>Capital Records</h1>
+        </div>
         <nav class="page-nav">
-          <a href="#/members" data-view="members" class="nav-link">Members</a>
-          <a href="#/queue" data-view="queue" class="nav-link">Insignia Queue</a>
-          <a href="#/loot" data-view="loot" class="nav-link">Loot Log</a>
-          <a href="#/items" data-view="items" class="nav-link">Item Report</a>
+          <a href="#/members" data-view="members" class="nav-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Members
+          </a>
+          <a href="#/queue" data-view="queue" class="nav-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            Insignia Queue
+          </a>
+          <a href="#/loot" data-view="loot" class="nav-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="M3.29 7 12 12l8.71-5"/><line x1="12" y1="22" x2="12" y2="12"/></svg>
+            Loot Log
+          </a>
+          <a href="#/items" data-view="items" class="nav-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+            Item Report
+          </a>
         </nav>
       </div>
       <button id="logoutBtn" class="btn small">Logout</button>
