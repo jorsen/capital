@@ -1,5 +1,6 @@
 node_modules/
 data/
+scratch-icons/
 .vercel
 .env
 .env.local

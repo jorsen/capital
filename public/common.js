@@ -39,13 +39,11 @@ function itemIconImg(iconUrl, name, size) {
 }
 
 // Delegated once for every modal on the page, regardless of which view rendered it.
+// Clicking the backdrop does NOT close the modal — only the explicit close button does,
+// so an accidental click outside doesn't discard whatever the user was editing.
 document.addEventListener('click', (e) => {
   const closeBtn = e.target.closest('[data-close]');
   if (closeBtn) {
     document.getElementById(closeBtn.getAttribute('data-close')).classList.add('hidden');
-    return;
-  }
-  if (e.target.classList.contains('modal-overlay')) {
-    e.target.classList.add('hidden');
   }
 });
