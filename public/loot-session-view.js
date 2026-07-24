@@ -40,17 +40,33 @@ function raffleLogItemsHtml(session) {
 }
 
 function raffleWinnersRowsHtml(session) {
-  const winners = session.records.filter((r) => r.viaRaffle).slice().sort((a, b) => a.item.localeCompare(b.item));
-  if (!winners.length) {
+  const winnerRecords = session.records.filter((r) => r.viaRaffle);
+  if (!winnerRecords.length) {
     return '<tr><td colspan="3" style="color:var(--text-muted)">No raffle winners yet.</td></tr>';
   }
-  return winners
+
+  // Same person winning the same item across separate draws is grouped into
+  // one row with a combined quantity, instead of showing duplicate entries.
+  const grouped = new Map();
+  winnerRecords.forEach((r) => {
+    const key = `${r.item.toLowerCase()}|${r.recipientId}`;
+    if (!grouped.has(key)) {
+      grouped.set(key, { item: r.item, recipientName: r.recipientName, quantity: 0, recordIds: [] });
+    }
+    const g = grouped.get(key);
+    g.quantity += r.quantity;
+    g.recordIds.push(r.id);
+  });
+
+  const rows = Array.from(grouped.values()).sort((a, b) => a.item.localeCompare(b.item));
+
+  return rows
     .map(
-      (r) => `
+      (g) => `
     <tr>
-      <td style="font-weight:600;">${itemLabel(r.item)} (x${r.quantity})</td>
-      <td>${escapeHtml(r.recipientName)}</td>
-      <td><button class="icon-btn" data-remove-raffle-winner="${r.id}" title="Remove winner">✕</button></td>
+      <td style="font-weight:600;">${itemLabel(g.item)} (x${g.quantity})</td>
+      <td>${escapeHtml(g.recipientName)}</td>
+      <td><button class="icon-btn" data-remove-raffle-winner="${g.recordIds.join(',')}" title="Remove winner">✕</button></td>
     </tr>`
     )
     .join('');
@@ -328,7 +344,14 @@ function renderSessionContent() {
       </table>
     </div>
 
-    <h3 style="margin-bottom:6px;">📜 Raffle Activity Log</h3>
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+      <h3 style="margin-bottom:6px;">📜 Raffle Activity Log</h3>
+      ${
+        !session.records.some((r) => r.viaRaffle) && session.raffleLog.length
+          ? '<button type="button" class="btn small" id="clearRaffleLogBtn" style="margin-bottom:6px;">Clear Log</button>'
+          : ''
+      }
+    </div>
     <div id="raffleLogList" class="raffle-log-list">${raffleLogItemsHtml(session)}</div>
 
     <h3 style="margin-bottom:6px;">Add Loot</h3>
@@ -460,16 +483,19 @@ function renderSessionContent() {
 
   content.querySelectorAll('[data-remove-raffle-winner]').forEach((btn) => {
     btn.addEventListener('click', async () => {
-      const recordId = btn.getAttribute('data-remove-raffle-winner');
-      const record = session.records.find((r) => r.id === recordId);
-      const removedItem = record.item;
-      const removedQty = record.quantity;
-      const removedName = record.recipientName;
-      const updated = await api(`/api/loot/${session.id}/records/${recordId}`, {
-        method: 'PUT',
-        body: JSON.stringify({ recipientId: '' }),
-      });
-      Object.assign(record, updated);
+      const recordIds = btn.getAttribute('data-remove-raffle-winner').split(',');
+      const records = recordIds.map((id) => session.records.find((r) => r.id === id)).filter(Boolean);
+      if (!records.length) return;
+      const removedItem = records[0].item;
+      const removedQty = records.reduce((sum, r) => sum + Number(r.quantity), 0);
+      const removedName = records[0].recipientName;
+      for (const record of records) {
+        const updated = await api(`/api/loot/${session.id}/records/${record.id}`, {
+          method: 'PUT',
+          body: JSON.stringify({ recipientId: '' }),
+        });
+        Object.assign(record, updated);
+      }
       try {
         const logEntry = await api(`/api/loot/${session.id}/raffle-log`, {
           method: 'POST',
@@ -483,6 +509,20 @@ function renderSessionContent() {
       toast('Removed from raffle winners — loot is unassigned again');
     });
   });
+
+  const clearRaffleLogBtn = content.querySelector('#clearRaffleLogBtn');
+  if (clearRaffleLogBtn) {
+    clearRaffleLogBtn.addEventListener('click', async () => {
+      try {
+        await api(`/api/loot/${session.id}/raffle-log`, { method: 'DELETE' });
+        session.raffleLog = [];
+        renderSessionContent();
+        toast('Raffle activity log cleared');
+      } catch (err) {
+        toast(err.message);
+      }
+    });
+  }
 
   content.querySelectorAll('.absence-check').forEach((cb) => {
     cb.addEventListener('change', async () => {
