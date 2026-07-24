@@ -547,6 +547,32 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
 }
 .loot-column h3 { margin: 0 0 6px; }
 
+.attendance-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 6px;
+  margin-bottom: 20px;
+}
+.attendance-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.attendance-item:hover { border-color: var(--border-strong); }
+.attendance-item:has(input:checked) {
+  border-color: var(--series-1);
+  background: var(--series-1-soft);
+  color: var(--series-1);
+}
+
 .icon-btn {
   border: none;
   background: transparent;

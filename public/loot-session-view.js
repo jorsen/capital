@@ -179,6 +179,24 @@ function renderSessionContent() {
       <button type="button" class="btn small danger" id="deleteSessionBtn">Delete Date</button>
     </form>
 
+    <h3 style="margin-bottom:6px;">
+      Guild Dungeon Attendance
+      <span id="attendanceCount" style="color:var(--text-muted); font-weight:400; font-size:13px;">(${session.attendees.length} / ${sortedMembers.length} attended)</span>
+    </h3>
+    <div id="attendanceList" class="attendance-grid">
+      ${
+        sortedMembers
+          .map(
+            (m) => `
+        <label class="attendance-item">
+          <input type="checkbox" class="attendance-check" data-member-id="${m.id}" ${session.attendees.includes(m.id) ? 'checked' : ''}>
+          <span>${escapeHtml(m.name)}</span>
+        </label>`
+          )
+          .join('') || '<p style="color:var(--text-muted); grid-column:1/-1;">No members yet.</p>'
+      }
+    </div>
+
     <h3 style="margin-bottom:6px;">Add Loot</h3>
 
     <form id="addRecordForm" class="growth-form-row">
@@ -242,6 +260,27 @@ function renderSessionContent() {
     if (!confirm(`Delete ${session.date} and all its loot records?`)) return;
     await api(`/api/loot/${session.id}`, { method: 'DELETE' });
     window.location.hash = '#/loot';
+  });
+
+  content.querySelectorAll('.attendance-check').forEach((cb) => {
+    cb.addEventListener('change', async () => {
+      const memberId = cb.getAttribute('data-member-id');
+      const attendeeSet = new Set(session.attendees);
+      if (cb.checked) attendeeSet.add(memberId);
+      else attendeeSet.delete(memberId);
+      const nextAttendees = Array.from(attendeeSet);
+      try {
+        const updated = await api(`/api/loot/${session.id}`, {
+          method: 'PUT',
+          body: JSON.stringify({ attendees: nextAttendees }),
+        });
+        session.attendees = updated.attendees;
+        document.getElementById('attendanceCount').textContent = `(${session.attendees.length} / ${sortedMembers.length} attended)`;
+      } catch (err) {
+        cb.checked = !cb.checked;
+        toast(err.message);
+      }
+    });
   });
 
   function updateAddRecordItemIcon() {
