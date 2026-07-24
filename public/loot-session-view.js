@@ -13,6 +13,16 @@ function getPresentMembers(session, sortedMembers) {
   return sortedMembers.filter((m) => !session.absentees.includes(m.id));
 }
 
+// Present members who haven't already won a raffle item this session — each
+// member can only win once, so a Kurashi who already won Necklace of Honor
+// won't be eligible for other items' draws too.
+function getEligibleRaffleMembers(session, sortedMembers) {
+  const alreadyWonIds = new Set(
+    session.records.filter((r) => r.viaRaffle && r.recipientId).map((r) => r.recipientId)
+  );
+  return getPresentMembers(session, sortedMembers).filter((m) => !alreadyWonIds.has(m.id));
+}
+
 function raffleLogItemsHtml(session) {
   const entries = session.raffleLog.slice().reverse(); // newest first
   if (!entries.length) {
@@ -407,12 +417,12 @@ function renderSessionContent() {
       toast(`Quantity must be between 1 and ${record.quantity}`);
       return;
     }
-    const present = getPresentMembers(session, sortedMembers);
-    if (!present.length) {
-      toast('No present members to raffle');
+    const eligible = getEligibleRaffleMembers(session, sortedMembers);
+    if (!eligible.length) {
+      toast('No eligible present members left — everyone present has already won something');
       return;
     }
-    const winner = present[Math.floor(Math.random() * present.length)];
+    const winner = eligible[Math.floor(Math.random() * eligible.length)];
     try {
       if (qty === record.quantity) {
         const updated = await api(`/api/loot/${session.id}/records/${recordId}`, {
