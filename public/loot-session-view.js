@@ -257,6 +257,7 @@ function renderSessionContent() {
 
   const allRecords = session.records.slice().reverse();
   const unassignedRecords = allRecords.filter((r) => !r.recipientId);
+  const raffleEligibleRecords = unassignedRecords.filter((r) => !r.excludedFromRaffle);
 
   const lootRecordsRows = allRecords
     .map((r) => {
@@ -275,14 +276,20 @@ function renderSessionContent() {
       const inProgress = session.records.some(
         (other) => other.recipientId && other.item.toLowerCase() === r.item.toLowerCase()
       );
+      const excludedBadge = r.excludedFromRaffle
+        ? '<span style="color:var(--text-muted); font-size:11px; margin-left:6px;">(excluded from raffle)</span>'
+        : '';
       return `
       <tr class="${inProgress ? 'loot-status-progress' : ''}">
-        <td style="font-weight:600;">${itemLabel(r.item)}</td>
+        <td style="font-weight:600;">${itemLabel(r.item)}${excludedBadge}</td>
         <td class="col-right"><input type="number" class="qty-input" data-record-id="${r.id}" value="${r.quantity}" min="1" step="1" style="width:100px; text-align:right;"></td>
         <td>
           <button type="button" class="btn small" data-multi-assign="${r.id}">Assign to…</button>
         </td>
-        <td><button class="icon-btn" data-del-record="${r.id}" title="Delete record">✕</button></td>
+        <td>
+          <button class="icon-btn" data-toggle-raffle-exclude="${r.id}" title="${r.excludedFromRaffle ? 'Include in raffle' : 'Exclude from raffle'}">${r.excludedFromRaffle ? '🎲' : '🚫'}</button>
+          <button class="icon-btn" data-del-record="${r.id}" title="Delete record">✕</button>
+        </td>
       </tr>`;
     })
     .join('');
@@ -328,12 +335,12 @@ function renderSessionContent() {
     <p style="color:var(--text-muted); font-size:13px; margin:-4px 0 8px;">Picks a random present member. Raffle a smaller quantity at a time to give more people a chance to win.</p>
     <div class="growth-form-row" style="margin-top:0; margin-bottom:20px;">
       <label style="flex:1.5;">Unassigned Loot
-        <select id="raffleRecordSelect">${raffleRecordOptionsHtml(unassignedRecords)}</select>
+        <select id="raffleRecordSelect">${raffleRecordOptionsHtml(raffleEligibleRecords)}</select>
       </label>
       <label style="max-width:120px;">Qty
-        <input type="number" id="raffleQtyInput" min="1" step="1" value="1" max="${unassignedRecords[0] ? unassignedRecords[0].quantity : 1}">
+        <input type="number" id="raffleQtyInput" min="1" step="1" value="1" max="${raffleEligibleRecords[0] ? raffleEligibleRecords[0].quantity : 1}">
       </label>
-      <button type="button" class="btn primary small" id="raffleDrawBtn" ${unassignedRecords.length ? '' : 'disabled'}>Draw</button>
+      <button type="button" class="btn primary small" id="raffleDrawBtn" ${raffleEligibleRecords.length ? '' : 'disabled'}>Draw</button>
     </div>
 
     <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
@@ -606,6 +613,25 @@ function renderSessionContent() {
       await api(`/api/loot/${session.id}/records/${recordId}`, { method: 'DELETE' });
       session.records = session.records.filter((r) => r.id !== recordId);
       renderSessionContent();
+    });
+  });
+
+  content.querySelectorAll('[data-toggle-raffle-exclude]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const recordId = btn.getAttribute('data-toggle-raffle-exclude');
+      const record = session.records.find((r) => r.id === recordId);
+      if (!record) return;
+      try {
+        const updated = await api(`/api/loot/${session.id}/records/${recordId}`, {
+          method: 'PUT',
+          body: JSON.stringify({ excludedFromRaffle: !record.excludedFromRaffle }),
+        });
+        Object.assign(record, updated);
+        renderSessionContent();
+        toast(record.excludedFromRaffle ? 'Excluded from raffle' : 'Included in raffle again');
+      } catch (err) {
+        toast(err.message);
+      }
     });
   });
 
