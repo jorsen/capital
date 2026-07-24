@@ -591,10 +591,13 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
 /* Loot Records: same 2-column reflow. Rows have more content (qty input,
    recipient, action buttons) than Raffle Winners, so the item name
    truncates with an ellipsis instead of wrapping, keeping each row to
-   a single line. */
+   a single line. Every column except Item gets a fixed width — with a
+   flexbox row, any content-sized (non-fixed) sibling makes the flexible
+   Item column's rendered width differ row to row, throwing every column
+   after it out of alignment. Fixed widths make each row identical. */
 #lootRecordsTableWrap {
   column-count: 2;
-  column-gap: 18px;
+  column-gap: 32px;
 }
 #lootRecordsTableWrap .growth-table { display: block; width: 100%; }
 #lootRecordsTableWrap .growth-table thead { display: none; }
@@ -603,8 +606,8 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
-  gap: 8px;
-  padding: 8px;
+  gap: 10px;
+  padding: 10px 4px;
   break-inside: avoid-column;
   border-bottom: 1px solid var(--gridline);
 }
@@ -614,14 +617,19 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
   gap: 4px;
   padding: 0;
   border: none;
-  background: none;
   min-width: 0;
 }
 #lootRecordsTableWrap .growth-table td:first-child { flex: 1 1 auto; min-width: 0; overflow: hidden; }
-#lootRecordsTableWrap .growth-table td:nth-child(2) { flex-shrink: 0; }
-#lootRecordsTableWrap .growth-table td:nth-child(3) { flex-shrink: 0; }
-#lootRecordsTableWrap .growth-table td:nth-child(4) { flex-shrink: 0; }
-#lootRecordsTableWrap .growth-table td:nth-child(5) { flex-shrink: 0; margin-left: auto; }
+#lootRecordsTableWrap .growth-table td:nth-child(2) { flex: 0 0 60px; }
+#lootRecordsTableWrap .growth-table td:nth-child(3) {
+  flex: 0 0 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+}
+#lootRecordsTableWrap .growth-table td:nth-child(4) { flex: 0 0 60px; }
+#lootRecordsTableWrap .growth-table td:nth-child(5) { flex: 0 0 56px; justify-content: flex-end; }
 #lootRecordsTableWrap .item-label-text {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -629,7 +637,7 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
   min-width: 0;
 }
 #lootRecordsTableWrap .item-icon { width: 28px !important; height: 28px !important; }
-#lootRecordsTableWrap .qty-input { width: 60px !important; }
+#lootRecordsTableWrap .qty-input { width: 56px !important; }
 
 .sent-check-label {
   display: inline-flex;
