@@ -181,15 +181,16 @@ function renderSessionContent() {
 
     <h3 style="margin-bottom:6px;">
       Guild Dungeon Attendance
-      <span id="attendanceCount" style="color:var(--text-muted); font-weight:400; font-size:13px;">(${session.attendees.length} / ${sortedMembers.length} attended)</span>
+      <span id="attendanceCount" style="color:var(--text-muted); font-weight:400; font-size:13px;">(${sortedMembers.length - session.absentees.length} / ${sortedMembers.length} present)</span>
     </h3>
+    <p style="color:var(--text-muted); font-size:13px; margin:-4px 0 8px;">Everyone is assumed present — check anyone who was absent.</p>
     <div id="attendanceList" class="attendance-grid">
       ${
         sortedMembers
           .map(
             (m) => `
         <label class="attendance-item">
-          <input type="checkbox" class="attendance-check" data-member-id="${m.id}" ${session.attendees.includes(m.id) ? 'checked' : ''}>
+          <input type="checkbox" class="absence-check" data-member-id="${m.id}" ${session.absentees.includes(m.id) ? 'checked' : ''}>
           <span>${escapeHtml(m.name)}</span>
         </label>`
           )
@@ -262,20 +263,20 @@ function renderSessionContent() {
     window.location.hash = '#/loot';
   });
 
-  content.querySelectorAll('.attendance-check').forEach((cb) => {
+  content.querySelectorAll('.absence-check').forEach((cb) => {
     cb.addEventListener('change', async () => {
       const memberId = cb.getAttribute('data-member-id');
-      const attendeeSet = new Set(session.attendees);
-      if (cb.checked) attendeeSet.add(memberId);
-      else attendeeSet.delete(memberId);
-      const nextAttendees = Array.from(attendeeSet);
+      const absenteeSet = new Set(session.absentees);
+      if (cb.checked) absenteeSet.add(memberId);
+      else absenteeSet.delete(memberId);
+      const nextAbsentees = Array.from(absenteeSet);
       try {
         const updated = await api(`/api/loot/${session.id}`, {
           method: 'PUT',
-          body: JSON.stringify({ attendees: nextAttendees }),
+          body: JSON.stringify({ absentees: nextAbsentees }),
         });
-        session.attendees = updated.attendees;
-        document.getElementById('attendanceCount').textContent = `(${session.attendees.length} / ${sortedMembers.length} attended)`;
+        session.absentees = updated.absentees;
+        document.getElementById('attendanceCount').textContent = `(${sortedMembers.length - session.absentees.length} / ${sortedMembers.length} present)`;
       } catch (err) {
         cb.checked = !cb.checked;
         toast(err.message);

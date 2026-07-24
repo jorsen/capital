@@ -568,9 +568,9 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
 }
 .attendance-item:hover { border-color: var(--border-strong); }
 .attendance-item:has(input:checked) {
-  border-color: var(--series-1);
-  background: var(--series-1-soft);
-  color: var(--series-1);
+  border-color: var(--bad);
+  background: rgba(242,104,95,0.12);
+  color: var(--bad);
 }
 
 .icon-btn {
