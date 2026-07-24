@@ -92,7 +92,12 @@ function renderSessionContent() {
     <h3 style="margin-bottom:6px;">Add Loot</h3>
 
     <form id="addRecordForm" class="growth-form-row">
-      <label style="flex:1.5;">Item<input type="text" name="item" list="itemCategoriesList" required placeholder="e.g. Morion"></label>
+      <label style="flex:1.5;">Item
+        <div style="display:flex; align-items:center; gap:8px;">
+          <input type="text" name="item" id="addRecordItemInput" list="itemCategoriesList" required placeholder="e.g. Morion" style="flex:1;">
+          <span id="addRecordItemIcon"></span>
+        </div>
+      </label>
       <label>Recipient <span style="color:var(--text-muted); font-weight:400;">(optional)</span>
         <select name="recipientId">
           <option value="" selected>Unassigned</option>
@@ -145,6 +150,11 @@ function renderSessionContent() {
     if (!confirm(`Delete ${session.date} and all its loot records?`)) return;
     await api(`/api/loot/${session.id}`, { method: 'DELETE' });
     window.location.hash = '#/loot';
+  });
+
+  content.querySelector('#addRecordItemInput').addEventListener('input', (e) => {
+    const category = itemCategoriesState.list.find((c) => c.name.toLowerCase() === e.target.value.trim().toLowerCase());
+    document.getElementById('addRecordItemIcon').innerHTML = category ? itemIconImg(category.iconUrl, category.name, 32) : '';
   });
 
   content.querySelector('#addRecordForm').addEventListener('submit', async (e) => {
