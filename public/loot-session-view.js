@@ -39,7 +39,7 @@ function renderSessionContent() {
       return `
       <tr>
         <td style="font-weight:600;">${escapeHtml(r.item)}</td>
-        <td class="col-right">${r.quantity}</td>
+        <td class="col-right"><input type="number" class="qty-input" data-record-id="${r.id}" value="${r.quantity}" min="1" step="1" style="width:60px; text-align:right;"></td>
         <td style="color:var(--text-muted); font-size:13px;">${escapeHtml(r.notes)}</td>
         <td>
           <select class="recipient-select" data-record-id="${r.id}" style="width:100%;">
@@ -57,7 +57,7 @@ function renderSessionContent() {
       (r) => `
       <tr>
         <td style="font-weight:600;">${escapeHtml(r.item)}</td>
-        <td class="col-right">${r.quantity}</td>
+        <td class="col-right"><input type="number" class="qty-input" data-record-id="${r.id}" value="${r.quantity}" min="1" step="1" style="width:60px; text-align:right;"></td>
         <td>${escapeHtml(r.recipientName)}</td>
         <td>
           <button class="icon-btn" data-unassign="${r.id}" title="Unassign">↩</button>
@@ -167,6 +167,31 @@ function renderSessionContent() {
       await api(`/api/loot/${session.id}/records/${recordId}`, { method: 'DELETE' });
       session.records = session.records.filter((r) => r.id !== recordId);
       renderSessionContent();
+    });
+  });
+
+  content.querySelectorAll('.qty-input').forEach((input) => {
+    input.addEventListener('change', async () => {
+      const recordId = input.getAttribute('data-record-id');
+      const qty = Number(input.value);
+      if (!Number.isFinite(qty) || qty < 1) {
+        toast('Quantity must be a positive number');
+        renderSessionContent();
+        return;
+      }
+      try {
+        const updated = await api(`/api/loot/${session.id}/records/${recordId}`, {
+          method: 'PUT',
+          body: JSON.stringify({ quantity: qty }),
+        });
+        const record = session.records.find((r) => r.id === recordId);
+        Object.assign(record, updated);
+        renderSessionContent();
+        toast('Quantity updated');
+      } catch (err) {
+        toast(err.message);
+        renderSessionContent();
+      }
     });
   });
 
