@@ -150,6 +150,7 @@ body {
   font-size: 14px;
   font-weight: 600;
   line-height: 1.2;
+  white-space: nowrap;
   text-decoration: none;
   cursor: pointer;
   transition: background 0.12s, border-color 0.12s, transform 0.05s;

@@ -172,7 +172,7 @@ function renderSessionContent() {
       </div>
     </div>
 
-    <form id="editSessionForm" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px;">
+    <form id="editSessionForm" style="display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap; margin-bottom:20px;">
       <label style="flex:1; min-width:140px;">Date<input type="date" name="date" value="${session.date}" required></label>
       <label style="flex:1; min-width:160px;">Run<input type="text" name="run" value="${escapeHtml(session.run || 'Guild Dungeon')}"></label>
       <button type="submit" class="btn small">Save Changes</button>
