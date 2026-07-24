@@ -140,10 +140,12 @@ body {
 .btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  height: 36px;
   border: 1px solid var(--border-strong);
   background: var(--surface-2);
   color: var(--text-primary);
-  padding: 9px 16px;
+  padding: 0 16px;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
@@ -267,7 +269,9 @@ body {
   border: 1px solid var(--border-strong);
   border-radius: 8px;
   padding: 8px 10px;
+  height: 36px;
 }
+textarea { height: auto; }
 .table-toolbar input:focus, .table-toolbar select:focus,
 select:focus, input:focus, textarea:focus {
   outline: none;

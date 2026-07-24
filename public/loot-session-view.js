@@ -191,7 +191,7 @@ function renderSessionContent() {
           <div class="icon-select-menu hidden" id="addRecordItemMenu"></div>
         </div>
       </label>
-      <label>Recipient <span style="color:var(--text-muted); font-weight:400;">(optional)</span>
+      <label><span>Recipient <span style="color:var(--text-muted); font-weight:400;">(optional)</span></span>
         <select name="recipientId">
           <option value="" selected>Unassigned</option>
           ${memberOptions}
