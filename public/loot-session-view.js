@@ -217,14 +217,24 @@ function renderSessionContent() {
   const unassignedRecords = allRecords.filter((r) => !r.recipientId);
   const assignedRecords = allRecords.filter((r) => r.recipientId);
 
-  const unassignedRows = unassignedRecords
+  const lootRecordsRows = allRecords
     .map((r) => {
-      const alreadyRaffled = session.records.some(
-        (other) => other.viaRaffle && other.item.toLowerCase() === r.item.toLowerCase()
+      if (r.recipientId) {
+        // Fully assigned/drawn — shown here as a read-only status row (manage it in Assigned Loot).
+        return `
+        <tr class="loot-status-done">
+          <td style="font-weight:600;">${itemLabel(r.item)}</td>
+          <td class="col-right">${r.quantity}</td>
+          <td>${escapeHtml(r.recipientName)}</td>
+          <td></td>
+        </tr>`;
+      }
+      const inProgress = session.records.some(
+        (other) => other.recipientId && other.item.toLowerCase() === r.item.toLowerCase()
       );
       return `
-      <tr class="${alreadyRaffled ? 'raffled-partial' : ''}">
-        <td style="font-weight:600;">${itemLabel(r.item)}${alreadyRaffled ? ' <span class="raffled-badge" title="Already has raffle winners">🎲</span>' : ''}</td>
+      <tr class="${inProgress ? 'loot-status-progress' : ''}">
+        <td style="font-weight:600;">${itemLabel(r.item)}</td>
         <td class="col-right"><input type="number" class="qty-input" data-record-id="${r.id}" value="${r.quantity}" min="1" step="1" style="width:100px; text-align:right;"></td>
         <td>
           <button type="button" class="btn small" data-multi-assign="${r.id}">Assign to…</button>
@@ -333,7 +343,7 @@ function renderSessionContent() {
         <h3>Loot Records</h3>
         <table class="growth-table">
           <thead><tr><th>Item</th><th class="col-right">Qty</th><th>Assign to</th><th></th></tr></thead>
-          <tbody>${unassignedRows || '<tr><td colspan="4" style="color:var(--text-muted)">No unassigned loot.</td></tr>'}</tbody>
+          <tbody>${lootRecordsRows || '<tr><td colspan="4" style="color:var(--text-muted)">No loot logged yet.</td></tr>'}</tbody>
         </table>
       </div>
 

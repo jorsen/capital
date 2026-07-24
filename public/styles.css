@@ -528,9 +528,10 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
 .growth-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
 .growth-table th { text-align: left; color: var(--text-muted); font-weight: 500; padding: 6px 8px; border-bottom: 1px solid var(--gridline); }
 .growth-table td { padding: 6px 8px; border-bottom: 1px solid var(--gridline); }
-.growth-table tr.raffled-partial td { background: var(--gold-soft); }
-.growth-table tr.raffled-partial td:first-child { box-shadow: inset 3px 0 0 var(--gold); }
-.raffled-badge { font-size: 12px; }
+.growth-table tr.loot-status-done td { background: var(--series-1-soft); color: var(--series-1); }
+.growth-table tr.loot-status-done td:first-child { box-shadow: inset 3px 0 0 var(--series-1); }
+.growth-table tr.loot-status-progress td { background: var(--gold-soft); }
+.growth-table tr.loot-status-progress td:first-child { box-shadow: inset 3px 0 0 var(--gold); }
 
 .loot-columns {
   display: grid;
