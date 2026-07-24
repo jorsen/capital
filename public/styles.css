@@ -534,8 +534,6 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
 .growth-table tr.loot-status-progress td:first-child { box-shadow: inset 3px 0 0 var(--gold); }
 
 .raffle-log-list {
-  max-height: 220px;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 2px;
