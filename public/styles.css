@@ -639,6 +639,14 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
 #lootRecordsTableWrap .item-icon { width: 28px !important; height: 28px !important; }
 #lootRecordsTableWrap .qty-input { width: 56px !important; }
 
+/* Paint the status tint on the row (now a flex box, safe to background)
+   instead of per-cell, so it reads as one continuous bar instead of a
+   row of separate colored chips with dark gaps between them. */
+#lootRecordsTableWrap .growth-table tr.loot-status-done { background: var(--series-1-soft); border-radius: 6px; }
+#lootRecordsTableWrap .growth-table tr.loot-status-done td { background: none; }
+#lootRecordsTableWrap .growth-table tr.loot-status-progress { background: var(--gold-soft); border-radius: 6px; }
+#lootRecordsTableWrap .growth-table tr.loot-status-progress td { background: none; }
+
 .sent-check-label {
   display: inline-flex;
   flex-direction: row;
