@@ -21,7 +21,6 @@ function getFilteredSortedLoot() {
     if (!q) return true;
     if (s.date.toLowerCase().includes(q)) return true;
     if ((s.run || '').toLowerCase().includes(q)) return true;
-    if ((s.notes || '').toLowerCase().includes(q)) return true;
     return s.records.some(
       (r) => r.item.toLowerCase().includes(q) || r.recipientName.toLowerCase().includes(q)
     );
@@ -49,7 +48,6 @@ function renderLootView() {
       <td>${sess.run ? `<span class="class-badge">${escapeHtml(sess.run)}</span>` : ''}</td>
       <td class="col-right">${sess.records.length}</td>
       <td class="col-right">${totalQty(sess)}</td>
-      <td style="color:var(--text-muted); font-size:13px;">${escapeHtml(sess.notes)}</td>
       <td class="col-right"><button class="icon-btn" data-delete="${sess.id}" title="Delete date">✕</button></td>
     `;
     tr.addEventListener('click', (e) => {
@@ -89,7 +87,6 @@ addSessionForm.addEventListener('submit', async (e) => {
       body: JSON.stringify({
         date: fd.get('date'),
         run: fd.get('run'),
-        notes: fd.get('notes'),
       }),
     });
     addSessionModal.classList.add('hidden');

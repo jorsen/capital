@@ -278,7 +278,6 @@ function renderMemberModal(member) {
       <tr>
         <td>${g.date}</td>
         <td class="growth-value ${growthClass(g.rate)}">${fmtRate(g.rate)}</td>
-        <td>${escapeHtml(g.note || '')}</td>
         <td><button class="icon-btn" data-del-growth="${g.id}" title="Delete entry">✕</button></td>
       </tr>`
     )
@@ -294,7 +293,6 @@ function renderMemberModal(member) {
     <form id="editMemberForm" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
       <label style="flex:1; min-width:140px;">Name<input name="name" value="${escapeHtml(member.name)}" required></label>
       <label style="flex:1; min-width:160px;">Class<select name="className">${classOptions}</select></label>
-      <label style="flex-basis:100%;">Notes<textarea name="notes" rows="2">${escapeHtml(member.notes || '')}</textarea></label>
       <button type="submit" class="btn small">Save Changes</button>
       <button type="button" class="btn small danger" id="deleteMemberBtn">Delete Member</button>
     </form>
@@ -305,13 +303,12 @@ function renderMemberModal(member) {
     <form id="addGrowthForm" class="growth-form-row">
       <label>Date<input type="date" name="date" required value="${new Date().toISOString().slice(0, 10)}"></label>
       <label>Growth Rate<input type="number" step="1" name="rate" required placeholder="e.g. 12500"></label>
-      <label>Note<input type="text" name="note" placeholder="optional"></label>
       <button type="submit" class="btn primary small">Add Entry</button>
     </form>
 
     <table class="growth-table">
-      <thead><tr><th>Date</th><th>Rate</th><th>Note</th><th></th></tr></thead>
-      <tbody>${growthRows || '<tr><td colspan="4" style="color:var(--text-muted)">No growth entries yet.</td></tr>'}</tbody>
+      <thead><tr><th>Date</th><th>Rate</th><th></th></tr></thead>
+      <tbody>${growthRows || '<tr><td colspan="3" style="color:var(--text-muted)">No growth entries yet.</td></tr>'}</tbody>
     </table>
   `;
 
@@ -325,7 +322,6 @@ function renderMemberModal(member) {
       body: JSON.stringify({
         name: fd.get('name'),
         className: fd.get('className'),
-        notes: fd.get('notes'),
       }),
     });
     Object.assign(member, updated);
@@ -350,7 +346,6 @@ function renderMemberModal(member) {
       body: JSON.stringify({
         date: fd.get('date'),
         rate: Number(fd.get('rate')),
-        note: fd.get('note'),
       }),
     });
     member.growth.push(entry);
@@ -451,7 +446,7 @@ function renderLineChart(root, growth) {
     circle.setAttribute('class', 'line-point');
     circle.addEventListener('mousemove', (e) => {
       const bounds = root.getBoundingClientRect();
-      tooltip.textContent = `${g.date}: ${fmtRate(g.rate)}${g.note ? ' — ' + g.note : ''}`;
+      tooltip.textContent = `${g.date}: ${fmtRate(g.rate)}`;
       tooltip.style.left = `${e.clientX - bounds.left}px`;
       tooltip.style.top = `${e.clientY - bounds.top}px`;
       tooltip.classList.add('show');
@@ -490,7 +485,6 @@ document.getElementById('addMemberForm').addEventListener('submit', async (e) =>
       body: JSON.stringify({
         name: fd.get('name'),
         className: fd.get('className'),
-        notes: fd.get('notes'),
       }),
     });
     membersState.members.push(member);

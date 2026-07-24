@@ -77,7 +77,6 @@ function openMultiAssignModal(sessionId, record, members) {
             recipientId: a.memberId,
             item: record.item,
             quantity: a.qty,
-            notes: record.notes,
           }),
         });
         sessionState.session.records.push(newRecord);
@@ -142,7 +141,6 @@ function renderSessionContent() {
       <tr>
         <td style="font-weight:600;">${itemLabel(r.item)}</td>
         <td class="col-right"><input type="number" class="qty-input" data-record-id="${r.id}" value="${r.quantity}" min="1" step="1" style="width:100px; text-align:right;"></td>
-        <td style="color:var(--text-muted); font-size:13px;">${escapeHtml(r.notes)}</td>
         <td>
           <button type="button" class="btn small" data-multi-assign="${r.id}">Assign to…</button>
         </td>
@@ -176,8 +174,7 @@ function renderSessionContent() {
 
     <form id="editSessionForm" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px;">
       <label style="flex:1; min-width:140px;">Date<input type="date" name="date" value="${session.date}" required></label>
-      <label style="flex:1; min-width:160px;">Run<input type="text" name="run" value="${escapeHtml(session.run)}"></label>
-      <label style="flex-basis:100%;">Notes<textarea name="notes" rows="2">${escapeHtml(session.notes)}</textarea></label>
+      <label style="flex:1; min-width:160px;">Run<input type="text" name="run" value="${escapeHtml(session.run || 'Guild Dungeon')}"></label>
       <button type="submit" class="btn small">Save Changes</button>
       <button type="button" class="btn small danger" id="deleteSessionBtn">Delete Date</button>
     </form>
@@ -201,7 +198,6 @@ function renderSessionContent() {
         </select>
       </label>
       <label style="max-width:120px;">Qty<input type="number" name="quantity" min="1" step="1" value="1"></label>
-      <label>Note<input type="text" name="notes" placeholder="optional"></label>
       <button type="submit" class="btn primary small">Add</button>
     </form>
 
@@ -209,8 +205,8 @@ function renderSessionContent() {
       <div class="loot-column">
         <h3>Loot Records</h3>
         <table class="growth-table">
-          <thead><tr><th>Item</th><th class="col-right">Qty</th><th>Note</th><th>Assign to</th><th></th></tr></thead>
-          <tbody>${unassignedRows || '<tr><td colspan="5" style="color:var(--text-muted)">No unassigned loot.</td></tr>'}</tbody>
+          <thead><tr><th>Item</th><th class="col-right">Qty</th><th>Assign to</th><th></th></tr></thead>
+          <tbody>${unassignedRows || '<tr><td colspan="4" style="color:var(--text-muted)">No unassigned loot.</td></tr>'}</tbody>
         </table>
       </div>
 
@@ -232,7 +228,7 @@ function renderSessionContent() {
     try {
       const updated = await api(`/api/loot/${session.id}`, {
         method: 'PUT',
-        body: JSON.stringify({ date: fd.get('date'), run: fd.get('run'), notes: fd.get('notes') }),
+        body: JSON.stringify({ date: fd.get('date'), run: fd.get('run') }),
       });
       Object.assign(session, updated);
       renderSessionContent();
@@ -304,7 +300,6 @@ function renderSessionContent() {
           recipientId: fd.get('recipientId'),
           item: fd.get('item'),
           quantity: Number(fd.get('quantity')) || 1,
-          notes: fd.get('notes'),
         }),
       });
       session.records.push(record);
