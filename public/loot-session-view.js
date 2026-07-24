@@ -179,10 +179,13 @@ function renderSessionContent() {
       <button type="button" class="btn small danger" id="deleteSessionBtn">Delete Date</button>
     </form>
 
-    <h3 style="margin-bottom:6px;">
-      Guild Dungeon Attendance
-      <span id="attendanceCount" style="color:var(--text-muted); font-weight:400; font-size:13px;">(${sortedMembers.length - session.absentees.length} / ${sortedMembers.length} present)</span>
-    </h3>
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
+      <h3 style="margin-bottom:6px;">
+        Guild Dungeon Attendance
+        <span id="attendanceCount" style="color:var(--text-muted); font-weight:400; font-size:13px;">(${sortedMembers.length - session.absentees.length} / ${sortedMembers.length} present)</span>
+      </h3>
+      <button type="button" class="btn small" id="copyPresentBtn">Copy Present Names</button>
+    </div>
     <p style="color:var(--text-muted); font-size:13px; margin:-4px 0 8px;">Everyone is assumed present — check anyone who was absent.</p>
     <div id="attendanceList" class="attendance-grid">
       ${
@@ -261,6 +264,19 @@ function renderSessionContent() {
     if (!confirm(`Delete ${session.date} and all its loot records?`)) return;
     await api(`/api/loot/${session.id}`, { method: 'DELETE' });
     window.location.hash = '#/loot';
+  });
+
+  content.querySelector('#copyPresentBtn').addEventListener('click', async () => {
+    const presentNames = sortedMembers
+      .filter((m) => !session.absentees.includes(m.id))
+      .map((m) => m.name);
+    const text = presentNames.map((name, i) => `${i + 1}. ${name}`).join('\n');
+    try {
+      await navigator.clipboard.writeText(text);
+      toast(`Copied ${presentNames.length} present name${presentNames.length === 1 ? '' : 's'}`);
+    } catch (err) {
+      toast('Could not copy — clipboard access denied');
+    }
   });
 
   content.querySelectorAll('.absence-check').forEach((cb) => {
