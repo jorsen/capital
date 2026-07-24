@@ -1,5 +1,18 @@
 const sessionState = { id: null, session: null, members: [] };
 
+function raffleWinnerHtml(session, sortedMembers) {
+  if (!session.raffleWinnerId) {
+    return '<span style="color:var(--text-muted); font-size:13px;">No winner drawn yet.</span>';
+  }
+  const winner = sortedMembers.find((m) => m.id === session.raffleWinnerId);
+  const name = winner ? winner.name : 'Unknown member';
+  return `<span class="raffle-winner">🏆 ${escapeHtml(name)}</span>`;
+}
+
+function getPresentMembers(session, sortedMembers) {
+  return sortedMembers.filter((m) => !session.absentees.includes(m.id));
+}
+
 function itemLabel(itemName) {
   const category = itemCategoriesState.list.find((c) => c.name.toLowerCase() === itemName.toLowerCase());
   const icon = itemIconImg(category ? category.iconUrl : null, itemName, 48);
@@ -201,6 +214,12 @@ function renderSessionContent() {
       }
     </div>
 
+    <h3 style="margin-bottom:6px;">🎲 Raffle</h3>
+    <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:20px;">
+      <span id="raffleWinnerDisplay">${raffleWinnerHtml(session, sortedMembers)}</span>
+      <button type="button" class="btn small" id="raffleBtn">${session.raffleWinnerId ? 'Re-roll' : 'Draw Winner'}</button>
+    </div>
+
     <h3 style="margin-bottom:6px;">Add Loot</h3>
 
     <form id="addRecordForm" class="growth-form-row">
@@ -267,15 +286,34 @@ function renderSessionContent() {
   });
 
   content.querySelector('#copyPresentBtn').addEventListener('click', async () => {
-    const presentNames = sortedMembers
-      .filter((m) => !session.absentees.includes(m.id))
-      .map((m) => m.name);
+    const presentNames = getPresentMembers(session, sortedMembers).map((m) => m.name);
     const text = presentNames.map((name, i) => `${i + 1}. ${name}`).join('\n');
     try {
       await navigator.clipboard.writeText(text);
       toast(`Copied ${presentNames.length} present name${presentNames.length === 1 ? '' : 's'}`);
     } catch (err) {
       toast('Could not copy — clipboard access denied');
+    }
+  });
+
+  content.querySelector('#raffleBtn').addEventListener('click', async () => {
+    const present = getPresentMembers(session, sortedMembers);
+    if (!present.length) {
+      toast('No present members to raffle');
+      return;
+    }
+    const winner = present[Math.floor(Math.random() * present.length)];
+    try {
+      const updated = await api(`/api/loot/${session.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ raffleWinnerId: winner.id }),
+      });
+      session.raffleWinnerId = updated.raffleWinnerId;
+      document.getElementById('raffleWinnerDisplay').innerHTML = raffleWinnerHtml(session, sortedMembers);
+      document.getElementById('raffleBtn').textContent = 'Re-roll';
+      toast(`🏆 ${winner.name} wins the raffle!`);
+    } catch (err) {
+      toast(err.message);
     }
   });
 

@@ -588,6 +588,19 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
   box-shadow: 0 0 0 1px rgba(242,104,95,0.3), 0 2px 10px rgba(242,104,95,0.22);
 }
 
+.raffle-winner {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  background: var(--gold-soft);
+  border: 1px solid rgba(242,169,60,0.35);
+  color: var(--gold);
+  font-weight: 700;
+  font-size: 15px;
+}
+
 .icon-btn {
   border: none;
   background: transparent;
