@@ -589,8 +589,9 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
 #raffleWinnersTableWrap .growth-table td:nth-child(2) { flex-shrink: 0; white-space: nowrap; }
 
 /* Loot Records: same 2-column reflow. Rows have more content (qty input,
-   recipient, action buttons) than Raffle Winners, so the item name takes
-   its own full-width line within the row and the rest wraps below it. */
+   recipient, action buttons) than Raffle Winners, so the item name
+   truncates with an ellipsis instead of wrapping, keeping each row to
+   a single line. */
 #lootRecordsTableWrap {
   column-count: 2;
   column-gap: 18px;
@@ -600,9 +601,9 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
 #lootRecordsTableWrap .growth-table tbody { display: block; }
 #lootRecordsTableWrap .growth-table tr {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 4px 8px;
+  gap: 8px;
   padding: 8px;
   break-inside: avoid-column;
   border-bottom: 1px solid var(--gridline);
@@ -614,15 +615,25 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
   padding: 0;
   border: none;
   background: none;
+  min-width: 0;
 }
-#lootRecordsTableWrap .growth-table td:first-child { flex: 1 1 100%; min-width: 0; }
+#lootRecordsTableWrap .growth-table td:first-child { flex: 1 1 auto; min-width: 0; overflow: hidden; }
 #lootRecordsTableWrap .growth-table td:nth-child(2) { flex-shrink: 0; }
-#lootRecordsTableWrap .growth-table td:nth-child(3) { flex: 1; min-width: 0; }
+#lootRecordsTableWrap .growth-table td:nth-child(3) { flex-shrink: 0; }
 #lootRecordsTableWrap .growth-table td:nth-child(4) { flex-shrink: 0; }
 #lootRecordsTableWrap .growth-table td:nth-child(5) { flex-shrink: 0; margin-left: auto; }
+#lootRecordsTableWrap .item-label-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+#lootRecordsTableWrap .item-icon { width: 28px !important; height: 28px !important; }
+#lootRecordsTableWrap .qty-input { width: 60px !important; }
 
 .sent-check-label {
   display: inline-flex;
+  flex-direction: row;
   align-items: center;
   gap: 5px;
   font-size: 12px;

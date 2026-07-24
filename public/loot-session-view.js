@@ -127,7 +127,7 @@ function wireItemDropdown({ inputId, menuId, iconId, iconSize }) {
 function itemLabel(itemName) {
   const category = itemCategoriesState.list.find((c) => c.name.toLowerCase() === itemName.toLowerCase());
   const icon = itemIconImg(category ? category.iconUrl : null, itemName, 48);
-  return `<span style="display:inline-flex; align-items:center; gap:6px;">${icon}${escapeHtml(itemName)}</span>`;
+  return `<span style="display:inline-flex; align-items:center; gap:6px; min-width:0;"><span style="flex-shrink:0; display:inline-flex;">${icon}</span><span class="item-label-text">${escapeHtml(itemName)}</span></span>`;
 }
 
 // Splits an unassigned record across multiple members, each with their own quantity.
