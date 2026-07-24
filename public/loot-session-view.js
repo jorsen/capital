@@ -93,9 +93,12 @@ function renderSessionContent() {
 
     <form id="addRecordForm" class="growth-form-row">
       <label style="flex:1.5;">Item
-        <div style="display:flex; align-items:center; gap:8px;">
-          <input type="text" name="item" id="addRecordItemInput" list="itemCategoriesList" required placeholder="e.g. Morion" style="flex:1;">
-          <span id="addRecordItemIcon"></span>
+        <div class="icon-select" id="addRecordItemDropdown" style="display:block; width:100%;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <input type="text" name="item" id="addRecordItemInput" autocomplete="off" required placeholder="e.g. Morion" style="flex:1;">
+            <span id="addRecordItemIcon"></span>
+          </div>
+          <div class="icon-select-menu hidden" id="addRecordItemMenu"></div>
         </div>
       </label>
       <label>Recipient <span style="color:var(--text-muted); font-weight:400;">(optional)</span>
@@ -152,10 +155,51 @@ function renderSessionContent() {
     window.location.hash = '#/loot';
   });
 
-  content.querySelector('#addRecordItemInput').addEventListener('input', (e) => {
-    const category = itemCategoriesState.list.find((c) => c.name.toLowerCase() === e.target.value.trim().toLowerCase());
+  function updateAddRecordItemIcon() {
+    const input = document.getElementById('addRecordItemInput');
+    const category = itemCategoriesState.list.find((c) => c.name.toLowerCase() === input.value.trim().toLowerCase());
     document.getElementById('addRecordItemIcon').innerHTML = category ? itemIconImg(category.iconUrl, category.name, 32) : '';
+  }
+
+  function renderAddRecordItemMenu() {
+    const input = document.getElementById('addRecordItemInput');
+    const menu = document.getElementById('addRecordItemMenu');
+    const query = input.value.trim().toLowerCase();
+    const matches = itemCategoriesState.list
+      .filter((c) => !query || c.name.toLowerCase().includes(query))
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    if (!matches.length) {
+      menu.classList.add('hidden');
+      return;
+    }
+
+    menu.innerHTML = matches
+      .map(
+        (c) => `
+        <div class="icon-select-option" data-name="${escapeHtml(c.name)}">
+          ${itemIconImg(c.iconUrl, c.name, 28)}
+          <span>${escapeHtml(c.name)}</span>
+        </div>`
+      )
+      .join('');
+    menu.classList.remove('hidden');
+
+    menu.querySelectorAll('.icon-select-option').forEach((el) => {
+      el.addEventListener('click', () => {
+        input.value = el.getAttribute('data-name');
+        menu.classList.add('hidden');
+        updateAddRecordItemIcon();
+      });
+    });
+  }
+
+  content.querySelector('#addRecordItemInput').addEventListener('input', () => {
+    updateAddRecordItemIcon();
+    renderAddRecordItemMenu();
   });
+
+  content.querySelector('#addRecordItemInput').addEventListener('focus', renderAddRecordItemMenu);
 
   content.querySelector('#addRecordForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -243,3 +287,12 @@ function renderSessionContent() {
     });
   });
 }
+
+// Bound once at script load (not per-render) since the dropdown's DOM is
+// rebuilt every time renderSessionContent() runs.
+document.addEventListener('click', (e) => {
+  const dropdown = document.getElementById('addRecordItemDropdown');
+  if (dropdown && !dropdown.contains(e.target)) {
+    document.getElementById('addRecordItemMenu').classList.add('hidden');
+  }
+});
