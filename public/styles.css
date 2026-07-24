@@ -90,6 +90,8 @@ body {
 }
 
 .btn {
+  display: inline-flex;
+  align-items: center;
   border: 1px solid var(--border-strong);
   background: var(--surface-2);
   color: var(--text-primary);
@@ -97,6 +99,8 @@ body {
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
   cursor: pointer;
   transition: background 0.12s, border-color 0.12s, transform 0.05s;
 }
