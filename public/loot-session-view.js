@@ -1,19 +1,11 @@
 const sessionState = { id: null, session: null, members: [] };
 
-function raffleDrawsRowsHtml(session) {
-  const draws = session.raffleDraws.slice().reverse(); // newest on top
-  if (!draws.length) {
-    return '<tr><td colspan="3" style="color:var(--text-muted)">No draws yet.</td></tr>';
+function raffleRecordOptionsHtml(unassignedRecords) {
+  if (!unassignedRecords.length) {
+    return '<option value="">No unassigned loot</option>';
   }
-  return draws
-    .map(
-      (d) => `
-    <tr>
-      <td style="font-weight:600;">${itemLabel(d.item)}</td>
-      <td><span class="raffle-winner">🏆 ${escapeHtml(d.winnerName)}</span></td>
-      <td><button class="icon-btn" data-del-raffle-draw="${d.id}" title="Remove draw">✕</button></td>
-    </tr>`
-    )
+  return unassignedRecords
+    .map((r) => `<option value="${r.id}">${escapeHtml(r.item)} (x${r.quantity})</option>`)
     .join('');
 }
 
@@ -275,23 +267,12 @@ function renderSessionContent() {
     </div>
 
     <h3 style="margin-bottom:6px;">🎲 Raffle</h3>
-    <div class="growth-form-row" style="margin-top:0;">
-      <label style="flex:1.5;">Item
-        <div class="icon-select" id="raffleItemDropdown" style="display:block; width:100%;">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <input type="text" id="raffleItemInput" autocomplete="off" placeholder="e.g. Morion" style="flex:1;">
-            <span id="raffleItemIcon"></span>
-          </div>
-          <div class="icon-select-menu hidden" id="raffleItemMenu"></div>
-        </div>
+    <p style="color:var(--text-muted); font-size:13px; margin:-4px 0 8px;">Picks a random present member and assigns them the whole loot record.</p>
+    <div class="growth-form-row" style="margin-top:0; margin-bottom:20px;">
+      <label style="flex:1.5;">Unassigned Loot
+        <select id="raffleRecordSelect">${raffleRecordOptionsHtml(unassignedRecords)}</select>
       </label>
-      <button type="button" class="btn primary small" id="raffleDrawBtn">Draw</button>
-    </div>
-    <div class="table-scroll" style="margin-bottom:20px;">
-      <table class="growth-table">
-        <thead><tr><th>Item</th><th>Winner</th><th></th></tr></thead>
-        <tbody id="raffleDrawsBody">${raffleDrawsRowsHtml(session)}</tbody>
-      </table>
+      <button type="button" class="btn primary small" id="raffleDrawBtn" ${unassignedRecords.length ? '' : 'disabled'}>Draw</button>
     </div>
 
     <h3 style="margin-bottom:6px;">Add Loot</h3>
@@ -371,10 +352,10 @@ function renderSessionContent() {
   });
 
   content.querySelector('#raffleDrawBtn').addEventListener('click', async () => {
-    const itemInput = document.getElementById('raffleItemInput');
-    const item = itemInput.value.trim();
-    if (!item) {
-      toast('Enter an item to raffle');
+    const recordId = document.getElementById('raffleRecordSelect').value;
+    const record = session.records.find((r) => r.id === recordId);
+    if (!record) {
+      toast('Pick an unassigned loot record to raffle');
       return;
     }
     const present = getPresentMembers(session, sortedMembers);
@@ -384,33 +365,17 @@ function renderSessionContent() {
     }
     const winner = present[Math.floor(Math.random() * present.length)];
     try {
-      const draw = await api(`/api/loot/${session.id}/raffle-draws`, {
-        method: 'POST',
-        body: JSON.stringify({ item, winnerId: winner.id }),
+      const updated = await api(`/api/loot/${session.id}/records/${recordId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ recipientId: winner.id }),
       });
-      session.raffleDraws.push(draw);
-      document.getElementById('raffleDrawsBody').innerHTML = raffleDrawsRowsHtml(session);
-      wireRaffleDrawDeleteButtons();
-      itemInput.value = '';
-      document.getElementById('raffleItemIcon').innerHTML = '';
-      toast(`🏆 ${winner.name} wins ${item}!`);
+      Object.assign(record, updated);
+      renderSessionContent();
+      toast(`🏆 ${winner.name} wins ${record.item} (x${record.quantity})!`);
     } catch (err) {
       toast(err.message);
     }
   });
-
-  function wireRaffleDrawDeleteButtons() {
-    content.querySelectorAll('[data-del-raffle-draw]').forEach((btn) => {
-      btn.addEventListener('click', async () => {
-        const drawId = btn.getAttribute('data-del-raffle-draw');
-        await api(`/api/loot/${session.id}/raffle-draws/${drawId}`, { method: 'DELETE' });
-        session.raffleDraws = session.raffleDraws.filter((d) => d.id !== drawId);
-        document.getElementById('raffleDrawsBody').innerHTML = raffleDrawsRowsHtml(session);
-        wireRaffleDrawDeleteButtons();
-      });
-    });
-  }
-  wireRaffleDrawDeleteButtons();
 
   content.querySelectorAll('.absence-check').forEach((cb) => {
     cb.addEventListener('change', async () => {
@@ -434,7 +399,6 @@ function renderSessionContent() {
   });
 
   wireItemDropdown({ inputId: 'addRecordItemInput', menuId: 'addRecordItemMenu', iconId: 'addRecordItemIcon', iconSize: 32 });
-  wireItemDropdown({ inputId: 'raffleItemInput', menuId: 'raffleItemMenu', iconId: 'raffleItemIcon', iconSize: 28 });
 
   content.querySelector('#addRecordForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -511,16 +475,11 @@ function renderSessionContent() {
   });
 }
 
-// Bound once at script load (not per-render) since the dropdowns' DOM is
+// Bound once at script load (not per-render) since the dropdown's DOM is
 // rebuilt every time renderSessionContent() runs.
 document.addEventListener('click', (e) => {
-  [
-    ['addRecordItemDropdown', 'addRecordItemMenu'],
-    ['raffleItemDropdown', 'raffleItemMenu'],
-  ].forEach(([dropdownId, menuId]) => {
-    const dropdown = document.getElementById(dropdownId);
-    if (dropdown && !dropdown.contains(e.target)) {
-      document.getElementById(menuId).classList.add('hidden');
-    }
-  });
+  const dropdown = document.getElementById('addRecordItemDropdown');
+  if (dropdown && !dropdown.contains(e.target)) {
+    document.getElementById('addRecordItemMenu').classList.add('hidden');
+  }
 });
