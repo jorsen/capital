@@ -284,10 +284,13 @@ function renderSessionContent() {
     </div>
 
     <h3 style="margin-bottom:6px;">🎲 Raffle</h3>
-    <p style="color:var(--text-muted); font-size:13px; margin:-4px 0 8px;">Picks a random present member and assigns them the whole loot record.</p>
+    <p style="color:var(--text-muted); font-size:13px; margin:-4px 0 8px;">Picks a random present member. Raffle a smaller quantity at a time to give more people a chance to win.</p>
     <div class="growth-form-row" style="margin-top:0; margin-bottom:20px;">
       <label style="flex:1.5;">Unassigned Loot
         <select id="raffleRecordSelect">${raffleRecordOptionsHtml(unassignedRecords)}</select>
+      </label>
+      <label style="max-width:120px;">Qty
+        <input type="number" id="raffleQtyInput" min="1" step="1" value="1" max="${unassignedRecords[0] ? unassignedRecords[0].quantity : 1}">
       </label>
       <button type="button" class="btn primary small" id="raffleDrawBtn" ${unassignedRecords.length ? '' : 'disabled'}>Draw</button>
     </div>
@@ -376,11 +379,24 @@ function renderSessionContent() {
     }
   });
 
+  content.querySelector('#raffleRecordSelect').addEventListener('change', (e) => {
+    const record = session.records.find((r) => r.id === e.target.value);
+    const qtyInput = document.getElementById('raffleQtyInput');
+    const max = record ? record.quantity : 1;
+    qtyInput.max = max;
+    if (Number(qtyInput.value) > max) qtyInput.value = max;
+  });
+
   content.querySelector('#raffleDrawBtn').addEventListener('click', async () => {
     const recordId = document.getElementById('raffleRecordSelect').value;
     const record = session.records.find((r) => r.id === recordId);
     if (!record) {
       toast('Pick an unassigned loot record to raffle');
+      return;
+    }
+    const qty = Number(document.getElementById('raffleQtyInput').value);
+    if (!Number.isFinite(qty) || qty < 1 || qty > record.quantity) {
+      toast(`Quantity must be between 1 and ${record.quantity}`);
       return;
     }
     const present = getPresentMembers(session, sortedMembers);
@@ -390,13 +406,26 @@ function renderSessionContent() {
     }
     const winner = present[Math.floor(Math.random() * present.length)];
     try {
-      const updated = await api(`/api/loot/${session.id}/records/${recordId}`, {
-        method: 'PUT',
-        body: JSON.stringify({ recipientId: winner.id, viaRaffle: true }),
-      });
-      Object.assign(record, updated);
+      if (qty === record.quantity) {
+        const updated = await api(`/api/loot/${session.id}/records/${recordId}`, {
+          method: 'PUT',
+          body: JSON.stringify({ recipientId: winner.id, viaRaffle: true }),
+        });
+        Object.assign(record, updated);
+      } else {
+        const newRecord = await api(`/api/loot/${session.id}/records`, {
+          method: 'POST',
+          body: JSON.stringify({ recipientId: winner.id, item: record.item, quantity: qty, viaRaffle: true }),
+        });
+        session.records.push(newRecord);
+        const updated = await api(`/api/loot/${session.id}/records/${recordId}`, {
+          method: 'PUT',
+          body: JSON.stringify({ quantity: record.quantity - qty }),
+        });
+        Object.assign(record, updated);
+      }
       renderSessionContent();
-      toast(`🏆 ${winner.name} wins ${record.item} (x${record.quantity})!`);
+      toast(`🏆 ${winner.name} wins ${record.item} (x${qty})!`);
     } catch (err) {
       toast(err.message);
     }
