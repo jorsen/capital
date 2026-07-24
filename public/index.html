@@ -204,6 +204,19 @@
     </div>
   </div>
 
+  <div id="multiAssignModal" class="modal-overlay hidden">
+    <div class="modal">
+      <button class="modal-close" data-close="multiAssignModal" aria-label="Close">×</button>
+      <h2>Assign Loot</h2>
+      <p id="multiAssignItemInfo" style="color:var(--text-muted); font-size:13px; margin-top:-8px;"></p>
+      <div id="multiAssignMembersList" style="max-height:320px; overflow-y:auto; display:flex; flex-direction:column; gap:6px; margin:14px 0;"></div>
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+        <span id="multiAssignTotal" style="font-size:13px; color:var(--text-secondary);"></span>
+        <button id="multiAssignConfirmBtn" class="btn primary small" disabled>Assign</button>
+      </div>
+    </div>
+  </div>
+
   <div id="addSessionModal" class="modal-overlay hidden">
     <div class="modal">
       <button class="modal-close" data-close="addSessionModal" aria-label="Close">×</button>

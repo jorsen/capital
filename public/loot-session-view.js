@@ -6,6 +6,105 @@ function itemLabel(itemName) {
   return `<span style="display:inline-flex; align-items:center; gap:6px;">${icon}${escapeHtml(itemName)}</span>`;
 }
 
+// Splits an unassigned record across multiple members, each with their own quantity.
+// Uses the existing loot-records API: one POST per member, then either shrinks the
+// original record to whatever's left over or deletes it if fully allocated.
+function openMultiAssignModal(sessionId, record, members) {
+  const modal = document.getElementById('multiAssignModal');
+  const list = document.getElementById('multiAssignMembersList');
+  const info = document.getElementById('multiAssignItemInfo');
+  const totalEl = document.getElementById('multiAssignTotal');
+  const confirmBtn = document.getElementById('multiAssignConfirmBtn');
+
+  info.innerHTML = `${itemLabel(record.item)} — ${record.quantity} available`;
+
+  list.innerHTML = members
+    .map(
+      (m) => `
+      <label style="display:flex; flex-direction:row; align-items:center; gap:8px;">
+        <input type="checkbox" class="multi-assign-check" data-member-id="${m.id}">
+        <span style="flex:1;">${escapeHtml(m.name)}</span>
+        <input type="number" class="multi-assign-qty" data-member-id="${m.id}" min="1" step="1" value="1" style="width:80px; display:none;">
+      </label>`
+    )
+    .join('');
+
+  function updateTotals() {
+    let total = 0;
+    let anyChecked = false;
+    list.querySelectorAll('.multi-assign-check').forEach((cb) => {
+      if (!cb.checked) return;
+      anyChecked = true;
+      const qtyInput = list.querySelector(`.multi-assign-qty[data-member-id="${cb.getAttribute('data-member-id')}"]`);
+      total += Number(qtyInput.value) || 0;
+    });
+    totalEl.textContent = `${total} / ${record.quantity} allocated`;
+    totalEl.style.color = total > record.quantity ? 'var(--bad)' : 'var(--text-secondary)';
+    confirmBtn.disabled = !anyChecked || total <= 0 || total > record.quantity;
+  }
+
+  list.querySelectorAll('.multi-assign-check').forEach((cb) => {
+    cb.addEventListener('change', () => {
+      const qtyInput = list.querySelector(`.multi-assign-qty[data-member-id="${cb.getAttribute('data-member-id')}"]`);
+      qtyInput.style.display = cb.checked ? '' : 'none';
+      updateTotals();
+    });
+  });
+  list.querySelectorAll('.multi-assign-qty').forEach((input) => {
+    input.addEventListener('input', updateTotals);
+  });
+
+  updateTotals();
+  modal.classList.remove('hidden');
+
+  // Assigned via property (not addEventListener) so repeated opens don't stack handlers.
+  confirmBtn.onclick = async () => {
+    const allocations = [];
+    list.querySelectorAll('.multi-assign-check:checked').forEach((cb) => {
+      const memberId = cb.getAttribute('data-member-id');
+      const qty = Number(list.querySelector(`.multi-assign-qty[data-member-id="${memberId}"]`).value);
+      if (qty > 0) allocations.push({ memberId, qty });
+    });
+    const total = allocations.reduce((sum, a) => sum + a.qty, 0);
+    if (!allocations.length || total > record.quantity) return;
+
+    confirmBtn.disabled = true;
+    try {
+      for (const a of allocations) {
+        const newRecord = await api(`/api/loot/${sessionId}/records`, {
+          method: 'POST',
+          body: JSON.stringify({
+            recipientId: a.memberId,
+            item: record.item,
+            quantity: a.qty,
+            notes: record.notes,
+          }),
+        });
+        sessionState.session.records.push(newRecord);
+      }
+
+      const remaining = record.quantity - total;
+      if (remaining > 0) {
+        const updated = await api(`/api/loot/${sessionId}/records/${record.id}`, {
+          method: 'PUT',
+          body: JSON.stringify({ quantity: remaining }),
+        });
+        Object.assign(record, updated);
+      } else {
+        await api(`/api/loot/${sessionId}/records/${record.id}`, { method: 'DELETE' });
+        sessionState.session.records = sessionState.session.records.filter((r) => r.id !== record.id);
+      }
+
+      modal.classList.add('hidden');
+      renderSessionContent();
+      toast(`Assigned to ${allocations.length} member${allocations.length === 1 ? '' : 's'}`);
+    } catch (err) {
+      toast(err.message);
+      confirmBtn.disabled = false;
+    }
+  };
+}
+
 async function loadSessionData(id) {
   sessionState.id = id;
   const content = document.getElementById('sessionContent');
@@ -38,24 +137,18 @@ function renderSessionContent() {
   const assignedRecords = allRecords.filter((r) => r.recipientId);
 
   const unassignedRows = unassignedRecords
-    .map((r) => {
-      const recipientOptions = sortedMembers
-        .map((m) => `<option value="${m.id}">${escapeHtml(m.name)}</option>`)
-        .join('');
-      return `
+    .map(
+      (r) => `
       <tr>
         <td style="font-weight:600;">${itemLabel(r.item)}</td>
         <td class="col-right"><input type="number" class="qty-input" data-record-id="${r.id}" value="${r.quantity}" min="1" step="1" style="width:100px; text-align:right;"></td>
         <td style="color:var(--text-muted); font-size:13px;">${escapeHtml(r.notes)}</td>
         <td>
-          <select class="recipient-select" data-record-id="${r.id}" style="width:100%;">
-            <option value="" selected>Assign to…</option>
-            ${recipientOptions}
-          </select>
+          <button type="button" class="btn small" data-multi-assign="${r.id}">Assign to…</button>
         </td>
         <td><button class="icon-btn" data-del-record="${r.id}" title="Delete record">✕</button></td>
-      </tr>`;
-    })
+      </tr>`
+    )
     .join('');
 
   const assignedRows = assignedRecords
@@ -255,22 +348,11 @@ function renderSessionContent() {
     });
   });
 
-  content.querySelectorAll('.recipient-select').forEach((sel) => {
-    sel.addEventListener('change', async () => {
-      const recordId = sel.getAttribute('data-record-id');
-      try {
-        const updated = await api(`/api/loot/${session.id}/records/${recordId}`, {
-          method: 'PUT',
-          body: JSON.stringify({ recipientId: sel.value }),
-        });
-        const record = session.records.find((r) => r.id === recordId);
-        Object.assign(record, updated);
-        toast(`Assigned to ${updated.recipientName}`);
-        renderSessionContent();
-      } catch (err) {
-        toast(err.message);
-        renderSessionContent();
-      }
+  content.querySelectorAll('[data-multi-assign]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const recordId = btn.getAttribute('data-multi-assign');
+      const record = session.records.find((r) => r.id === recordId);
+      openMultiAssignModal(session.id, record, sortedMembers);
     });
   });
 
