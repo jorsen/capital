@@ -45,7 +45,7 @@ function renderSessionContent() {
       return `
       <tr>
         <td style="font-weight:600;">${itemLabel(r.item)}</td>
-        <td class="col-right"><input type="number" class="qty-input" data-record-id="${r.id}" value="${r.quantity}" min="1" step="1" style="width:60px; text-align:right;"></td>
+        <td class="col-right"><input type="number" class="qty-input" data-record-id="${r.id}" value="${r.quantity}" min="1" step="1" style="width:100px; text-align:right;"></td>
         <td style="color:var(--text-muted); font-size:13px;">${escapeHtml(r.notes)}</td>
         <td>
           <select class="recipient-select" data-record-id="${r.id}" style="width:100%;">
@@ -63,7 +63,7 @@ function renderSessionContent() {
       (r) => `
       <tr>
         <td style="font-weight:600;">${itemLabel(r.item)}</td>
-        <td class="col-right"><input type="number" class="qty-input" data-record-id="${r.id}" value="${r.quantity}" min="1" step="1" style="width:60px; text-align:right;"></td>
+        <td class="col-right"><input type="number" class="qty-input" data-record-id="${r.id}" value="${r.quantity}" min="1" step="1" style="width:100px; text-align:right;"></td>
         <td>${escapeHtml(r.recipientName)}</td>
         <td>
           <button class="icon-btn" data-unassign="${r.id}" title="Unassign">↩</button>
@@ -107,7 +107,7 @@ function renderSessionContent() {
           ${memberOptions}
         </select>
       </label>
-      <label style="max-width:80px;">Qty<input type="number" name="quantity" min="1" step="1" value="1"></label>
+      <label style="max-width:120px;">Qty<input type="number" name="quantity" min="1" step="1" value="1"></label>
       <label>Note<input type="text" name="notes" placeholder="optional"></label>
       <button type="submit" class="btn primary small">Add</button>
     </form>
