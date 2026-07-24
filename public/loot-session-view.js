@@ -336,7 +336,14 @@ function renderSessionContent() {
       <button type="button" class="btn primary small" id="raffleDrawBtn" ${unassignedRecords.length ? '' : 'disabled'}>Draw</button>
     </div>
 
-    <h3 style="margin-bottom:6px;">🏆 Raffle Winners</h3>
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+      <h3 style="margin-bottom:6px;">🏆 Raffle Winners</h3>
+      ${
+        session.records.some((r) => r.viaRaffle)
+          ? '<button type="button" class="btn small danger" id="clearAllWinnersBtn" style="margin-bottom:6px;">Clear All Winners</button>'
+          : ''
+      }
+    </div>
     <div class="table-scroll" style="margin-bottom:20px;">
       <table class="growth-table">
         <thead><tr><th>Item</th><th>Winner</th><th></th></tr></thead>
@@ -347,7 +354,7 @@ function renderSessionContent() {
     <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
       <h3 style="margin-bottom:6px;">📜 Raffle Activity Log</h3>
       ${
-        !session.records.some((r) => r.viaRaffle) && session.raffleLog.length
+        session.raffleLog.length
           ? '<button type="button" class="btn small" id="clearRaffleLogBtn" style="margin-bottom:6px;">Clear Log</button>'
           : ''
       }
@@ -509,6 +516,33 @@ function renderSessionContent() {
       toast('Removed from raffle winners — loot is unassigned again');
     });
   });
+
+  const clearAllWinnersBtn = content.querySelector('#clearAllWinnersBtn');
+  if (clearAllWinnersBtn) {
+    clearAllWinnersBtn.addEventListener('click', async () => {
+      const winnerRecords = session.records.filter((r) => r.viaRaffle);
+      if (!winnerRecords.length) return;
+      if (!confirm(`Clear all ${winnerRecords.length} raffle winner(s)? Their loot will go back to unassigned.`)) return;
+      for (const record of winnerRecords) {
+        const updated = await api(`/api/loot/${session.id}/records/${record.id}`, {
+          method: 'PUT',
+          body: JSON.stringify({ recipientId: '' }),
+        });
+        Object.assign(record, updated);
+      }
+      try {
+        const logEntry = await api(`/api/loot/${session.id}/raffle-log`, {
+          method: 'POST',
+          body: JSON.stringify({ message: `🧹 Cleared all raffle winners (${winnerRecords.length} item${winnerRecords.length === 1 ? '' : 's'})` }),
+        });
+        session.raffleLog.push(logEntry);
+      } catch (logErr) {
+        // non-fatal
+      }
+      renderSessionContent();
+      toast('All raffle winners cleared — loot is unassigned again');
+    });
+  }
 
   const clearRaffleLogBtn = content.querySelector('#clearRaffleLogBtn');
   if (clearRaffleLogBtn) {
