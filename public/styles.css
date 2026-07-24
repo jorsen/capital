@@ -615,7 +615,7 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 0;
+  padding: 0px 10px;
   border: none;
   min-width: 0;
 }
