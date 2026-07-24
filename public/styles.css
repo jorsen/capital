@@ -560,6 +560,8 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
 .print-only { display: none; }
 
 @media print {
+  @page { margin: 10mm; }
+
   body.printing-raffle { background: #fff !important; }
   body.printing-raffle * { visibility: hidden; }
   body.printing-raffle #rafflePrintSection,
@@ -570,21 +572,38 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
     left: 0;
     width: 100%;
     background: #fff;
-  }
-  body.printing-raffle #rafflePrintSection * {
-    color: #000 !important;
-    background: none !important;
-    box-shadow: none !important;
-    text-shadow: none !important;
+    /* Recalibrate the dark-theme palette for white paper instead of
+       stripping color entirely — badges/highlights stay green & gold. */
+    --bg: #fff;
+    --surface-1: #fff;
+    --surface-2: #f8fafc;
+    --surface-modal: #fff;
+    --text-primary: #1e293b;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+    --gridline: #cbd5e1;
+    --border: #cbd5e1;
+    --border-strong: #94a3b8;
+    --series-1: #15803d;
+    --series-1-strong: #166534;
+    --series-1-soft: rgba(21,128,61,0.14);
+    --gold: #b45309;
+    --gold-soft: rgba(180,83,9,0.14);
+    color: var(--text-primary);
   }
   body.printing-raffle .no-print { display: none !important; }
-  body.printing-raffle .print-only { display: block; }
-  body.printing-raffle .raffle-log-list { border: 1px solid #999; }
-  body.printing-raffle .raffle-log-entry,
-  body.printing-raffle .growth-table th,
-  body.printing-raffle .growth-table td {
-    border-color: #999 !important;
-  }
+  body.printing-raffle .print-only { display: block; margin: 0 0 10px; font-size: 16px; }
+
+  /* Compact spacing/type so winners + log fit on a single printed page. */
+  body.printing-raffle #rafflePrintSection h3 { font-size: 13px; margin: 10px 0 4px; }
+  body.printing-raffle #rafflePrintSection .growth-table { font-size: 11px; margin-top: 2px; }
+  body.printing-raffle #rafflePrintSection .growth-table th,
+  body.printing-raffle #rafflePrintSection .growth-table td { padding: 3px 6px; }
+  body.printing-raffle #rafflePrintSection .growth-table tr { page-break-inside: avoid; }
+  body.printing-raffle #rafflePrintSection .table-scroll { margin-bottom: 8px !important; }
+  body.printing-raffle #rafflePrintSection .item-icon { width: 16px !important; height: 16px !important; }
+  body.printing-raffle #rafflePrintSection .raffle-log-list { padding: 4px 8px; gap: 0; margin-bottom: 0 !important; }
+  body.printing-raffle #rafflePrintSection .raffle-log-entry { padding: 2px 0; font-size: 11px; page-break-inside: avoid; }
 }
 
 .attendance-grid {
