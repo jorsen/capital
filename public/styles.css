@@ -619,20 +619,27 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
   border: none;
   min-width: 0;
 }
-#lootRecordsTableWrap .growth-table td:first-child { flex: 1 1 auto; min-width: 0; }
+#lootRecordsTableWrap .growth-table td:first-child { flex: 1 1 auto; min-width: 0; overflow: hidden; }
 #lootRecordsTableWrap .growth-table td:nth-child(2) { flex: 0 0 60px; }
 #lootRecordsTableWrap .growth-table td:nth-child(3) {
   flex: 0 0 220px;
-  white-space: normal;
-  word-break: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   display: inline-block;
 }
 #lootRecordsTableWrap .growth-table td:nth-child(4) { flex: 0 0 78px; }
 #lootRecordsTableWrap .growth-table td:nth-child(5) { flex: 0 0 56px; justify-content: flex-end; }
 #lootRecordsTableWrap .item-label-text {
-  white-space: normal;
-  word-break: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   min-width: 0;
+}
+#lootRecordsTableWrap .excluded-badge {
+  flex-shrink: 0;
+  font-size: 13px;
+  opacity: 0.8;
 }
 #lootRecordsTableWrap .item-icon { width: 28px !important; height: 28px !important; }
 #lootRecordsTableWrap .qty-input { width: 56px !important; }

@@ -279,13 +279,17 @@ function renderSessionContent() {
   const raffleEligibleRecords = unassignedRecords.filter((r) => !r.excludedFromRaffle);
   const reservationRecords = unassignedRecords.filter((r) => r.excludedFromRaffle);
 
-  // Raffle-drawn items float to the top, sorted alphabetically among
-  // themselves; everything else keeps its original (newest-first) order.
-  const displayRecords = allRecords.slice().sort((a, b) => {
-    if (a.viaRaffle !== b.viaRaffle) return a.viaRaffle ? -1 : 1;
-    if (a.viaRaffle) return a.item.localeCompare(b.item);
-    return 0;
-  });
+  // Raffle-drawn items float to the top (sorted alphabetically among
+  // themselves), then excluded-from-raffle items (also alphabetized), then
+  // everything else keeps its original (newest-first) order.
+  const raffleGroup = allRecords.filter((r) => r.viaRaffle).sort((a, b) => a.item.localeCompare(b.item));
+  const excludedGroup = allRecords
+    .filter((r) => !r.viaRaffle && !r.recipientId && r.excludedFromRaffle)
+    .sort((a, b) => a.item.localeCompare(b.item));
+  const restGroup = allRecords.filter(
+    (r) => !r.viaRaffle && !(!r.recipientId && r.excludedFromRaffle)
+  );
+  const displayRecords = [...raffleGroup, ...excludedGroup, ...restGroup];
 
   const lootRecordsRows = displayRecords
     .map((r) => {
@@ -311,7 +315,7 @@ function renderSessionContent() {
         (other) => other.recipientId && other.item.toLowerCase() === r.item.toLowerCase()
       );
       const excludedBadge = r.excludedFromRaffle
-        ? '<span style="color:var(--text-muted); font-size:11px; margin-left:6px;">(excluded from raffle)</span>'
+        ? '<span class="excluded-badge" title="Excluded from raffle">🚫</span>'
         : '';
       return `
       <tr class="${inProgress ? 'loot-status-progress' : ''}">
