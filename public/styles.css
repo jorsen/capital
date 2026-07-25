@@ -20,6 +20,8 @@
   --series-1-soft:   rgba(34,197,94,0.14);
   --gold:            #f2a93c;
   --gold-soft:       rgba(242,169,60,0.16);
+  --reserved:        #3b82f6;
+  --reserved-soft:   rgba(59,130,246,0.16);
   --good:            #4ade80;
   --bad:             #ef4444;
   --shadow-sm:       0 1px 2px rgba(0,0,0,0.35);
@@ -532,6 +534,8 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
 .growth-table tr.loot-status-done td:first-child { box-shadow: inset 3px 0 0 var(--series-1); }
 .growth-table tr.loot-status-progress td { background: var(--gold-soft); }
 .growth-table tr.loot-status-progress td:first-child { box-shadow: inset 3px 0 0 var(--gold); }
+.growth-table tr.loot-status-reserved td { background: var(--reserved-soft); color: var(--reserved); }
+.growth-table tr.loot-status-reserved td:first-child { box-shadow: inset 3px 0 0 var(--reserved); }
 
 .raffle-log-list {
   display: block;
@@ -641,6 +645,12 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
   font-size: 13px;
   opacity: 0.8;
 }
+.reserved-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--reserved);
+  margin-left: 6px;
+}
 #lootRecordsTableWrap .item-icon { width: 28px !important; height: 28px !important; }
 #lootRecordsTableWrap .qty-input { width: 56px !important; }
 
@@ -651,6 +661,8 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
 #lootRecordsTableWrap .growth-table tr.loot-status-done td { background: none; }
 #lootRecordsTableWrap .growth-table tr.loot-status-progress { background: var(--gold-soft); border-radius: 6px; }
 #lootRecordsTableWrap .growth-table tr.loot-status-progress td { background: none; }
+#lootRecordsTableWrap .growth-table tr.loot-status-reserved { background: var(--reserved-soft); border-radius: 6px; }
+#lootRecordsTableWrap .growth-table tr.loot-status-reserved td { background: none; }
 
 .sent-check-label {
   display: inline-flex;

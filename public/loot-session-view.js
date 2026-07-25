@@ -152,7 +152,7 @@ function itemLabel(itemName) {
 // Splits an unassigned record across multiple members, each with their own quantity.
 // Uses the existing loot-records API: one POST per member, then either shrinks the
 // original record to whatever's left over or deletes it if fully allocated.
-function openMultiAssignModal(sessionId, record, members) {
+function openMultiAssignModal(sessionId, record, members, { viaReservation } = {}) {
   const modal = document.getElementById('multiAssignModal');
   const list = document.getElementById('multiAssignMembersList');
   const info = document.getElementById('multiAssignItemInfo');
@@ -220,6 +220,7 @@ function openMultiAssignModal(sessionId, record, members) {
             recipientId: a.memberId,
             item: record.item,
             quantity: a.qty,
+            viaReservation: !!viaReservation,
           }),
         });
         sessionState.session.records.push(newRecord);
@@ -294,11 +295,12 @@ function renderSessionContent() {
   const lootRecordsRows = displayRecords
     .map((r) => {
       if (r.recipientId) {
+        const reservedBadge = r.viaReservation ? '<span class="reserved-badge">Reserved</span>' : '';
         return `
-        <tr class="loot-status-done">
+        <tr class="${r.viaReservation ? 'loot-status-reserved' : 'loot-status-done'}">
           <td style="font-weight:600;">${itemLabel(r.item)}</td>
           <td class="col-right"><input type="number" class="qty-input" data-record-id="${r.id}" value="${r.quantity}" min="1" step="1" style="width:100px; text-align:right;"></td>
-          <td>${escapeHtml(r.recipientName)}</td>
+          <td>${escapeHtml(r.recipientName)}${reservedBadge}</td>
           <td>
             <label class="sent-check-label" title="Mark as sent">
               <input type="checkbox" class="sent-check" data-record-id="${r.id}" ${r.sent ? 'checked' : ''}>
@@ -700,7 +702,7 @@ function renderSessionContent() {
       const recordId = btn.getAttribute('data-reservation-assign');
       const record = session.records.find((r) => r.id === recordId);
       if (!record) return;
-      openMultiAssignModal(session.id, record, sortedMembers);
+      openMultiAssignModal(session.id, record, sortedMembers, { viaReservation: true });
     });
   });
 
