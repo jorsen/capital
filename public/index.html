@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=35">
+  <link rel="stylesheet" href="styles.css?v=34">
 </head>
 <body>
   <div class="app viz-root">
@@ -37,6 +37,10 @@
           <a href="#/items" data-view="items" class="nav-link">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
             Item Report
+          </a>
+          <a href="#/bosses" data-view="bosses" class="nav-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Boss Timers
           </a>
         </nav>
       </div>
@@ -173,6 +177,16 @@
       </section>
     </div>
 
+    <!-- ===================== BOSS TIMERS VIEW ===================== -->
+    <div id="view-bosses" class="view hidden">
+      <div class="view-header">
+        <p style="color:var(--text-muted); font-size:13px; margin:0; flex:1;">Times are in <strong>your local time</strong> — enter each spawn time as it appears on your own clock.</p>
+        <button id="addBossBtn" class="btn primary">+ Add Boss</button>
+      </div>
+      <div id="bossTimerGrid" class="boss-timer-grid"></div>
+      <p id="bossTimerEmptyState" class="empty-state hidden">No bosses tracked yet — click "Add Boss" to start.</p>
+    </div>
+
     <!-- ===================== LOOT SESSION DETAIL VIEW ===================== -->
     <div id="view-loot-session" class="view hidden">
       <div class="view-header space-between">
@@ -192,6 +206,13 @@
     <div class="modal modal-wide">
       <button class="modal-close" data-close="memberModal" aria-label="Close">×</button>
       <div id="memberModalContent"></div>
+    </div>
+  </div>
+
+  <div id="bossModal" class="modal-overlay hidden">
+    <div class="modal">
+      <button class="modal-close" data-close="bossModal" aria-label="Close">×</button>
+      <div id="bossModalContent"></div>
     </div>
   </div>
 
@@ -259,14 +280,15 @@
 
   <div id="toast" class="toast hidden"></div>
 
-  <script src="common.js?v=30"></script>
-  <script src="item-categories.js?v=30"></script>
-  <script src="members-view.js?v=30"></script>
-  <script src="queue-view.js?v=30"></script>
-  <script src="loot-view.js?v=30"></script>
-  <script src="loot-session-view.js?v=30"></script>
-  <script src="item-report-view.js?v=30"></script>
-  <script src="auth.js?v=30"></script>
-  <script src="router.js?v=30"></script>
+  <script src="common.js?v=29"></script>
+  <script src="item-categories.js?v=29"></script>
+  <script src="members-view.js?v=29"></script>
+  <script src="queue-view.js?v=29"></script>
+  <script src="loot-view.js?v=29"></script>
+  <script src="loot-session-view.js?v=29"></script>
+  <script src="item-report-view.js?v=29"></script>
+  <script src="boss-timer-view.js?v=29"></script>
+  <script src="auth.js?v=29"></script>
+  <script src="router.js?v=29"></script>
 </body>
 </html>
