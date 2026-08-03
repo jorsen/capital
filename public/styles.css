@@ -628,6 +628,7 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
 .raffle-log-list {
   display: block;
   column-width: 240px;
+  column-count: 2;
   column-gap: 18px;
   margin-bottom: 20px;
   background: var(--surface-2);
@@ -656,6 +657,7 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
    one table's id so other .growth-table usages elsewhere are unaffected. */
 #raffleWinnersTableWrap {
   column-width: 260px;
+  column-count: 2;
   column-gap: 18px;
   overflow-x: auto;
 }
