@@ -13,6 +13,21 @@ function latestRateByName() {
   return map;
 }
 
+// Guild-wide growth-rate ranking (#1 = highest), independent of a member's
+// position within any one queue — shown before their name so it's clear
+// where they currently stand overall.
+function rankByName() {
+  const rates = latestRateByName();
+  const sorted = queueState.members.slice().sort((a, b) => {
+    const ra = rates.has(a.name) ? rates.get(a.name) : -Infinity;
+    const rb = rates.has(b.name) ? rates.get(b.name) : -Infinity;
+    return rb - ra;
+  });
+  const map = new Map();
+  sorted.forEach((m, i) => map.set(m.name, i + 1));
+  return map;
+}
+
 // An earlier version of this feature stored `done` as plain name strings
 // instead of {name, completedAt} objects — normalize either shape.
 function normalizeDoneEntries(doneArr) {
@@ -43,6 +58,7 @@ function renderQueueColumn(slot) {
 
   const names = queueState.queue[slot] || [];
   const doneNames = new Set(normalizeDoneEntries(queueState.done[slot]).map((d) => d.name));
+  const ranks = rankByName();
   const datalistId = `memberNamesList-${slot.replace(/[^a-z0-9]+/gi, '-')}`;
   // Members who already received this part are left out of the "Add name"
   // suggestions, since they can't be re-queued for it anyway.
@@ -52,19 +68,21 @@ function renderQueueColumn(slot) {
     .join('');
 
   const items = names
-    .map(
-      (name, i) => `
+    .map((name, i) => {
+      const rank = ranks.get(name);
+      const rankBadge = rank ? `<span class="queue-member-rank">#${rank}</span>` : '';
+      return `
       <li class="queue-item" data-index="${i}">
         <span class="queue-rank">${i + 1}</span>
         <input type="checkbox" class="queue-done-check" data-name="${escapeHtml(name)}" title="Mark as done — removes them from this queue">
-        <span class="queue-name">${escapeHtml(name)}</span>
+        <span class="queue-name">${rankBadge}${escapeHtml(name)}</span>
         <span class="queue-actions">
           <button class="icon-btn" data-act="up" title="Move up" ${i === 0 ? 'disabled' : ''}>↑</button>
           <button class="icon-btn" data-act="down" title="Move down" ${i === names.length - 1 ? 'disabled' : ''}>↓</button>
           <button class="icon-btn" data-act="remove" title="Remove">✕</button>
         </span>
-      </li>`
-    )
+      </li>`;
+    })
     .join('');
 
   col.innerHTML = `

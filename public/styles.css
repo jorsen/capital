@@ -1001,6 +1001,12 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
   white-space: nowrap;
   font-weight: 600;
 }
+.queue-member-rank {
+  color: var(--text-muted);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  margin-right: 4px;
+}
 .queue-actions {
   display: flex;
   gap: 1px;
