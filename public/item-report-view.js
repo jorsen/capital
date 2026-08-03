@@ -85,14 +85,12 @@ function renderItemReportView() {
       const expanded = itemReportState.expandedDates.has(g.date);
       const headerRow = `
         <tr class="item-report-date-row" data-date="${g.date}">
-          <td colspan="2" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-            <span>
-              <span class="item-report-caret">${expanded ? '▾' : '▸'}</span>
-              <strong>${formatShortDate(g.date)}</strong>
-              <span class="item-report-summary">${g.entries.length} member${g.entries.length === 1 ? '' : 's'} · ${g.totalQty} total</span>
-            </span>
-            <button type="button" class="icon-btn" data-copy-date="${g.date}" title="Copy member names">📋</button>
+          <td>
+            <span class="item-report-caret">${expanded ? '▾' : '▸'}</span>
+            <strong>${formatShortDate(g.date)}</strong>
+            <span class="item-report-summary">${g.entries.length} member${g.entries.length === 1 ? '' : 's'} · ${g.totalQty} total</span>
           </td>
+          <td class="col-right"><button type="button" class="icon-btn" data-copy-date="${g.date}" title="Copy member names">📋</button></td>
         </tr>`;
       const memberRows = expanded
         ? g.entries
