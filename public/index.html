@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=23">
+  <link rel="stylesheet" href="styles.css?v=24">
 </head>
 <body>
   <div class="app viz-root">
@@ -100,6 +100,14 @@
       <section class="panel">
         <div class="table-scroll">
           <div id="queueColumns" class="queue-columns"></div>
+        </div>
+      </section>
+
+      <h3 style="margin-bottom:6px;">✅ Already Received</h3>
+      <p style="color:var(--text-muted); font-size:13px; margin:-4px 0 8px;">Who's already gotten each insignia part — they can't be re-queued for the same part.</p>
+      <section class="panel">
+        <div class="table-scroll">
+          <div id="queueHistory" class="queue-history-columns"></div>
         </div>
       </section>
     </div>
@@ -249,14 +257,14 @@
 
   <div id="toast" class="toast hidden"></div>
 
-  <script src="common.js?v=22"></script>
-  <script src="item-categories.js?v=22"></script>
-  <script src="members-view.js?v=22"></script>
-  <script src="queue-view.js?v=22"></script>
-  <script src="loot-view.js?v=22"></script>
-  <script src="loot-session-view.js?v=22"></script>
-  <script src="item-report-view.js?v=22"></script>
-  <script src="auth.js?v=22"></script>
-  <script src="router.js?v=22"></script>
+  <script src="common.js?v=23"></script>
+  <script src="item-categories.js?v=23"></script>
+  <script src="members-view.js?v=23"></script>
+  <script src="queue-view.js?v=23"></script>
+  <script src="loot-view.js?v=23"></script>
+  <script src="loot-session-view.js?v=23"></script>
+  <script src="item-report-view.js?v=23"></script>
+  <script src="auth.js?v=23"></script>
+  <script src="router.js?v=23"></script>
 </body>
 </html>

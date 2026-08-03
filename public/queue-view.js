@@ -34,6 +34,7 @@ function renderQueueView() {
   queueState.slots.forEach((slot) => {
     root.appendChild(renderQueueColumn(slot));
   });
+  renderQueueHistory();
 }
 
 function renderQueueColumn(slot) {
@@ -41,22 +42,20 @@ function renderQueueColumn(slot) {
   col.className = 'queue-col';
 
   const names = queueState.queue[slot] || [];
-  const doneNames = queueState.done[slot] || [];
   const items = names
-    .map((name, i) => {
-      const isDone = doneNames.includes(name);
-      return `
-      <li class="queue-item${isDone ? ' queue-item-done' : ''}" data-index="${i}">
+    .map(
+      (name, i) => `
+      <li class="queue-item" data-index="${i}">
         <span class="queue-rank">${i + 1}</span>
-        <input type="checkbox" class="queue-done-check" data-name="${escapeHtml(name)}" title="Mark as done" ${isDone ? 'checked' : ''}>
+        <input type="checkbox" class="queue-done-check" data-name="${escapeHtml(name)}" title="Mark as done — removes them from this queue">
         <span class="queue-name">${escapeHtml(name)}</span>
         <span class="queue-actions">
           <button class="icon-btn" data-act="up" title="Move up" ${i === 0 ? 'disabled' : ''}>↑</button>
           <button class="icon-btn" data-act="down" title="Move down" ${i === names.length - 1 ? 'disabled' : ''}>↓</button>
           <button class="icon-btn" data-act="remove" title="Remove">✕</button>
         </span>
-      </li>`;
-    })
+      </li>`
+    )
     .join('');
 
   col.innerHTML = `
@@ -89,11 +88,10 @@ function renderQueueColumn(slot) {
 
   col.querySelectorAll('.queue-done-check').forEach((cb) => {
     cb.addEventListener('change', () => {
-      const name = cb.getAttribute('data-name');
-      const doneArr = new Set(queueState.done[slot] || []);
-      if (cb.checked) doneArr.add(name);
-      else doneArr.delete(name);
-      saveQueueDone(slot, Array.from(doneArr));
+      if (!cb.checked) return;
+      const li = cb.closest('.queue-item');
+      li.classList.add('queue-item-done');
+      completeQueueMember(slot, cb.getAttribute('data-name'));
     });
   });
 
@@ -122,6 +120,44 @@ function renderQueueColumn(slot) {
   return col;
 }
 
+// "Who already got it" — one card per part, listing everyone who's ever been
+// marked done for it (permanent, independent of the active queue lists).
+function renderQueueHistory() {
+  const root = document.getElementById('queueHistory');
+  if (!root) return;
+
+  root.innerHTML = queueState.slots
+    .map((slot) => {
+      const entries = (queueState.done[slot] || [])
+        .slice()
+        .sort((a, b) => b.completedAt.localeCompare(a.completedAt));
+      const rows = entries.length
+        ? entries
+            .map(
+              (e) => `
+          <li class="queue-history-item">
+            <span class="queue-history-name">${escapeHtml(e.name)}</span>
+            <span class="queue-history-date">${new Date(e.completedAt).toLocaleDateString()}</span>
+            <button class="icon-btn" data-undo-slot="${escapeHtml(slot)}" data-undo-name="${escapeHtml(e.name)}" title="Undo — does not re-queue them">✕</button>
+          </li>`
+            )
+            .join('')
+        : '<li class="queue-history-empty">No one yet.</li>';
+      return `
+      <div class="queue-history-col">
+        <div class="queue-col-header queue-history-header">${escapeHtml(slot)} <span class="queue-history-count">${entries.length}</span></div>
+        <ul class="queue-history-list">${rows}</ul>
+      </div>`;
+    })
+    .join('');
+
+  root.querySelectorAll('[data-undo-slot]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      undoQueueCompletion(btn.getAttribute('data-undo-slot'), btn.getAttribute('data-undo-name'));
+    });
+  });
+}
+
 async function saveQueueSlot(slot, names) {
   try {
     const result = await api(`/api/queue/${encodeURIComponent(slot)}`, {
@@ -136,14 +172,30 @@ async function saveQueueSlot(slot, names) {
   }
 }
 
-async function saveQueueDone(slot, done) {
+async function completeQueueMember(slot, name) {
   try {
-    const result = await api(`/api/queue/${encodeURIComponent(slot)}/done`, {
-      method: 'PUT',
-      body: JSON.stringify({ done }),
+    const result = await api(`/api/queue/${encodeURIComponent(slot)}/complete`, {
+      method: 'POST',
+      body: JSON.stringify({ name }),
+    });
+    queueState.queue[slot] = result.names;
+    queueState.done[slot] = result.done;
+    renderQueueView();
+    toast(`${name} marked done for ${slot}`);
+  } catch (err) {
+    toast(err.message);
+    renderQueueView();
+  }
+}
+
+async function undoQueueCompletion(slot, name) {
+  try {
+    const result = await api(`/api/queue/${encodeURIComponent(slot)}/complete/${encodeURIComponent(name)}`, {
+      method: 'DELETE',
     });
     queueState.done[slot] = result.done;
     renderQueueView();
+    toast(`Removed ${name} from ${slot} history`);
   } catch (err) {
     toast(err.message);
   }

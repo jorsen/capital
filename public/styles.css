@@ -925,6 +925,58 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
 }
 .queue-actions .icon-btn:disabled:hover { color: var(--text-muted); background: none; }
 
+.queue-history-columns {
+  display: flex;
+  gap: 14px;
+  min-width: max-content;
+}
+.queue-history-col {
+  width: 220px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.queue-history-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: var(--series-1-soft);
+  color: var(--series-1);
+}
+.queue-history-count {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+.queue-history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 8px;
+}
+.queue-history-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--series-1);
+  border-radius: 8px;
+  background: var(--series-1-soft);
+  font-size: 13px;
+}
+.queue-history-name { flex: 1; color: var(--series-1); font-weight: 600; white-space: nowrap; }
+.queue-history-date { color: var(--text-muted); font-size: 11px; flex-shrink: 0; }
+.queue-history-empty {
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 6px 8px;
+}
+
 .queue-add-form {
   display: flex;
   gap: 6px;
