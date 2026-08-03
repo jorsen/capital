@@ -270,7 +270,14 @@ function renderSessionContent() {
   const session = sessionState.session;
   const content = document.getElementById('sessionContent');
 
-  const sortedMembers = sessionState.members.slice().sort((a, b) => a.name.localeCompare(b.name));
+  // Highest growth rate first everywhere a member picker shows up (Recipient
+  // dropdown, Attendance checklist, multi-assign modal) — same metric and
+  // ordering as the Members table's default sort.
+  const sortedMembers = sessionState.members.slice().sort((a, b) => {
+    const av = latestGrowth(a)?.rate ?? -Infinity;
+    const bv = latestGrowth(b)?.rate ?? -Infinity;
+    return bv - av;
+  });
   const memberOptions = sortedMembers
     .map((m) => `<option value="${m.id}">${escapeHtml(m.name)}</option>`)
     .join('');
