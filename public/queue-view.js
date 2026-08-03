@@ -13,19 +13,19 @@ function latestRateByName() {
   return map;
 }
 
+// An earlier version of this feature stored `done` as plain name strings
+// instead of {name, completedAt} objects — normalize either shape.
+function normalizeDoneEntries(doneArr) {
+  return (doneArr || []).map((d) => (typeof d === 'string' ? { name: d, completedAt: null } : d));
+}
+
 async function loadQueueData() {
   const [{ slots, queue, done }, members] = await Promise.all([api('/api/queue'), api('/api/members')]);
   queueState.slots = slots;
   queueState.queue = queue;
   queueState.done = done;
   queueState.members = members;
-  populateQueueDatalist();
   renderQueueView();
-}
-
-function populateQueueDatalist() {
-  const list = document.getElementById('memberNamesList');
-  list.innerHTML = queueState.members.map((m) => `<option value="${escapeHtml(m.name)}">`).join('');
 }
 
 function renderQueueView() {
@@ -42,6 +42,15 @@ function renderQueueColumn(slot) {
   col.className = 'queue-col';
 
   const names = queueState.queue[slot] || [];
+  const doneNames = new Set(normalizeDoneEntries(queueState.done[slot]).map((d) => d.name));
+  const datalistId = `memberNamesList-${slot.replace(/[^a-z0-9]+/gi, '-')}`;
+  // Members who already received this part are left out of the "Add name"
+  // suggestions, since they can't be re-queued for it anyway.
+  const availableOptions = queueState.members
+    .filter((m) => !doneNames.has(m.name))
+    .map((m) => `<option value="${escapeHtml(m.name)}">`)
+    .join('');
+
   const items = names
     .map(
       (name, i) => `
@@ -62,9 +71,10 @@ function renderQueueColumn(slot) {
     <div class="queue-col-header">${escapeHtml(slot)}</div>
     <ol class="queue-list">${items}</ol>
     <form class="queue-add-form">
-      <input type="text" list="memberNamesList" placeholder="Add name…" required maxlength="40">
+      <input type="text" list="${datalistId}" placeholder="Add name…" required maxlength="40">
       <button type="submit" class="btn small" title="Add to queue">+</button>
     </form>
+    <datalist id="${datalistId}">${availableOptions}</datalist>
     <button type="button" class="btn small ghost queue-sort-btn">Sort by Growth Rate</button>
   `;
 
@@ -128,17 +138,13 @@ function renderQueueHistory() {
 
   root.innerHTML = queueState.slots
     .map((slot) => {
-      // Normalize legacy entries: an earlier version of this feature stored
-      // done as plain name strings instead of {name, completedAt} objects.
-      // Some slots ended up with both a legacy string AND a new object entry
-      // for the same person — dedupe by name, preferring the dated one.
+      // Some slots ended up with both a legacy string entry and a new object
+      // entry for the same person — dedupe by name, preferring the dated one.
       const byName = new Map();
-      (queueState.done[slot] || [])
-        .map((d) => (typeof d === 'string' ? { name: d, completedAt: null } : d))
-        .forEach((d) => {
-          const existing = byName.get(d.name);
-          if (!existing || (!existing.completedAt && d.completedAt)) byName.set(d.name, d);
-        });
+      normalizeDoneEntries(queueState.done[slot]).forEach((d) => {
+        const existing = byName.get(d.name);
+        if (!existing || (!existing.completedAt && d.completedAt)) byName.set(d.name, d);
+      });
       const entries = Array.from(byName.values()).sort((a, b) => (b.completedAt || '').localeCompare(a.completedAt || ''));
       const rows = entries.length
         ? entries
