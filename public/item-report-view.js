@@ -85,10 +85,13 @@ function renderItemReportView() {
       const expanded = itemReportState.expandedDates.has(g.date);
       const headerRow = `
         <tr class="item-report-date-row" data-date="${g.date}">
-          <td colspan="2">
-            <span class="item-report-caret">${expanded ? '▾' : '▸'}</span>
-            <strong>${formatShortDate(g.date)}</strong>
-            <span class="item-report-summary">${g.entries.length} member${g.entries.length === 1 ? '' : 's'} · ${g.totalQty} total</span>
+          <td colspan="2" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+            <span>
+              <span class="item-report-caret">${expanded ? '▾' : '▸'}</span>
+              <strong>${formatShortDate(g.date)}</strong>
+              <span class="item-report-summary">${g.entries.length} member${g.entries.length === 1 ? '' : 's'} · ${g.totalQty} total</span>
+            </span>
+            <button type="button" class="icon-btn" data-copy-date="${g.date}" title="Copy member names">📋</button>
           </td>
         </tr>`;
       const memberRows = expanded
@@ -118,6 +121,21 @@ function renderItemReportView() {
     tr.addEventListener('click', (e) => {
       e.stopPropagation();
       window.location.hash = `#/loot-session/${tr.getAttribute('data-session-id')}`;
+    });
+  });
+  body.querySelectorAll('[data-copy-date]').forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const date = btn.getAttribute('data-copy-date');
+      const group = groups.find((g) => g.date === date);
+      if (!group) return;
+      const text = group.entries.map((entry, i) => `${i + 1}. ${entry.member}`).join('\n');
+      try {
+        await navigator.clipboard.writeText(text);
+        toast(`Copied ${group.entries.length} name${group.entries.length === 1 ? '' : 's'}`);
+      } catch (err) {
+        toast('Could not copy — clipboard access denied');
+      }
     });
   });
 
