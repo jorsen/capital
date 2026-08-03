@@ -47,3 +47,32 @@ document.addEventListener('click', (e) => {
     document.getElementById(closeBtn.getAttribute('data-close')).classList.add('hidden');
   }
 });
+
+// Mobile burger menu: toggles the nav dropdown, closes on link click or on
+// clicking anywhere outside of it.
+(() => {
+  const toggle = document.getElementById('navToggle');
+  const nav = document.getElementById('pageNav');
+  if (!toggle || !nav) return;
+
+  function closeNav() {
+    nav.classList.remove('open');
+    toggle.setAttribute('aria-expanded', 'false');
+  }
+
+  toggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = nav.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', String(isOpen));
+  });
+
+  nav.querySelectorAll('.nav-link').forEach((link) => {
+    link.addEventListener('click', closeNav);
+  });
+
+  document.addEventListener('click', (e) => {
+    if (nav.classList.contains('open') && !nav.contains(e.target) && e.target !== toggle) {
+      closeNav();
+    }
+  });
+})();
