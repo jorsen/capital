@@ -494,7 +494,8 @@ function renderSessionContent() {
 
   content.querySelector('#copyPresentBtn').addEventListener('click', async () => {
     const presentNames = getPresentMembers(session, sortedMembers).map((m) => m.name);
-    const text = presentNames.map((name, i) => `${i + 1}. ${name}`).join('\n');
+    const dateLine = `${session.date}${session.run ? ` — ${session.run}` : ''}`;
+    const text = [dateLine, ...presentNames.map((name, i) => `${i + 1}. ${name}`)].join('\n');
     try {
       await navigator.clipboard.writeText(text);
       toast(`Copied ${presentNames.length} present name${presentNames.length === 1 ? '' : 's'}`);

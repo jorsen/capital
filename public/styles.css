@@ -76,8 +76,11 @@ body {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 16px;
-  padding: 24px 0;
-  margin-bottom: 28px;
+  /* Bleed out of .app's horizontal padding so the background spans the
+     full viewport edge-to-edge, while the added padding keeps the actual
+     brand/nav/logout content aligned exactly where it was before. */
+  margin: 0 -20px 28px;
+  padding: 24px 20px;
   position: sticky;
   top: 0;
   z-index: 10;
@@ -169,7 +172,7 @@ body {
 
 @media (max-width: 720px) {
   .nav-toggle { display: flex; }
-  .topbar-left { position: relative; }
+  .topbar { position: relative; }
   .page-nav {
     display: none;
     position: absolute;
@@ -178,11 +181,9 @@ body {
     right: 0;
     flex-direction: column;
     gap: 2px;
-    margin-top: 8px;
     padding: 10px;
     background: var(--surface-1);
-    border: 1px solid var(--border);
-    border-radius: 10px;
+    border-top: 1px solid var(--border);
     box-shadow: var(--shadow-md);
     z-index: 20;
   }
@@ -315,8 +316,14 @@ body {
 .table-toolbar {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
   margin-bottom: 14px;
 }
+.table-toolbar input[type="search"] {
+  flex: 1 1 160px;
+  min-width: 0;
+}
+.table-toolbar select { flex-shrink: 0; }
 .table-toolbar input, .table-toolbar select, select, input, textarea {
   font: inherit;
   color: var(--text-primary);
@@ -417,7 +424,7 @@ select:focus, input:focus, textarea:focus {
 .item-icon {
   display: inline-block;
   border-radius: 6px;
-  object-fit: cover;
+  object-fit: contain;
   vertical-align: middle;
   flex-shrink: 0;
 }
