@@ -845,26 +845,31 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
   color: var(--text-secondary);
 }
 
+/* Grid with a fixed track per slot (not flex + horizontal scroll) so all
+   8 columns always divide up the available width and fit on one screen —
+   font sizes/padding are trimmed throughout to match the narrower tracks. */
 .queue-columns {
-  display: flex;
-  gap: 14px;
-  min-width: max-content;
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 8px;
 }
 .queue-col {
-  width: 220px;
-  flex-shrink: 0;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 .queue-col-header {
   background: var(--gold-soft);
   color: var(--gold);
   font-weight: 700;
-  font-size: 13px;
+  font-size: 11px;
   text-align: center;
-  padding: 8px 6px;
+  padding: 6px 4px;
   border-radius: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .queue-list {
   list-style: none;
@@ -872,18 +877,19 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
   min-height: 8px;
 }
 .queue-item {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 8px;
+  gap: 4px;
+  padding: 4px 5px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 7px;
   background: var(--surface-2);
-  font-size: 13px;
+  font-size: 11px;
+  min-width: 0;
   transition: background 0.12s, border-color 0.12s;
 }
 .queue-item-done {
@@ -893,6 +899,8 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
 .queue-item-done .queue-name { color: var(--series-1); }
 .queue-done-check {
   flex-shrink: 0;
+  width: 12px;
+  height: 12px;
   cursor: pointer;
 }
 .queue-done-check:checked { accent-color: var(--series-1); }
@@ -900,8 +908,8 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
   font-variant-numeric: tabular-nums;
   color: var(--gold);
   font-weight: 700;
-  font-size: 11px;
-  width: 14px;
+  font-size: 10px;
+  width: 12px;
   flex-shrink: 0;
 }
 .queue-name {
@@ -912,12 +920,12 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
 }
 .queue-actions {
   display: flex;
-  gap: 2px;
+  gap: 1px;
   flex-shrink: 0;
 }
 .queue-actions .icon-btn {
-  font-size: 11px;
-  padding: 2px;
+  font-size: 10px;
+  padding: 1px;
 }
 .queue-actions .icon-btn:disabled {
   opacity: 0.25;
@@ -926,22 +934,23 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
 .queue-actions .icon-btn:disabled:hover { color: var(--text-muted); background: none; }
 
 .queue-history-columns {
-  display: flex;
-  gap: 14px;
-  min-width: max-content;
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 8px;
 }
 .queue-history-col {
-  width: 220px;
-  flex-shrink: 0;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 .queue-history-header {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 5px;
+  font-size: 11px;
+  padding: 6px 4px;
   background: var(--series-1-soft);
   color: var(--series-1);
 }
@@ -956,40 +965,49 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
   min-height: 8px;
 }
 .queue-history-item {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 8px;
+  gap: 4px;
+  padding: 4px 5px;
   border: 1px solid var(--series-1);
-  border-radius: 8px;
+  border-radius: 7px;
   background: var(--series-1-soft);
-  font-size: 13px;
+  font-size: 11px;
+  min-width: 0;
 }
-.queue-history-name { flex: 1; color: var(--series-1); font-weight: 600; white-space: nowrap; }
-.queue-history-date { color: var(--text-muted); font-size: 11px; flex-shrink: 0; }
+.queue-history-name {
+  flex: 1;
+  min-width: 0;
+  color: var(--series-1);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.queue-history-date { color: var(--text-muted); font-size: 9px; flex-shrink: 0; }
 .queue-history-empty {
   color: var(--text-muted);
-  font-size: 13px;
-  padding: 6px 8px;
+  font-size: 11px;
+  padding: 4px 5px;
 }
 
 .queue-add-form {
   display: flex;
-  gap: 6px;
+  gap: 4px;
 }
 .queue-add-form input {
   flex: 1;
   min-width: 0;
-  padding: 6px 8px;
-  font-size: 12px;
+  padding: 4px 6px;
+  font-size: 11px;
 }
 .queue-add-form button {
   flex-shrink: 0;
-  padding: 6px 10px;
+  padding: 4px 8px;
 }
 
 .toast {
