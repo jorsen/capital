@@ -4,8 +4,9 @@ const VIEW_TITLES = {
   loot: 'Guild Dungeon Loot — Capital Records',
   'loot-session': 'Loot Details — Capital Records',
   items: 'Item Report — Capital Records',
+  bosses: 'Boss Timers — Capital Records',
 };
-const VALID_VIEWS = ['members', 'queue', 'loot', 'loot-session', 'items'];
+const VALID_VIEWS = ['members', 'queue', 'loot', 'loot-session', 'items', 'bosses'];
 
 function showView(name) {
   document.querySelectorAll('.view').forEach((v) => v.classList.add('hidden'));
@@ -30,6 +31,7 @@ function parseRoute() {
   if (activeView === 'loot') loadLootData().catch((err) => toast(err.message));
   if (activeView === 'loot-session') loadSessionData(param);
   if (activeView === 'items') loadItemReportData().catch((err) => toast(err.message));
+  if (activeView === 'bosses') loadBossTimerData().catch((err) => toast(err.message));
 }
 
 window.addEventListener('hashchange', parseRoute);
