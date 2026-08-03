@@ -128,16 +128,25 @@ function renderQueueHistory() {
 
   root.innerHTML = queueState.slots
     .map((slot) => {
-      const entries = (queueState.done[slot] || [])
-        .slice()
-        .sort((a, b) => b.completedAt.localeCompare(a.completedAt));
+      // Normalize legacy entries: an earlier version of this feature stored
+      // done as plain name strings instead of {name, completedAt} objects.
+      // Some slots ended up with both a legacy string AND a new object entry
+      // for the same person — dedupe by name, preferring the dated one.
+      const byName = new Map();
+      (queueState.done[slot] || [])
+        .map((d) => (typeof d === 'string' ? { name: d, completedAt: null } : d))
+        .forEach((d) => {
+          const existing = byName.get(d.name);
+          if (!existing || (!existing.completedAt && d.completedAt)) byName.set(d.name, d);
+        });
+      const entries = Array.from(byName.values()).sort((a, b) => (b.completedAt || '').localeCompare(a.completedAt || ''));
       const rows = entries.length
         ? entries
             .map(
               (e) => `
           <li class="queue-history-item">
             <span class="queue-history-name">${escapeHtml(e.name)}</span>
-            <span class="queue-history-date">${new Date(e.completedAt).toLocaleDateString()}</span>
+            <span class="queue-history-date">${e.completedAt ? new Date(e.completedAt).toLocaleDateString() : '—'}</span>
             <button class="icon-btn" data-undo-slot="${escapeHtml(slot)}" data-undo-name="${escapeHtml(e.name)}" title="Undo — does not re-queue them">✕</button>
           </li>`
             )
