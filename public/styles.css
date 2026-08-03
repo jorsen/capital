@@ -324,6 +324,22 @@ select:focus, input:focus, textarea:focus {
   box-shadow: inset 3px 0 0 var(--series-1);
 }
 
+.item-report-date-row { background: var(--surface-1); font-weight: 600; }
+.item-report-caret {
+  display: inline-block;
+  width: 14px;
+  color: var(--gold);
+  font-size: 11px;
+}
+.item-report-summary {
+  margin-left: 10px;
+  color: var(--text-muted);
+  font-weight: 400;
+  font-size: 13px;
+}
+.item-report-member-row td:first-child { padding-left: 34px; }
+.item-report-member-row { color: var(--text-secondary); }
+
 .col-right { text-align: right; }
 .col-center { text-align: center; }
 

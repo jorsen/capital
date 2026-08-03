@@ -2,6 +2,7 @@ const itemReportState = {
   loot: [],
   categories: [],
   selectedItem: '',
+  expandedDates: new Set(),
 };
 
 function formatShortDate(dateStr) {
@@ -40,6 +41,7 @@ function renderItemReportMenu() {
   menu.querySelectorAll('.icon-select-option').forEach((el) => {
     el.addEventListener('click', () => {
       itemReportState.selectedItem = el.getAttribute('data-name');
+      itemReportState.expandedDates.clear();
       menu.classList.add('hidden');
       renderItemReportMenu();
       renderItemReportTrigger();
@@ -54,46 +56,72 @@ function renderItemReportTrigger() {
   document.getElementById('itemReportTriggerLabel').textContent = itemReportState.selectedItem || 'Select item';
 }
 
-function getItemReportRows() {
+// One group per date the selected item was given out, so the report can
+// show "08/03 — 3 members" and expand on click to the individual recipients
+// instead of one long flat list mixing every date together.
+function getItemReportGroups() {
   const item = itemReportState.selectedItem.toLowerCase();
-  const rows = [];
+  const groupsByDate = new Map();
   itemReportState.loot.forEach((session) => {
     session.records.forEach((record) => {
-      if (record.item.toLowerCase() === item) {
-        rows.push({
-          member: record.recipientName || '(unassigned)',
-          quantity: record.quantity,
-          date: session.date,
-          sessionId: session.id,
-        });
+      if (record.item.toLowerCase() !== item) return;
+      if (!groupsByDate.has(session.date)) {
+        groupsByDate.set(session.date, { date: session.date, sessionId: session.id, entries: [], totalQty: 0 });
       }
+      const group = groupsByDate.get(session.date);
+      group.entries.push({ member: record.recipientName || '(unassigned)', quantity: record.quantity });
+      group.totalQty += Number(record.quantity) || 0;
     });
   });
-  rows.sort((a, b) => a.date.localeCompare(b.date));
-  return rows;
+  return Array.from(groupsByDate.values()).sort((a, b) => b.date.localeCompare(a.date));
 }
 
 function renderItemReportView() {
-  const rows = getItemReportRows();
+  const groups = getItemReportGroups();
   const body = document.getElementById('itemReportBody');
-  document.getElementById('itemReportColumnLabel').textContent = itemReportState.selectedItem
-    ? `${itemReportState.selectedItem} Given:`
-    : 'Given:';
 
-  body.innerHTML = '';
-  rows.forEach((row) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${escapeHtml(row.member)}</td>
-      <td>${row.quantity} - ${formatShortDate(row.date)}</td>
-    `;
+  body.innerHTML = groups
+    .map((g) => {
+      const expanded = itemReportState.expandedDates.has(g.date);
+      const headerRow = `
+        <tr class="item-report-date-row" data-date="${g.date}">
+          <td colspan="2">
+            <span class="item-report-caret">${expanded ? '▾' : '▸'}</span>
+            <strong>${formatShortDate(g.date)}</strong>
+            <span class="item-report-summary">${g.entries.length} member${g.entries.length === 1 ? '' : 's'} · ${g.totalQty} total</span>
+          </td>
+        </tr>`;
+      const memberRows = expanded
+        ? g.entries
+            .map(
+              (e) => `
+        <tr class="item-report-member-row" data-session-id="${g.sessionId}">
+          <td>${escapeHtml(e.member)}</td>
+          <td>${e.quantity}</td>
+        </tr>`
+            )
+            .join('')
+        : '';
+      return headerRow + memberRows;
+    })
+    .join('');
+
+  body.querySelectorAll('.item-report-date-row').forEach((tr) => {
     tr.addEventListener('click', () => {
-      window.location.hash = `#/loot-session/${row.sessionId}`;
+      const date = tr.getAttribute('data-date');
+      if (itemReportState.expandedDates.has(date)) itemReportState.expandedDates.delete(date);
+      else itemReportState.expandedDates.add(date);
+      renderItemReportView();
     });
-    body.appendChild(tr);
+  });
+  body.querySelectorAll('.item-report-member-row').forEach((tr) => {
+    tr.addEventListener('click', (e) => {
+      e.stopPropagation();
+      window.location.hash = `#/loot-session/${tr.getAttribute('data-session-id')}`;
+    });
   });
 
-  document.getElementById('itemReportEmptyState').classList.toggle('hidden', rows.length !== 0);
+  document.getElementById('itemReportEmptyState').classList.toggle('hidden', groups.length !== 0);
 }
 
 document.getElementById('itemReportTrigger').addEventListener('click', (e) => {
