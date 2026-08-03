@@ -1,6 +1,7 @@
 const queueState = {
   slots: [],
   queue: {},
+  done: {},
   members: [],
 };
 
@@ -13,9 +14,10 @@ function latestRateByName() {
 }
 
 async function loadQueueData() {
-  const [{ slots, queue }, members] = await Promise.all([api('/api/queue'), api('/api/members')]);
+  const [{ slots, queue, done }, members] = await Promise.all([api('/api/queue'), api('/api/members')]);
   queueState.slots = slots;
   queueState.queue = queue;
+  queueState.done = done;
   queueState.members = members;
   populateQueueDatalist();
   renderQueueView();
@@ -39,19 +41,22 @@ function renderQueueColumn(slot) {
   col.className = 'queue-col';
 
   const names = queueState.queue[slot] || [];
+  const doneNames = queueState.done[slot] || [];
   const items = names
-    .map(
-      (name, i) => `
-      <li class="queue-item" data-index="${i}">
+    .map((name, i) => {
+      const isDone = doneNames.includes(name);
+      return `
+      <li class="queue-item${isDone ? ' queue-item-done' : ''}" data-index="${i}">
         <span class="queue-rank">${i + 1}</span>
+        <input type="checkbox" class="queue-done-check" data-name="${escapeHtml(name)}" title="Mark as done" ${isDone ? 'checked' : ''}>
         <span class="queue-name">${escapeHtml(name)}</span>
         <span class="queue-actions">
           <button class="icon-btn" data-act="up" title="Move up" ${i === 0 ? 'disabled' : ''}>↑</button>
           <button class="icon-btn" data-act="down" title="Move down" ${i === names.length - 1 ? 'disabled' : ''}>↓</button>
           <button class="icon-btn" data-act="remove" title="Remove">✕</button>
         </span>
-      </li>`
-    )
+      </li>`;
+    })
     .join('');
 
   col.innerHTML = `
@@ -79,6 +84,16 @@ function renderQueueColumn(slot) {
         return;
       }
       saveQueueSlot(slot, arr);
+    });
+  });
+
+  col.querySelectorAll('.queue-done-check').forEach((cb) => {
+    cb.addEventListener('change', () => {
+      const name = cb.getAttribute('data-name');
+      const doneArr = new Set(queueState.done[slot] || []);
+      if (cb.checked) doneArr.add(name);
+      else doneArr.delete(name);
+      saveQueueDone(slot, Array.from(doneArr));
     });
   });
 
@@ -114,6 +129,20 @@ async function saveQueueSlot(slot, names) {
       body: JSON.stringify({ names }),
     });
     queueState.queue[slot] = result.names;
+    queueState.done[slot] = result.done;
+    renderQueueView();
+  } catch (err) {
+    toast(err.message);
+  }
+}
+
+async function saveQueueDone(slot, done) {
+  try {
+    const result = await api(`/api/queue/${encodeURIComponent(slot)}/done`, {
+      method: 'PUT',
+      body: JSON.stringify({ done }),
+    });
+    queueState.done[slot] = result.done;
     renderQueueView();
   } catch (err) {
     toast(err.message);

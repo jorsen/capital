@@ -884,7 +884,18 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
   border-radius: 8px;
   background: var(--surface-2);
   font-size: 13px;
+  transition: background 0.12s, border-color 0.12s;
 }
+.queue-item-done {
+  background: var(--series-1-soft);
+  border-color: var(--series-1);
+}
+.queue-item-done .queue-name { color: var(--series-1); }
+.queue-done-check {
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.queue-done-check:checked { accent-color: var(--series-1); }
 .queue-rank {
   font-variant-numeric: tabular-nums;
   color: var(--gold);
