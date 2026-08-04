@@ -42,6 +42,10 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             Boss Timers
           </a>
+          <a href="#/boss-history" data-view="boss-history" class="nav-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
+            Boss History
+          </a>
         </nav>
       </div>
       <button id="logoutBtn" class="btn small">Logout</button>
@@ -187,6 +191,26 @@
       <p id="bossTimerEmptyState" class="empty-state hidden">No bosses tracked yet — click "Add Boss" to start.</p>
     </div>
 
+    <!-- ===================== BOSS HISTORY VIEW ===================== -->
+    <div id="view-boss-history" class="view hidden">
+      <section class="panel">
+        <div class="table-scroll">
+          <table class="members-table">
+            <thead>
+              <tr>
+                <th>Boss</th>
+                <th>Killed At</th>
+                <th>Source</th>
+                <th>Attendance Posted By</th>
+              </tr>
+            </thead>
+            <tbody id="bossHistoryBody"></tbody>
+          </table>
+        </div>
+        <p id="bossHistoryEmptyState" class="empty-state hidden">No boss kills logged yet.</p>
+      </section>
+    </div>
+
     <!-- ===================== LOOT SESSION DETAIL VIEW ===================== -->
     <div id="view-loot-session" class="view hidden">
       <div class="view-header space-between">
@@ -288,7 +312,8 @@
   <script src="loot-session-view.js?v=29"></script>
   <script src="item-report-view.js?v=29"></script>
   <script src="boss-timer-view.js?v=30"></script>
+  <script src="boss-history-view.js?v=30"></script>
   <script src="auth.js?v=29"></script>
-  <script src="router.js?v=29"></script>
+  <script src="router.js?v=30"></script>
 </body>
 </html>
