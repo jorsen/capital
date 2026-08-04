@@ -8,6 +8,13 @@ const bossTimerState = {
 // local time, to sidestep needing to know/convert the game server's
 // timezone). Interval bosses respawn a fixed duration after they were last
 // killed, tracked via lastKilledAt.
+//
+// Interval respawn times are estimated from chat history, not confirmed
+// in-game data, so a fixed buffer is added past the raw calculation —
+// arriving a few minutes after a boss is actually up beats rallying the
+// guild early to an empty spawn point.
+const SPAWN_BUFFER_MS = 5 * 60 * 1000;
+
 function nextSpawnMs(boss, now) {
   if (boss.type === 'daily') {
     if (!boss.spawnTime) return null;
@@ -18,7 +25,7 @@ function nextSpawnMs(boss, now) {
     return next.getTime();
   }
   if (!boss.lastKilledAt || !boss.intervalMinutes) return null;
-  return new Date(boss.lastKilledAt).getTime() + boss.intervalMinutes * 60000;
+  return new Date(boss.lastKilledAt).getTime() + boss.intervalMinutes * 60000 + SPAWN_BUFFER_MS;
 }
 
 function formatCountdown(ms) {
