@@ -1,4 +1,18 @@
-const sessionState = { id: null, session: null, members: [] };
+const sessionState = { id: null, session: null, members: [], bosses: [] };
+
+// Mirrors matchBossByRunName in lib/app.js — client-side only, so the
+// session view can preview which boss (if any) a "Submit Attendance" click
+// would match, without a round trip or actually submitting anything.
+function matchBossByRunName(run, bosses) {
+  const normalizedRun = (run || '').trim().toLowerCase();
+  if (!normalizedRun) return null;
+  return (
+    bosses.find((b) => {
+      const name = b.name.trim().toLowerCase();
+      return !!name && (normalizedRun.includes(name) || name.includes(normalizedRun));
+    }) || null
+  );
+}
 
 function raffleRecordOptionsHtml(unassignedRecords) {
   if (!unassignedRecords.length) {
@@ -13,8 +27,13 @@ function getPresentMembers(session, sortedMembers) {
   return sortedMembers.filter((m) => !session.absentees.includes(m.id));
 }
 
-function attendanceStatusText(session) {
-  if (!session.attendanceSubmittedAt) return '';
+function attendanceStatusText(session, bosses) {
+  if (!session.attendanceSubmittedAt) {
+    const preview = matchBossByRunName(session.run, bosses.filter((b) => b.type === 'interval'));
+    return preview
+      ? `Will match boss timer "${preview.name}" — clicking Submit Attendance posts a Discord confirm button for it.`
+      : 'No matching boss timer for this run name — submitting will just record attendance.';
+  }
   if (session.bossConfirmedAt) return `Boss kill confirmed by ${session.bossConfirmedBy} — timer started.`;
   if (session.bossId) return 'Waiting for kill confirmation in Discord to start the timer.';
   return 'Submitted — no matching boss timer found for this run name.';
@@ -264,9 +283,14 @@ async function loadSessionData(id) {
   }
   content.innerHTML = 'Loading…';
   try {
-    const [session, members] = await Promise.all([api(`/api/loot/${id}`), api('/api/members')]);
+    const [session, members, bosses] = await Promise.all([
+      api(`/api/loot/${id}`),
+      api('/api/members'),
+      api('/api/boss-timers'),
+    ]);
     sessionState.session = session;
     sessionState.members = members;
+    sessionState.bosses = bosses;
     renderSessionContent();
   } catch (err) {
     content.innerHTML = `<p class="empty-state">${escapeHtml(err.message)}</p>`;
@@ -389,7 +413,7 @@ function renderSessionContent() {
       <button type="button" class="btn small primary" id="submitAttendanceBtn" ${session.attendanceSubmittedAt ? 'disabled' : ''}>
         ${session.attendanceSubmittedAt ? 'Attendance Submitted ✓' : 'Submit Attendance'}
       </button>
-      <span id="attendanceSubmitStatus" style="color:var(--text-muted); font-size:13px;">${attendanceStatusText(session)}</span>
+      <span id="attendanceSubmitStatus" style="color:var(--text-muted); font-size:13px;">${attendanceStatusText(session, sessionState.bosses)}</span>
     </div>
 
     <h3 style="margin-bottom:6px;">🎲 Raffle</h3>
