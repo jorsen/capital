@@ -1,0 +1,18 @@
+name: Poll Discord boss kills
+
+# Vercel Cron on the Hobby plan can only run once a day (see vercel.json),
+# which is too slow to pick up kills posted in #cave-attendance promptly.
+# This runs the same endpoint every 5 minutes instead.
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch: {}
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hit poll-boss-kills endpoint
+        run: |
+          curl -sf -X POST "https://capital-records.vercel.app/api/discord/poll-boss-kills" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
