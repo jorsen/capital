@@ -245,6 +245,13 @@ body {
 }
 .view-header.space-between { justify-content: space-between; align-items: center; }
 
+.section-heading {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 28px 0 12px;
+}
+
 .dashboard-grid {
   display: grid;
   grid-template-columns: 220px 1fr;
