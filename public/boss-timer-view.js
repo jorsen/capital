@@ -2,6 +2,7 @@ const bossTimerState = {
   bosses: [],
   tickHandle: null,
   refreshHandle: null,
+  pollHandle: null,
 };
 
 // Daily bosses spawn at a fixed time of day (entered in the viewer's own
@@ -58,11 +59,30 @@ async function loadBossTimerData() {
 
   clearInterval(bossTimerState.tickHandle);
   clearInterval(bossTimerState.refreshHandle);
+  clearInterval(bossTimerState.pollHandle);
   // Cheap per-second update of just the countdown text/urgency class.
   bossTimerState.tickHandle = setInterval(tickBossTimers, 1000);
   // Full re-render every 30s so the sort order and daily-boss day-rollover
   // stay correct without reflowing the whole grid every second.
   bossTimerState.refreshHandle = setInterval(renderBossTimerGrid, 30000);
+  // Re-fetches from the server every few seconds so a kill logged from
+  // another tab/device — or confirmed via the Discord button — shows up here
+  // without a manual reload. There's no server push (Vercel serverless has
+  // no shared state across function instances to push from), so polling is
+  // the pragmatic stand-in.
+  bossTimerState.pollHandle = setInterval(pollBossTimers, 5000);
+}
+
+async function pollBossTimers() {
+  try {
+    const bosses = await api('/api/boss-timers');
+    if (JSON.stringify(bosses) !== JSON.stringify(bossTimerState.bosses)) {
+      bossTimerState.bosses = bosses;
+      renderBossTimerGrid();
+    }
+  } catch (err) {
+    // Transient network hiccup — the next poll will retry.
+  }
 }
 
 function renderBossTimerGrid() {

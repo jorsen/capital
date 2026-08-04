@@ -13,6 +13,13 @@ function getPresentMembers(session, sortedMembers) {
   return sortedMembers.filter((m) => !session.absentees.includes(m.id));
 }
 
+function attendanceStatusText(session) {
+  if (!session.attendanceSubmittedAt) return '';
+  if (session.bossConfirmedAt) return `Boss kill confirmed by ${session.bossConfirmedBy} — timer started.`;
+  if (session.bossId) return 'Waiting for kill confirmation in Discord to start the timer.';
+  return 'Submitted — no matching boss timer found for this run name.';
+}
+
 // Present members who haven't already won a raffle item this session — each
 // member can only win once, so a Kurashi who already won Necklace of Honor
 // won't be eligible for other items' draws too.
@@ -378,6 +385,12 @@ function renderSessionContent() {
           .join('') || '<p style="color:var(--text-muted); grid-column:1/-1;">No members yet.</p>'
       }
     </div>
+    <div style="display:flex; align-items:center; gap:10px; margin:10px 0 20px;">
+      <button type="button" class="btn small primary" id="submitAttendanceBtn" ${session.attendanceSubmittedAt ? 'disabled' : ''}>
+        ${session.attendanceSubmittedAt ? 'Attendance Submitted ✓' : 'Submit Attendance'}
+      </button>
+      <span id="attendanceSubmitStatus" style="color:var(--text-muted); font-size:13px;">${attendanceStatusText(session)}</span>
+    </div>
 
     <h3 style="margin-bottom:6px;">🎲 Raffle</h3>
     <p style="color:var(--text-muted); font-size:13px; margin:-4px 0 8px;">Picks a random present member. Raffle a smaller quantity at a time to give more people a chance to win.</p>
@@ -501,6 +514,27 @@ function renderSessionContent() {
       toast(`Copied ${presentNames.length} present name${presentNames.length === 1 ? '' : 's'}`);
     } catch (err) {
       toast('Could not copy — clipboard access denied');
+    }
+  });
+
+  content.querySelector('#submitAttendanceBtn').addEventListener('click', async (e) => {
+    e.target.disabled = true;
+    try {
+      const result = await api(`/api/loot/${session.id}/submit-attendance`, { method: 'POST' });
+      Object.assign(session, result.session);
+      renderSessionContent();
+      if (result.alreadySubmitted) {
+        toast('Attendance was already submitted');
+      } else if (result.matchedBoss && result.discordPosted) {
+        toast(`Posted a kill-confirm button for ${result.matchedBoss.name} to Discord`);
+      } else if (result.matchedBoss) {
+        toast(`Matched ${result.matchedBoss.name}, but the Discord post failed`);
+      } else {
+        toast('Attendance submitted');
+      }
+    } catch (err) {
+      e.target.disabled = false;
+      toast(err.message);
     }
   });
 
