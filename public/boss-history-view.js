@@ -22,9 +22,21 @@ function renderBossHistory(history) {
       <td>${formatHistoryTimestamp(h.killedAt)}</td>
       <td>${h.source === 'discord' ? 'Discord' : 'Manual'}</td>
       <td>${h.discordAuthor ? escapeHtml(h.discordAuthor) : '—'}</td>
+      <td class="col-right"><button type="button" class="icon-btn" data-delete-history="${h.id}" title="Delete entry">×</button></td>
     </tr>`
     )
     .join('');
 
   document.getElementById('bossHistoryEmptyState').classList.toggle('hidden', history.length !== 0);
+
+  body.querySelectorAll('[data-delete-history]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      try {
+        await api(`/api/boss-history/${btn.getAttribute('data-delete-history')}`, { method: 'DELETE' });
+        loadBossHistoryData();
+      } catch (err) {
+        toast(err.message);
+      }
+    });
+  });
 }
