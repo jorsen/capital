@@ -32,8 +32,17 @@ function renderBossHistory(history) {
   body.querySelectorAll('[data-delete-history]').forEach((btn) => {
     btn.addEventListener('click', async () => {
       try {
-        await api(`/api/boss-history/${btn.getAttribute('data-delete-history')}`, { method: 'DELETE' });
+        const result = await api(`/api/boss-history/${btn.getAttribute('data-delete-history')}`, { method: 'DELETE' });
         loadBossHistoryData();
+        if (result.revertedBossId) {
+          // This was the kill currently driving the boss's live countdown —
+          // the server already rolled last_killed_at back; refresh the grid
+          // now instead of waiting on its next 5s poll tick.
+          if (typeof pollBossTimers === 'function') pollBossTimers();
+          toast(result.revertedTo ? `Entry deleted — timer reverted to previous kill` : `Entry deleted — timer cleared (no kills left logged)`);
+        } else {
+          toast('Entry deleted');
+        }
       } catch (err) {
         toast(err.message);
       }
