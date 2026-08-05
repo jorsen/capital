@@ -118,7 +118,12 @@ function renderBossTimerGrid() {
         <div class="boss-timer-countdown" data-countdown>${formatCountdown(ms)}</div>
         <p class="boss-timer-meta">${meta}</p>
         <div class="boss-timer-actions admin-only">
-          ${b.type === 'interval' ? `<button type="button" class="btn small primary" data-kill="${b.id}">Killed Now</button>` : ''}
+          ${
+            b.type === 'interval'
+              ? `<button type="button" class="btn small primary" data-kill="${b.id}">Killed Now</button>
+                 <button type="button" class="icon-btn" data-set-kill-time="${b.id}" title="Set a custom kill time">🕒</button>`
+              : ''
+          }
           <button type="button" class="icon-btn" data-edit="${b.id}" title="Edit">✎</button>
           <button type="button" class="icon-btn" data-delete="${b.id}" title="Delete">✕</button>
         </div>
@@ -130,6 +135,9 @@ function renderBossTimerGrid() {
 
   grid.querySelectorAll('[data-kill]').forEach((btn) => {
     btn.addEventListener('click', () => killBoss(btn.getAttribute('data-kill')));
+  });
+  grid.querySelectorAll('[data-set-kill-time]').forEach((btn) => {
+    btn.addEventListener('click', () => openKillTimeModal(btn.getAttribute('data-set-kill-time')));
   });
   grid.querySelectorAll('[data-edit]').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -168,6 +176,42 @@ async function killBoss(id) {
   } catch (err) {
     toast(err.message);
   }
+}
+
+// Lets an admin correct a boss's kill time directly (e.g. a wrong time that
+// got parsed from Discord chat) instead of only ever being able to set it to
+// "right now" via Killed Now.
+function openKillTimeModal(id) {
+  const boss = bossTimerState.bosses.find((b) => b.id === id);
+  if (!boss) return;
+
+  const modal = document.getElementById('killTimeModal');
+  const form = document.getElementById('killTimeForm');
+  const input = form.querySelector('[name="killedAt"]');
+
+  const base = boss.lastKilledAt ? new Date(boss.lastKilledAt) : new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  input.value = `${base.getFullYear()}-${pad(base.getMonth() + 1)}-${pad(base.getDate())}T${pad(base.getHours())}:${pad(base.getMinutes())}`;
+
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const updated = await api(`/api/boss-timers/${id}/kill`, {
+        method: 'POST',
+        body: JSON.stringify({ killedAt: new Date(input.value).toISOString() }),
+      });
+      const idx = bossTimerState.bosses.findIndex((b) => b.id === id);
+      if (idx !== -1) bossTimerState.bosses[idx] = updated;
+      renderBossTimerGrid();
+      if (typeof loadBossHistoryData === 'function') loadBossHistoryData();
+      modal.classList.add('hidden');
+      toast(`${updated.name}'s kill time updated`);
+    } catch (err) {
+      toast(err.message);
+    }
+  };
+
+  modal.classList.remove('hidden');
 }
 
 async function deleteBoss(id) {

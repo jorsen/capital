@@ -237,6 +237,22 @@
     </div>
   </div>
 
+  <div id="killTimeModal" class="modal-overlay hidden">
+    <div class="modal">
+      <button class="modal-close" data-close="killTimeModal" aria-label="Close">×</button>
+      <h2>Set Kill Time</h2>
+      <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;">
+        Corrects when this boss was actually killed — useful when a Discord-detected time was wrong.
+      </p>
+      <form id="killTimeForm" style="display:flex; flex-direction:column; gap:12px; margin-top:10px;">
+        <label>Killed At <span style="color:var(--text-muted); font-weight:400;">(your local time)</span>
+          <input type="datetime-local" name="killedAt" required>
+        </label>
+        <button type="submit" class="btn primary">Save</button>
+      </form>
+    </div>
+  </div>
+
   <div id="addModal" class="modal-overlay hidden">
     <div class="modal">
       <button class="modal-close" data-close="addModal" aria-label="Close">×</button>
