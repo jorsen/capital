@@ -208,6 +208,10 @@ function openBossModal(boss) {
         Respawn Interval <span style="color:var(--text-muted); font-weight:400;">(minutes)</span>
         <input type="number" name="intervalMinutes" min="1" step="1" value="${isEdit && boss.intervalMinutes ? boss.intervalMinutes : 60}">
       </label>
+      <label id="bossNotifyLeadField" class="${!isEdit || boss.type === 'daily' ? 'hidden' : ''}">
+        Discord Notify Lead Time <span style="color:var(--text-muted); font-weight:400;">(minutes before spawn)</span>
+        <input type="number" name="notifyLeadMinutes" min="1" step="1" value="${isEdit && boss.notifyLeadMinutes ? boss.notifyLeadMinutes : 5}">
+      </label>
       <label>Notes / Location <span style="color:var(--text-muted); font-weight:400;">(optional)</span>
         <input type="text" name="notes" maxlength="80" value="${isEdit ? escapeHtml(boss.notes || '') : ''}" placeholder="e.g. Auber Volcanic Field">
       </label>
@@ -222,6 +226,7 @@ function openBossModal(boss) {
   typeSelect.addEventListener('change', () => {
     content.querySelector('#bossDailyField').classList.toggle('hidden', typeSelect.value !== 'daily');
     content.querySelector('#bossIntervalField').classList.toggle('hidden', typeSelect.value !== 'interval');
+    content.querySelector('#bossNotifyLeadField').classList.toggle('hidden', typeSelect.value !== 'interval');
   });
 
   content.querySelector('#bossForm').addEventListener('submit', async (e) => {
@@ -232,6 +237,7 @@ function openBossModal(boss) {
       type: fd.get('type'),
       spawnTime: fd.get('spawnTime'),
       intervalMinutes: Number(fd.get('intervalMinutes')),
+      notifyLeadMinutes: Number(fd.get('notifyLeadMinutes')),
       notes: fd.get('notes'),
     };
     try {
