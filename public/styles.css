@@ -1181,6 +1181,7 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
 .login-card label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--text-secondary); }
 .login-card .btn.primary { width: 100%; }
 .login-error { color: var(--bad); font-size: 13px; margin: 0; text-align: center; }
+.login-back-link { display: block; margin-top: 18px; font-size: 13px; color: var(--text-secondary); text-align: center; }
 
 /* ===================== BOSS TIMERS ===================== */
 .boss-timer-grid {
