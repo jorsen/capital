@@ -44,6 +44,7 @@
           </a>
         </nav>
       </div>
+      <span id="roleBadge" class="hidden" style="color:var(--text-muted); font-size:13px; margin-right:10px;">Viewing (read-only)</span>
       <button id="logoutBtn" class="btn small">Logout</button>
     </header>
 
@@ -51,7 +52,8 @@
     <div id="view-members" class="view hidden">
       <div class="view-header">
         <a href="/api/members/export" class="btn small">Export to Excel</a>
-        <button id="addMemberBtn" class="btn primary">+ Add Member</button>
+        <button id="manageClassesBtn" class="btn small admin-only">Manage Classes</button>
+        <button id="addMemberBtn" class="btn primary admin-only">+ Add Member</button>
       </div>
 
       <div class="dashboard-grid">
@@ -122,8 +124,8 @@
     <!-- ===================== LOOT LOG VIEW ===================== -->
     <div id="view-loot" class="view hidden">
       <div class="view-header">
-        <button id="manageItemsBtnLoot" class="btn small">Manage Items</button>
-        <button id="addSessionBtn" class="btn primary">+ Log a Date</button>
+        <button id="manageItemsBtnLoot" class="btn small admin-only">Manage Items</button>
+        <button id="addSessionBtn" class="btn primary admin-only">+ Log a Date</button>
       </div>
 
       <section class="panel">
@@ -181,7 +183,7 @@
     <div id="view-bosses" class="view hidden">
       <div class="view-header">
         <p style="color:var(--text-muted); font-size:13px; margin:0; flex:1;">Times are in <strong>your local time</strong> — enter each spawn time as it appears on your own clock.</p>
-        <button id="addBossBtn" class="btn primary">+ Add Boss</button>
+        <button id="addBossBtn" class="btn primary admin-only">+ Add Boss</button>
       </div>
       <div id="bossTimerGrid" class="boss-timer-grid"></div>
       <p id="bossTimerEmptyState" class="empty-state hidden">No bosses tracked yet — click "Add Boss" to start.</p>
@@ -210,7 +212,7 @@
     <div id="view-loot-session" class="view hidden">
       <div class="view-header space-between">
         <a href="#/loot" class="back-link">← Back to Loot Log</a>
-        <button id="manageItemsBtnSession" class="btn small">Manage Items</button>
+        <button id="manageItemsBtnSession" class="btn small admin-only">Manage Items</button>
       </div>
 
       <section class="panel">
@@ -290,6 +292,21 @@
       <ul id="itemCategoryList" style="list-style:none; padding:0; margin:14px 0; display:flex; flex-direction:column; gap:8px;"></ul>
       <form id="addItemCategoryForm" style="display:flex; gap:8px;">
         <input type="text" name="name" placeholder="New item name…" required style="flex:1;">
+        <button type="submit" class="btn primary small">Add</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="manageClassesModal" class="modal-overlay hidden">
+    <div class="modal">
+      <button class="modal-close" data-close="manageClassesModal" aria-label="Close">×</button>
+      <h2>Manage Classes</h2>
+      <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;">
+        Adding a class here also updates it in Discord's <code>/growth</code> command automatically.
+      </p>
+      <ul id="classList" style="list-style:none; padding:0; margin:14px 0; display:flex; flex-direction:column; gap:8px;"></ul>
+      <form id="addClassForm" style="display:flex; gap:8px;">
+        <input type="text" name="name" placeholder="New class name…" required style="flex:1;">
         <button type="submit" class="btn primary small">Add</button>
       </form>
     </div>

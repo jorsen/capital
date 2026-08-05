@@ -198,7 +198,7 @@ function renderTable() {
       <td><span class="class-badge">${escapeHtml(m.className)}</span></td>
       <td class="col-right growth-value ${growthClass(g?.rate)}">${fmtRate(g?.rate)}</td>
       <td class="col-center sparkline-cell"></td>
-      <td class="col-right"><button class="icon-btn" data-delete="${m.id}" title="Delete member">✕</button></td>
+      <td class="col-right"><button class="icon-btn admin-only" data-delete="${m.id}" title="Delete member">✕</button></td>
     `;
     tr.querySelector('.sparkline-cell').appendChild(renderSparkline(m.growth));
     tr.addEventListener('click', (e) => {
@@ -278,7 +278,7 @@ function renderMemberModal(member) {
       <tr>
         <td>${g.date}</td>
         <td class="growth-value ${growthClass(g.rate)}">${fmtRate(g.rate)}</td>
-        <td><button class="icon-btn" data-del-growth="${g.id}" title="Delete entry">✕</button></td>
+        <td><button class="icon-btn admin-only" data-del-growth="${g.id}" title="Delete entry">✕</button></td>
       </tr>`
     )
     .join('');
@@ -293,14 +293,14 @@ function renderMemberModal(member) {
     <form id="editMemberForm" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
       <label style="flex:1; min-width:140px;">Name<input name="name" value="${escapeHtml(member.name)}" required></label>
       <label style="flex:1; min-width:160px;">Class<select name="className">${classOptions}</select></label>
-      <button type="submit" class="btn small">Save Changes</button>
-      <button type="button" class="btn small danger" id="deleteMemberBtn">Delete Member</button>
+      <button type="submit" class="btn small admin-only">Save Changes</button>
+      <button type="button" class="btn small danger admin-only" id="deleteMemberBtn">Delete Member</button>
     </form>
 
     <h3 style="margin-bottom:6px;">Growth Rate History</h3>
     <div id="growthChart" class="chart-root"></div>
 
-    <form id="addGrowthForm" class="growth-form-row">
+    <form id="addGrowthForm" class="growth-form-row admin-only">
       <label>Date<input type="date" name="date" required value="${new Date().toISOString().slice(0, 10)}"></label>
       <label>Growth Rate<input type="number" step="1" name="rate" required placeholder="e.g. 12500"></label>
       <button type="submit" class="btn primary small">Add Entry</button>
@@ -492,6 +492,62 @@ document.getElementById('addMemberForm').addEventListener('submit', async (e) =>
     e.target.reset();
     document.getElementById('addModal').classList.add('hidden');
     toast(`${member.name} added`);
+  } catch (err) {
+    toast(err.message);
+  }
+});
+
+// ---------- Manage classes ----------
+
+function renderClassList() {
+  const list = document.getElementById('classList');
+  const sorted = membersState.classes.slice().sort((a, b) => a.localeCompare(b));
+
+  list.innerHTML = sorted
+    .map(
+      (name) => `
+      <li style="display:flex; gap:8px; align-items:center;">
+        <span style="flex:1;">${escapeHtml(name)}</span>
+        <button class="icon-btn" data-delete-class="${escapeHtml(name)}" title="Delete class">✕</button>
+      </li>`
+    )
+    .join('');
+
+  list.querySelectorAll('[data-delete-class]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const name = btn.getAttribute('data-delete-class');
+      if (!confirm(`Remove "${name}" from the class list? Members already using it keep it, but it won't be offered anymore.`)) return;
+      try {
+        const result = await api(`/api/classes/${encodeURIComponent(name)}`, { method: 'DELETE' });
+        membersState.classes = membersState.classes.filter((c) => c !== name);
+        populateClassOptions();
+        renderClassList();
+        toast(result.discordRegistered ? `${name} removed` : `${name} removed, but Discord sync failed: ${result.discordError}`);
+      } catch (err) {
+        toast(err.message);
+      }
+    });
+  });
+}
+
+document.getElementById('manageClassesBtn').addEventListener('click', () => {
+  renderClassList();
+  document.getElementById('manageClassesModal').classList.remove('hidden');
+});
+
+document.getElementById('addClassForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  try {
+    const result = await api('/api/classes', {
+      method: 'POST',
+      body: JSON.stringify({ name: fd.get('name') }),
+    });
+    membersState.classes.push(result.name);
+    populateClassOptions();
+    renderClassList();
+    e.target.reset();
+    toast(result.discordRegistered ? `${result.name} added and synced to Discord` : `${result.name} added, but Discord sync failed: ${result.discordError}`);
   } catch (err) {
     toast(err.message);
   }

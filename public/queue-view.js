@@ -74,9 +74,9 @@ function renderQueueColumn(slot) {
       return `
       <li class="queue-item" data-index="${i}">
         <span class="queue-rank">${i + 1}</span>
-        <input type="checkbox" class="queue-done-check" data-name="${escapeHtml(name)}" title="Mark as done — removes them from this queue">
+        <input type="checkbox" class="queue-done-check admin-only" data-name="${escapeHtml(name)}" title="Mark as done — removes them from this queue">
         <span class="queue-name">${rankBadge}${escapeHtml(name)}</span>
-        <span class="queue-actions">
+        <span class="queue-actions admin-only">
           <button class="icon-btn" data-act="up" title="Move up" ${i === 0 ? 'disabled' : ''}>↑</button>
           <button class="icon-btn" data-act="down" title="Move down" ${i === names.length - 1 ? 'disabled' : ''}>↓</button>
           <button class="icon-btn" data-act="remove" title="Remove">✕</button>
@@ -88,12 +88,12 @@ function renderQueueColumn(slot) {
   col.innerHTML = `
     <div class="queue-col-header">${escapeHtml(slot)}</div>
     <ol class="queue-list">${items}</ol>
-    <form class="queue-add-form">
+    <form class="queue-add-form admin-only">
       <input type="text" list="${datalistId}" placeholder="Add name…" required maxlength="40">
       <button type="submit" class="btn small" title="Add to queue">+</button>
     </form>
     <datalist id="${datalistId}">${availableOptions}</datalist>
-    <button type="button" class="btn small ghost queue-sort-btn">Sort by Growth Rate</button>
+    <button type="button" class="btn small ghost queue-sort-btn admin-only">Sort by Growth Rate</button>
   `;
 
   col.querySelectorAll('[data-act]').forEach((btn) => {
@@ -171,7 +171,7 @@ function renderQueueHistory() {
           <li class="queue-history-item">
             <span class="queue-history-name">${escapeHtml(e.name)}</span>
             <span class="queue-history-date">${e.completedAt ? new Date(e.completedAt).toLocaleDateString() : '—'}</span>
-            <button class="icon-btn" data-undo-slot="${escapeHtml(slot)}" data-undo-name="${escapeHtml(e.name)}" title="Undo — does not re-queue them">✕</button>
+            <button class="icon-btn admin-only" data-undo-slot="${escapeHtml(slot)}" data-undo-name="${escapeHtml(e.name)}" title="Undo — does not re-queue them">✕</button>
           </li>`
             )
             .join('')

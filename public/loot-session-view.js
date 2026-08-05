@@ -92,7 +92,7 @@ function raffleWinnersRowsHtml(session) {
     <tr>
       <td style="font-weight:600;">${itemLabel(g.item)} (x${g.quantity})</td>
       <td>${escapeHtml(g.recipientName)}</td>
-      <td class="no-print"><button class="icon-btn" data-remove-raffle-winner="${g.recordIds.join(',')}" title="Remove winner">✕</button></td>
+      <td class="no-print"><button class="icon-btn admin-only" data-remove-raffle-winner="${g.recordIds.join(',')}" title="Remove winner">✕</button></td>
     </tr>`
     )
     .join('');
@@ -111,7 +111,7 @@ function reservationRowsHtml(reservationRecords) {
     <tr>
       <td style="font-weight:600;">${itemLabel(r.item)}</td>
       <td class="col-right">${r.quantity}</td>
-      <td><button type="button" class="btn small primary" data-reservation-assign="${r.id}">Assign to…</button></td>
+      <td><button type="button" class="btn small primary admin-only" data-reservation-assign="${r.id}">Assign to…</button></td>
     </tr>`
     )
     .join('');
@@ -337,15 +337,15 @@ function renderSessionContent() {
         return `
         <tr class="${r.viaReservation ? 'loot-status-reserved' : 'loot-status-done'}">
           <td style="font-weight:600;">${itemLabel(r.item)}</td>
-          <td class="col-right"><input type="number" class="qty-input" data-record-id="${r.id}" value="${r.quantity}" min="1" step="1" style="width:100px; text-align:right;"></td>
+          <td class="col-right"><input type="number" class="qty-input admin-disable" data-record-id="${r.id}" value="${r.quantity}" min="1" step="1" style="width:100px; text-align:right;"></td>
           <td>${escapeHtml(r.recipientName)}${reservedBadge}</td>
           <td>
             <label class="sent-check-label" title="Mark as sent">
-              <input type="checkbox" class="sent-check" data-record-id="${r.id}" ${r.sent ? 'checked' : ''}>
+              <input type="checkbox" class="sent-check admin-disable" data-record-id="${r.id}" ${r.sent ? 'checked' : ''}>
               Sent
             </label>
           </td>
-          <td>
+          <td class="admin-only">
             <button class="icon-btn" data-unassign="${r.id}" title="Unassign">↩</button>
             <button class="icon-btn" data-del-record="${r.id}" title="Delete record">✕</button>
           </td>
@@ -360,12 +360,12 @@ function renderSessionContent() {
       return `
       <tr class="${inProgress ? 'loot-status-progress' : ''}">
         <td style="font-weight:600;">${itemLabel(r.item)}${excludedBadge}</td>
-        <td class="col-right"><input type="number" class="qty-input" data-record-id="${r.id}" value="${r.quantity}" min="1" step="1" style="width:100px; text-align:right;"></td>
-        <td>
+        <td class="col-right"><input type="number" class="qty-input admin-disable" data-record-id="${r.id}" value="${r.quantity}" min="1" step="1" style="width:100px; text-align:right;"></td>
+        <td class="admin-only">
           <button type="button" class="btn small" data-multi-assign="${r.id}">Assign to…</button>
         </td>
         <td></td>
-        <td>
+        <td class="admin-only">
           <button class="icon-btn" data-toggle-raffle-exclude="${r.id}" title="${r.excludedFromRaffle ? 'Include in raffle' : 'Exclude from raffle'}">${r.excludedFromRaffle ? '🎲' : '🚫'}</button>
           <button class="icon-btn" data-del-record="${r.id}" title="Delete record">✕</button>
         </td>
@@ -384,8 +384,8 @@ function renderSessionContent() {
     <form id="editSessionForm" style="display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap; margin-bottom:20px;">
       <label style="flex:1; min-width:140px;">Date<input type="date" name="date" value="${session.date}" required></label>
       <label style="flex:1; min-width:160px;">Run<input type="text" name="run" value="${escapeHtml(session.run || 'Guild Dungeon')}"></label>
-      <button type="submit" class="btn small">Save Changes</button>
-      <button type="button" class="btn small danger" id="deleteSessionBtn">Delete Date</button>
+      <button type="submit" class="btn small admin-only">Save Changes</button>
+      <button type="button" class="btn small danger admin-only" id="deleteSessionBtn">Delete Date</button>
     </form>
 
     <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
@@ -402,7 +402,7 @@ function renderSessionContent() {
           .map(
             (m) => `
         <label class="attendance-item" title="${escapeHtml(m.name)}">
-          <input type="checkbox" class="absence-check" data-member-id="${m.id}" ${session.absentees.includes(m.id) ? 'checked' : ''}>
+          <input type="checkbox" class="absence-check admin-disable" data-member-id="${m.id}" ${session.absentees.includes(m.id) ? 'checked' : ''}>
           <span>${escapeHtml(m.name)}</span>
         </label>`
           )
@@ -410,7 +410,7 @@ function renderSessionContent() {
       }
     </div>
     <div style="display:flex; align-items:center; gap:10px; margin:10px 0 20px;">
-      <button type="button" class="btn small primary" id="submitAttendanceBtn" ${session.attendanceSubmittedAt ? 'disabled' : ''}>
+      <button type="button" class="btn small primary admin-only" id="submitAttendanceBtn" ${session.attendanceSubmittedAt ? 'disabled' : ''}>
         ${session.attendanceSubmittedAt ? 'Attendance Submitted ✓' : 'Submit Attendance'}
       </button>
       <span id="attendanceSubmitStatus" style="color:var(--text-muted); font-size:13px;">${attendanceStatusText(session, sessionState.bosses)}</span>
@@ -418,7 +418,7 @@ function renderSessionContent() {
 
     <h3 style="margin-bottom:6px;">🎲 Raffle</h3>
     <p style="color:var(--text-muted); font-size:13px; margin:-4px 0 8px;">Picks a random present member. Raffle a smaller quantity at a time to give more people a chance to win.</p>
-    <div class="growth-form-row" style="margin-top:0; margin-bottom:20px;">
+    <div class="growth-form-row admin-only" style="margin-top:0; margin-bottom:20px;">
       <label style="flex:1.5;">Unassigned Loot
         <select id="raffleRecordSelect">${raffleRecordOptionsHtml(raffleEligibleRecords)}</select>
       </label>
@@ -437,7 +437,7 @@ function renderSessionContent() {
           <button type="button" class="btn small" id="printRaffleBtn" style="margin-bottom:6px;">🖨️ Print</button>
           ${
             session.records.some((r) => r.viaRaffle)
-              ? '<button type="button" class="btn small danger" id="clearAllWinnersBtn" style="margin-bottom:6px;">Clear All Winners</button>'
+              ? '<button type="button" class="btn small danger admin-only" id="clearAllWinnersBtn" style="margin-bottom:6px;">Clear All Winners</button>'
               : ''
           }
         </div>
@@ -453,7 +453,7 @@ function renderSessionContent() {
         <h3 class="print-heading-log" style="margin-bottom:6px;">📜 Raffle Activity Log</h3>
         ${
           session.raffleLog.length
-            ? '<button type="button" class="btn small no-print" id="clearRaffleLogBtn" style="margin-bottom:6px;">Clear Log</button>'
+            ? '<button type="button" class="btn small no-print admin-only" id="clearRaffleLogBtn" style="margin-bottom:6px;">Clear Log</button>'
             : ''
         }
       </div>
@@ -471,7 +471,7 @@ function renderSessionContent() {
 
     <h3 style="margin-bottom:6px;">Add Loot</h3>
 
-    <form id="addRecordForm" class="growth-form-row">
+    <form id="addRecordForm" class="growth-form-row admin-only">
       <label style="flex:1.5;">Item
         <div class="icon-select" id="addRecordItemDropdown" style="display:block; width:100%;">
           <div style="display:flex; align-items:center; gap:8px;">

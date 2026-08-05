@@ -117,7 +117,7 @@ function renderBossTimerGrid() {
         ${b.notes ? `<p class="boss-timer-notes">${escapeHtml(b.notes)}</p>` : ''}
         <div class="boss-timer-countdown" data-countdown>${formatCountdown(ms)}</div>
         <p class="boss-timer-meta">${meta}</p>
-        <div class="boss-timer-actions">
+        <div class="boss-timer-actions admin-only">
           ${b.type === 'interval' ? `<button type="button" class="btn small primary" data-kill="${b.id}">Killed Now</button>` : ''}
           <button type="button" class="icon-btn" data-edit="${b.id}" title="Edit">✎</button>
           <button type="button" class="icon-btn" data-delete="${b.id}" title="Delete">✕</button>

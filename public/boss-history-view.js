@@ -22,7 +22,7 @@ function renderBossHistory(history) {
       <td>${formatHistoryTimestamp(h.killedAt)}</td>
       <td>${h.source === 'discord' ? 'Discord' : 'Manual'}</td>
       <td>${h.discordAuthor ? escapeHtml(h.discordAuthor) : '—'}</td>
-      <td class="col-right"><button type="button" class="icon-btn" data-delete-history="${h.id}" title="Delete entry">×</button></td>
+      <td class="col-right"><button type="button" class="icon-btn admin-only" data-delete-history="${h.id}" title="Delete entry">×</button></td>
     </tr>`
     )
     .join('');

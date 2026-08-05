@@ -48,7 +48,7 @@ function renderLootView() {
       <td>${sess.run ? `<span class="class-badge">${escapeHtml(sess.run)}</span>` : ''}</td>
       <td class="col-right">${sess.records.length}</td>
       <td class="col-right">${totalQty(sess)}</td>
-      <td class="col-right"><button class="icon-btn" data-delete="${sess.id}" title="Delete date">✕</button></td>
+      <td class="col-right"><button class="icon-btn admin-only" data-delete="${sess.id}" title="Delete date">✕</button></td>
     `;
     tr.addEventListener('click', (e) => {
       if (e.target.closest('[data-delete]')) return;

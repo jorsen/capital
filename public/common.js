@@ -1,3 +1,26 @@
+// Populated before the first route renders (see router.js) so every view's
+// first render already reflects the real role — avoids a flash of admin
+// controls that then disappear once the session check resolves.
+const appSession = { role: null };
+
+function isAdmin() {
+  return appSession.role === 'admin';
+}
+
+async function loadSession() {
+  try {
+    const { role } = await api('/api/session');
+    appSession.role = role;
+  } catch (err) {
+    appSession.role = null;
+  }
+  document.body.classList.toggle('view-only', !isAdmin());
+  const badge = document.getElementById('roleBadge');
+  if (badge) badge.classList.toggle('hidden', isAdmin());
+}
+
+const sessionReady = loadSession();
+
 async function api(path, opts) {
   const res = await fetch(path, {
     headers: { 'Content-Type': 'application/json' },

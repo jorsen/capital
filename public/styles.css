@@ -508,6 +508,12 @@ select:focus, input:focus, textarea:focus {
 }
 .hidden { display: none !important; }
 
+/* Read-only "viewer" role (see common.js isAdmin/loadSession): the real
+   enforcement is server-side (non-GET /api/* requires the admin role) — this
+   is just UX polish so a viewer isn't shown controls that would just 403. */
+body.view-only .admin-only { display: none !important; }
+body.view-only .admin-disable { pointer-events: none; opacity: 0.55; }
+
 /* Chart */
 .chart-root { position: relative; }
 .chart-tooltip {

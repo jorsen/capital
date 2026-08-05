@@ -38,4 +38,7 @@ function parseRoute() {
 }
 
 window.addEventListener('hashchange', parseRoute);
-parseRoute();
+// Waits for the role check (see common.js) so the very first render already
+// knows whether to show admin controls, instead of showing them and then
+// yanking them away once the session check resolves a moment later.
+sessionReady.then(parseRoute);
