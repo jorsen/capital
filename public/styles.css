@@ -627,7 +627,7 @@ select:focus, input:focus, textarea:focus {
   gap: 5px;
 }
 .schedule-day-empty { background: transparent; }
-.schedule-day-number { font-size: 11px; font-weight: 600; color: var(--text-muted); }
+.schedule-day-number { font-size: 15px; font-weight: 700; color: var(--text-muted); }
 .schedule-day-filled .schedule-day-number { color: rgba(10,15,26,0.7); }
 .schedule-day-select {
   font-size: 11px;
