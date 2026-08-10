@@ -3,10 +3,12 @@ const VIEW_TITLES = {
   queue: 'Insignia Queue — Capital Records',
   loot: 'Guild Dungeon Loot — Capital Records',
   'loot-session': 'Loot Details — Capital Records',
+  caves: 'Cave Attendance — Capital Records',
+  'cave-session': 'Cave Details — Capital Records',
   items: 'Item Report — Capital Records',
   bosses: 'Boss Timers — Capital Records',
 };
-const VALID_VIEWS = ['members', 'queue', 'loot', 'loot-session', 'items', 'bosses'];
+const VALID_VIEWS = ['members', 'queue', 'loot', 'loot-session', 'caves', 'cave-session', 'items', 'bosses'];
 
 function showView(name) {
   document.querySelectorAll('.view').forEach((v) => v.classList.add('hidden'));
@@ -30,6 +32,8 @@ function parseRoute() {
   if (activeView === 'queue') loadQueueData().catch((err) => toast(err.message));
   if (activeView === 'loot') loadLootData().catch((err) => toast(err.message));
   if (activeView === 'loot-session') loadSessionData(param);
+  if (activeView === 'caves') loadCaveData().catch((err) => toast(err.message));
+  if (activeView === 'cave-session') loadCaveSessionData(param);
   if (activeView === 'items') loadItemReportData().catch((err) => toast(err.message));
   if (activeView === 'bosses') {
     loadBossTimerData().catch((err) => toast(err.message));

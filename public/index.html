@@ -34,6 +34,10 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="M3.29 7 12 12l8.71-5"/><line x1="12" y1="22" x2="12" y2="12"/></svg>
             Loot Log
           </a>
+          <a href="#/caves" data-view="caves" class="nav-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V10.5C5 6.36 8.13 3 12 3s7 3.36 7 7.5V21"/><path d="M9 21v-5a3 3 0 0 1 6 0v5"/></svg>
+            Cave Attendance
+          </a>
           <a href="#/items" data-view="items" class="nav-link">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
             Item Report
@@ -147,6 +151,47 @@
           </table>
         </div>
         <p id="lootEmptyState" class="empty-state hidden">No dates logged yet — click "Log a Date" to start recording loot.</p>
+      </section>
+    </div>
+
+    <!-- ===================== CAVE ATTENDANCE VIEW ===================== -->
+    <div id="view-caves" class="view hidden">
+      <div class="view-header">
+        <button id="manageItemsBtnCave" class="btn small admin-only">Manage Items</button>
+        <button id="addCaveBtn" class="btn primary admin-only">+ Log a Date</button>
+      </div>
+
+      <section class="panel">
+        <div class="table-toolbar">
+          <input id="caveSearchInput" type="search" placeholder="Search by date, cave, item, or recipient…">
+        </div>
+        <div class="table-scroll">
+          <table class="members-table">
+            <thead>
+              <tr>
+                <th data-sort="date">Date</th>
+                <th data-sort="run">Cave</th>
+                <th class="col-right">Records</th>
+                <th class="col-right">Total Qty</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="caveSessionsBody"></tbody>
+          </table>
+        </div>
+        <p id="caveEmptyState" class="empty-state hidden">No dates logged yet — click "Log a Date" to start recording cave runs.</p>
+      </section>
+    </div>
+
+    <!-- ===================== CAVE SESSION DETAIL VIEW ===================== -->
+    <div id="view-cave-session" class="view hidden">
+      <div class="view-header space-between">
+        <a href="#/caves" class="back-link">← Back to Cave Attendance</a>
+        <button id="manageItemsBtnCaveSession" class="btn small admin-only">Manage Items</button>
+      </div>
+
+      <section class="panel">
+        <div id="caveSessionContent">Loading…</div>
       </section>
     </div>
 
@@ -298,6 +343,22 @@
     </div>
   </div>
 
+  <div id="addCaveModal" class="modal-overlay hidden">
+    <div class="modal">
+      <button class="modal-close" data-close="addCaveModal" aria-label="Close">×</button>
+      <h2>Log a Date</h2>
+      <form id="addCaveForm">
+        <label>Date
+          <input type="date" name="date" required>
+        </label>
+        <label><span>Cave <span style="color:var(--text-muted); font-weight:400;">(optional)</span></span>
+          <input type="text" name="run" placeholder="e.g. Cave of Trials 7/23">
+        </label>
+        <button type="submit" class="btn primary">Create & Add Loot</button>
+      </form>
+    </div>
+  </div>
+
   <div id="manageItemsModal" class="modal-overlay hidden">
     <div class="modal modal-wide">
       <button class="modal-close" data-close="manageItemsModal" aria-label="Close">×</button>
@@ -338,6 +399,8 @@
   <script src="queue-view.js?v=30"></script>
   <script src="loot-view.js?v=30"></script>
   <script src="loot-session-view.js?v=30"></script>
+  <script src="cave-view.js?v=1"></script>
+  <script src="cave-session-view.js?v=1"></script>
   <script src="item-report-view.js?v=29"></script>
   <script src="boss-timer-view.js?v=33"></script>
   <script src="boss-history-view.js?v=32"></script>

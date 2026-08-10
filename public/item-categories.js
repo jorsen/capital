@@ -89,5 +89,7 @@ document.getElementById('addItemCategoryForm').addEventListener('submit', async 
 
 document.getElementById('manageItemsBtnLoot').addEventListener('click', openManageItemsModal);
 document.getElementById('manageItemsBtnSession').addEventListener('click', openManageItemsModal);
+document.getElementById('manageItemsBtnCave').addEventListener('click', openManageItemsModal);
+document.getElementById('manageItemsBtnCaveSession').addEventListener('click', openManageItemsModal);
 
 loadItemCategories().catch((err) => toast(err.message));
