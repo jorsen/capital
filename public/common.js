@@ -48,6 +48,10 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+function memberDisplayName(member) {
+  return member.alias ? `${member.name} (${member.alias})` : member.name;
+}
+
 function currentMonthValue() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;

@@ -102,9 +102,9 @@ function renderCaveSessionContent() {
         sortedMembers
           .map(
             (m) => `
-        <label class="attendance-item" title="${escapeHtml(m.name)}">
+        <label class="attendance-item" title="${escapeHtml(memberDisplayName(m))}">
           <input type="checkbox" class="attendance-check admin-disable" data-member-id="${m.id}" ${session.attendees.includes(m.id) ? 'checked' : ''}>
-          <span>${escapeHtml(m.name)}</span>
+          <span>${escapeHtml(memberDisplayName(m))}</span>
         </label>`
           )
           .join('') || '<p style="color:var(--text-muted); grid-column:1/-1;">No members yet.</p>'
@@ -162,7 +162,7 @@ function renderCaveSessionContent() {
   });
 
   content.querySelector('#copyCavePresentBtn').addEventListener('click', async () => {
-    const presentNames = getPresentCaveMembers(session, sortedMembers).map((m) => m.name);
+    const presentNames = getPresentCaveMembers(session, sortedMembers).map((m) => memberDisplayName(m));
     const dateLine = `${session.date}${session.run ? ` — ${session.run}` : ''}`;
     const text = [dateLine, ...presentNames.map((name, i) => `${i + 1}. ${name}`)].join('\n');
     try {

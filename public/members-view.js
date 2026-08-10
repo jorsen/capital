@@ -56,7 +56,8 @@ function populateClassOptions() {
 
 function getFilteredSortedMembers() {
   let list = membersState.members.filter((m) => {
-    const matchesSearch = m.name.toLowerCase().includes(membersState.search.toLowerCase());
+    const q = membersState.search.toLowerCase();
+    const matchesSearch = m.name.toLowerCase().includes(q) || (m.alias || '').toLowerCase().includes(q);
     const matchesClass = !membersState.classFilter || m.className === membersState.classFilter;
     return matchesSearch && matchesClass;
   });
@@ -194,7 +195,7 @@ function renderTable() {
     const tr = document.createElement('tr');
     const g = latestGrowth(m);
     tr.innerHTML = `
-      <td><span class="member-name"><span class="avatar">${escapeHtml(initials(m.name))}</span>${escapeHtml(m.name)}</span></td>
+      <td><span class="member-name"><span class="avatar">${escapeHtml(initials(m.name))}</span>${escapeHtml(memberDisplayName(m))}</span></td>
       <td><span class="class-badge">${escapeHtml(m.className)}</span></td>
       <td class="col-right growth-value ${growthClass(g?.rate)}">${fmtRate(g?.rate)}</td>
       <td class="col-center sparkline-cell"></td>
@@ -286,12 +287,13 @@ function renderMemberModal(member) {
   content.innerHTML = `
     <div class="member-header">
       <div>
-        <h2>${escapeHtml(member.name)}</h2>
+        <h2>${escapeHtml(memberDisplayName(member))}</h2>
         <div class="member-meta">Joined ${new Date(member.createdAt).toLocaleDateString()}</div>
       </div>
     </div>
     <form id="editMemberForm" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
       <label style="flex:1; min-width:140px;">Name<input name="name" value="${escapeHtml(member.name)}" required></label>
+      <label style="flex:1; min-width:140px;"><span>Alias <span style="color:var(--text-muted); font-weight:400;">(optional)</span></span><input name="alias" value="${escapeHtml(member.alias || '')}"></label>
       <label style="flex:1; min-width:160px;">Class<select name="className">${classOptions}</select></label>
       <button type="submit" class="btn small admin-only">Save Changes</button>
       <button type="button" class="btn small danger admin-only" id="deleteMemberBtn">Delete Member</button>
@@ -321,6 +323,7 @@ function renderMemberModal(member) {
       method: 'PUT',
       body: JSON.stringify({
         name: fd.get('name'),
+        alias: fd.get('alias'),
         className: fd.get('className'),
       }),
     });
@@ -484,6 +487,7 @@ document.getElementById('addMemberForm').addEventListener('submit', async (e) =>
       method: 'POST',
       body: JSON.stringify({
         name: fd.get('name'),
+        alias: fd.get('alias'),
         className: fd.get('className'),
       }),
     });

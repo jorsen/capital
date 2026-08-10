@@ -192,7 +192,7 @@ function openMultiAssignModal(sessionId, record, members, { viaReservation } = {
       (m) => `
       <label style="display:flex; flex-direction:row; align-items:center; gap:8px;">
         <input type="checkbox" class="multi-assign-check" data-member-id="${m.id}">
-        <span style="flex:1;">${escapeHtml(m.name)}</span>
+        <span style="flex:1;">${escapeHtml(memberDisplayName(m))}</span>
         <input type="number" class="multi-assign-qty" data-member-id="${m.id}" min="1" step="1" value="1" style="width:120px; display:none;">
       </label>`
     )
@@ -310,7 +310,7 @@ function renderSessionContent() {
     return bv - av;
   });
   const memberOptions = sortedMembers
-    .map((m) => `<option value="${m.id}">${escapeHtml(m.name)}</option>`)
+    .map((m) => `<option value="${m.id}">${escapeHtml(memberDisplayName(m))}</option>`)
     .join('');
 
   const allRecords = session.records.slice().reverse();
@@ -401,9 +401,9 @@ function renderSessionContent() {
         sortedMembers
           .map(
             (m) => `
-        <label class="attendance-item" title="${escapeHtml(m.name)}">
+        <label class="attendance-item" title="${escapeHtml(memberDisplayName(m))}">
           <input type="checkbox" class="absence-check admin-disable" data-member-id="${m.id}" ${session.absentees.includes(m.id) ? 'checked' : ''}>
-          <span>${escapeHtml(m.name)}</span>
+          <span>${escapeHtml(memberDisplayName(m))}</span>
         </label>`
           )
           .join('') || '<p style="color:var(--text-muted); grid-column:1/-1;">No members yet.</p>'
@@ -530,7 +530,7 @@ function renderSessionContent() {
   });
 
   content.querySelector('#copyPresentBtn').addEventListener('click', async () => {
-    const presentNames = getPresentMembers(session, sortedMembers).map((m) => m.name);
+    const presentNames = getPresentMembers(session, sortedMembers).map((m) => memberDisplayName(m));
     const dateLine = `${session.date}${session.run ? ` — ${session.run}` : ''}`;
     const text = [dateLine, ...presentNames.map((name, i) => `${i + 1}. ${name}`)].join('\n');
     try {

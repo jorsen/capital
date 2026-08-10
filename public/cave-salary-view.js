@@ -123,7 +123,7 @@ function renderCaveSalary() {
   const sortedMembers = caveSalaryState.members.slice().sort((a, b) => a.name.localeCompare(b.name));
   memberSelect.innerHTML =
     '<option value="">— none (use custom name) —</option>' +
-    sortedMembers.map((m) => `<option value="${m.id}">${escapeHtml(m.name)}</option>`).join('');
+    sortedMembers.map((m) => `<option value="${m.id}">${escapeHtml(memberDisplayName(m))}</option>`).join('');
 
   const body = document.getElementById('caveSalaryBody');
   const empty = document.getElementById('caveSalaryEmptyState');
@@ -133,7 +133,7 @@ function renderCaveSalary() {
     .map(
       (r) => `
     <tr>
-      <td style="font-weight:600;">${escapeHtml(r.member.name)}</td>
+      <td style="font-weight:600;">${escapeHtml(memberDisplayName(r.member))}</td>
       <td class="col-center">${r.growthRate === null ? '–' : r.growthRate.toLocaleString()}</td>
       <td class="col-center">${r.attendance}</td>
       <td class="col-center">${r.multiplier}×</td>

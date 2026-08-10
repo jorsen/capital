@@ -60,7 +60,7 @@ function renderCaveReport() {
     .map(
       ({ member, total }) => `
     <tr data-member-id="${member.id}">
-      <td class="cave-report-name-col">${escapeHtml(member.name)}</td>
+      <td class="cave-report-name-col">${escapeHtml(memberDisplayName(member))}</td>
       <td class="cave-report-total-col" data-total-cell>${total}</td>
       ${sessions
         .map(
