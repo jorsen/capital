@@ -55,6 +55,23 @@ function renderScheduleLegend() {
     .join('');
 }
 
+// What the calendar would look like if "Apply to This Month" were clicked
+// right now, computed from the current evenlyOrder — day 1 of the month
+// gets evenlyOrder[0], day 2 gets evenlyOrder[1], wrapping around. Purely a
+// client-side preview; nothing is saved until Apply actually runs the same
+// rotation server-side.
+function getEvenlyPreviewSchedule() {
+  if (!scheduleState.evenlyOrder.length) return {};
+  const [year, month] = scheduleState.month.split('-').map(Number);
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const preview = {};
+  for (let day = 1; day <= daysInMonth; day++) {
+    const date = `${scheduleState.month}-${String(day).padStart(2, '0')}`;
+    preview[date] = scheduleState.evenlyOrder[(day - 1) % scheduleState.evenlyOrder.length];
+  }
+  return preview;
+}
+
 function renderScheduleCalendar() {
   document.getElementById('scheduleWeekdayRow').innerHTML = SCHEDULE_WEEKDAY_LABELS.map((d) => `<div class="schedule-weekday">${d}</div>`).join('');
 
@@ -62,12 +79,13 @@ function renderScheduleCalendar() {
   const firstDow = new Date(Date.UTC(year, month - 1, 1)).getUTCDay();
   const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
   const isManual = scheduleState.mode === 'manual';
+  const displaySchedule = isManual ? scheduleState.schedule : getEvenlyPreviewSchedule();
 
   const cells = [];
   for (let i = 0; i < firstDow; i++) cells.push('<div class="schedule-day schedule-day-empty"></div>');
   for (let day = 1; day <= daysInMonth; day++) {
     const date = `${scheduleState.month}-${String(day).padStart(2, '0')}`;
-    const assigned = scheduleState.schedule[date];
+    const assigned = displaySchedule[date];
     const color = assigned ? scheduleColorForServer(assigned) : null;
     const optionsHtml = scheduleState.servers
       .map((s) => `<option value="${escapeHtml(s.name)}" ${s.name === assigned ? 'selected' : ''}>${escapeHtml(s.name)}</option>`)
@@ -128,6 +146,7 @@ function renderScheduleEvenlyOrder() {
       const i = Number(btn.getAttribute('data-move-up'));
       [scheduleState.evenlyOrder[i - 1], scheduleState.evenlyOrder[i]] = [scheduleState.evenlyOrder[i], scheduleState.evenlyOrder[i - 1]];
       renderScheduleEvenlyOrder();
+      renderScheduleCalendar();
     });
   });
   el.querySelectorAll('[data-move-down]').forEach((btn) => {
@@ -135,6 +154,7 @@ function renderScheduleEvenlyOrder() {
       const i = Number(btn.getAttribute('data-move-down'));
       [scheduleState.evenlyOrder[i + 1], scheduleState.evenlyOrder[i]] = [scheduleState.evenlyOrder[i], scheduleState.evenlyOrder[i + 1]];
       renderScheduleEvenlyOrder();
+      renderScheduleCalendar();
     });
   });
 }
