@@ -422,6 +422,11 @@ select:focus, input:focus, textarea:focus {
   background: var(--surface-2);
   box-shadow: inset 3px 0 0 var(--series-1);
 }
+/* Activity Log's per-entry "what changed" detail — a plain info row, not a
+   clickable one, so it skips the hover highlight the rest of the table gets. */
+.activity-log-changes-row { cursor: default; }
+.activity-log-changes-row:hover { background: none; box-shadow: none; }
+.activity-log-changes-row td { padding-top: 4px; padding-bottom: 10px; background: rgba(255,255,255,0.02); }
 
 .item-report-date-row { background: var(--surface-1); font-weight: 600; }
 .item-report-caret {

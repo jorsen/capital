@@ -50,16 +50,29 @@ function renderActivityLog(entries) {
   const body = document.getElementById('activityLogBody');
   document.getElementById('activityLogEmptyState').classList.toggle('hidden', entries.length !== 0);
 
+  // Changes get their own full-width row below the main one instead of a
+  // fifth narrow column — a long attendee-list diff has room to actually
+  // read instead of wrapping awkwardly in a squeezed cell.
   body.innerHTML = entries
-    .map(
-      (e) => `
+    .map((e) => {
+      const changesHtml = renderEntryChanges(e);
+      const mainRow = `
     <tr>
       <td style="white-space:nowrap;">${new Date(e.createdAt).toLocaleString()}</td>
       <td>${escapeHtml(e.username)} <span style="color:var(--text-muted); font-size:12px;">(${escapeHtml(e.role)})</span></td>
       <td><span class="class-badge">${escapeHtml(e.action)}</span></td>
       <td>${escapeHtml(e.description)}</td>
-      <td style="font-size:12px;">${renderEntryChanges(e)}</td>
+    </tr>`;
+      const changesRow = changesHtml
+        ? `
+    <tr class="activity-log-changes-row">
+      <td colspan="4">
+        <span style="color:var(--text-muted); font-size:12px;">${escapeHtml(t('activityLog.thChanges'))}:</span>
+        <div style="font-size:12px; margin-top:2px;">${changesHtml}</div>
+      </td>
     </tr>`
-    )
+        : '';
+      return mainRow + changesRow;
+    })
     .join('');
 }
