@@ -584,10 +584,9 @@ select:focus, input:focus, textarea:focus {
 .item-input-unmatched { border-color: var(--bad) !important; }
 .item-input-unmatched:focus { box-shadow: 0 0 0 3px rgba(239,68,68,0.18) !important; }
 
-/* Cave Schedule calendar — kept deliberately plain: thin hairline borders,
-   no filled color blocks, a small dot + a slim top accent are the only
-   color cues so a month full of assignments doesn't read as a wall of
-   color blocks. */
+/* Cave Schedule calendar — thin hairline grid, but an assigned day's cell
+   is fully filled with its server's color so the month is scannable at a
+   glance rather than needing to read each day's small label. */
 .schedule-calendar-header {
   display: flex;
   align-items: baseline;
@@ -620,17 +619,16 @@ select:focus, input:focus, textarea:focus {
   border: 1px solid var(--gridline);
 }
 .schedule-day {
-  --accent: transparent;
   min-height: 64px;
   background: var(--bg);
   padding: 6px 6px 5px;
   display: flex;
   flex-direction: column;
   gap: 5px;
-  border-top: 2px solid var(--accent);
 }
-.schedule-day-empty { background: transparent; border-top-color: transparent; }
+.schedule-day-empty { background: transparent; }
 .schedule-day-number { font-size: 11px; font-weight: 600; color: var(--text-muted); }
+.schedule-day-filled .schedule-day-number { color: rgba(10,15,26,0.7); }
 .schedule-day-select {
   font-size: 11px;
   padding: 2px 4px;
@@ -640,18 +638,21 @@ select:focus, input:focus, textarea:focus {
   border-color: transparent;
 }
 .schedule-day-select:hover, .schedule-day-select:focus { background: var(--surface-2); border-color: var(--border-strong); }
+.schedule-day-filled .schedule-day-select { color: #0a0f1a; }
+.schedule-day-filled .schedule-day-select option { color: var(--text-primary); background: var(--surface-2); }
 .schedule-day-badge {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 700;
   color: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .schedule-day-badge-empty { color: var(--text-muted); }
+.schedule-day-filled .schedule-day-badge { color: #0a0f1a; }
 .schedule-order-row {
   display: flex;
   align-items: center;

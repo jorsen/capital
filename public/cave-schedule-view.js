@@ -92,13 +92,13 @@ function renderScheduleCalendar() {
       .map((s) => `<option value="${escapeHtml(s.name)}" ${s.name === assigned ? 'selected' : ''}>${escapeHtml(s.name)}</option>`)
       .join('');
     cells.push(`
-      <div class="schedule-day" style="${color ? `--accent:${color};` : ''}">
+      <div class="schedule-day ${color ? 'schedule-day-filled' : ''}" style="${color ? `background:${color};` : ''}">
         <div class="schedule-day-number">${day}</div>
         ${
           isManual
             ? `<select class="schedule-day-select" data-date="${date}"><option value="">—</option>${optionsHtml}</select>`
             : assigned
-              ? `<div class="schedule-day-badge"><span class="schedule-dot" style="background:${color}"></span>${escapeHtml(assigned)}</div>`
+              ? `<div class="schedule-day-badge">${escapeHtml(assigned)}</div>`
               : `<div class="schedule-day-badge schedule-day-badge-empty">—</div>`
         }
       </div>`);
