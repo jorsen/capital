@@ -26,6 +26,7 @@ function renderCaveDateView() {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td style="font-weight:600;">${sess.run ? `<span class="class-badge">${escapeHtml(sess.run)}</span>` : '(No boss)'}</td>
+      <td>${sess.attendees.length}</td>
       <td>${sess.records.length}</td>
       <td>${totalQty(sess)}</td>
       <td><button class="icon-btn admin-only" data-delete="${sess.id}" title="Delete boss log">✕</button></td>
