@@ -73,6 +73,7 @@ function getEvenlyPreviewSchedule() {
 }
 
 function renderScheduleCalendar() {
+  document.getElementById('scheduleMonthHeading').textContent = formatMonthYear(scheduleState.month);
   document.getElementById('scheduleWeekdayRow').innerHTML = SCHEDULE_WEEKDAY_LABELS.map((d) => `<div class="schedule-weekday">${d}</div>`).join('');
 
   const [year, month] = scheduleState.month.split('-').map(Number);
@@ -91,12 +92,14 @@ function renderScheduleCalendar() {
       .map((s) => `<option value="${escapeHtml(s.name)}" ${s.name === assigned ? 'selected' : ''}>${escapeHtml(s.name)}</option>`)
       .join('');
     cells.push(`
-      <div class="schedule-day" style="${color ? `border-color:${color};` : ''}">
+      <div class="schedule-day" style="${color ? `--accent:${color};` : ''}">
         <div class="schedule-day-number">${day}</div>
         ${
           isManual
             ? `<select class="schedule-day-select" data-date="${date}"><option value="">—</option>${optionsHtml}</select>`
-            : `<div class="schedule-day-badge" style="${color ? `background:${color};` : ''}">${assigned ? escapeHtml(assigned) : '—'}</div>`
+            : assigned
+              ? `<div class="schedule-day-badge"><span class="schedule-dot" style="background:${color}"></span>${escapeHtml(assigned)}</div>`
+              : `<div class="schedule-day-badge schedule-day-badge-empty">—</div>`
         }
       </div>`);
   }

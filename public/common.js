@@ -86,6 +86,13 @@ function formatTimeOfDay(isoString) {
   return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
 }
 
+// "2026-08" -> "August 2026" — a month heading above a monthly calendar.
+function formatMonthYear(monthStr) {
+  const d = new Date(`${monthStr}-01T00:00:00`);
+  if (Number.isNaN(d.getTime())) return monthStr;
+  return d.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+}
+
 function currentMonthValue() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;

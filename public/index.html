@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=54">
+  <link rel="stylesheet" href="styles.css?v=55">
 </head>
 <body>
   <div class="app viz-root">
@@ -433,7 +433,10 @@
       </section>
 
       <section class="panel">
-        <div id="scheduleCalendarLegend" class="schedule-legend"></div>
+        <div class="schedule-calendar-header">
+          <h2 id="scheduleMonthHeading" class="schedule-month-heading"></h2>
+          <div id="scheduleCalendarLegend" class="schedule-legend"></div>
+        </div>
         <div id="scheduleWeekdayRow" class="schedule-weekdays"></div>
         <div id="scheduleCalendarGrid" class="schedule-calendar"></div>
         <p id="scheduleNoServersState" class="empty-state hidden" data-i18n="schedule.noServers">No servers added yet — click "Manage Servers" to add one.</p>
@@ -755,7 +758,7 @@
 
   <div id="toast" class="toast hidden"></div>
 
-  <script src="common.js?v=34"></script>
+  <script src="common.js?v=35"></script>
   <script src="item-categories.js?v=32"></script>
   <script src="members-view.js?v=32"></script>
   <script src="queue-view.js?v=30"></script>
@@ -768,7 +771,7 @@
   <script src="cave-report-view.js?v=3"></script>
   <script src="cave-loot-list-view.js?v=9"></script>
   <script src="cave-salary-view.js?v=8"></script>
-  <script src="cave-schedule-view.js?v=2"></script>
+  <script src="cave-schedule-view.js?v=3"></script>
   <script src="item-report-view.js?v=30"></script>
   <script src="boss-timer-view.js?v=33"></script>
   <script src="boss-history-view.js?v=33"></script>
