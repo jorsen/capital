@@ -97,6 +97,10 @@ function openAddCaveModal() {
 
 document.getElementById('addCaveBtn').addEventListener('click', openAddCaveModal);
 document.getElementById('addCaveBtnFromSession').addEventListener('click', openAddCaveModal);
+document.getElementById('addCaveBtnFromDate').addEventListener('click', openAddCaveModal);
+document.getElementById('addCaveBtnFromReport').addEventListener('click', openAddCaveModal);
+document.getElementById('addCaveBtnFromLootList').addEventListener('click', openAddCaveModal);
+document.getElementById('addCaveBtnFromSalary').addEventListener('click', openAddCaveModal);
 
 addCaveForm.addEventListener('submit', async (e) => {
   e.preventDefault();

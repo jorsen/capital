@@ -190,7 +190,14 @@
     <div id="view-cave-date" class="view hidden">
       <div class="view-header space-between">
         <a href="#/caves" class="back-link">← Back to Cave Attendance</a>
-        <button id="addCaveBossBtn" class="btn primary admin-only">+ Log a Boss</button>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <a href="#/cave-report" class="btn small">📊 Attendance Report</a>
+          <a href="#/cave-loot-list" class="btn small">🧾 Loot List</a>
+          <a href="#/cave-salary" class="btn small">💰 Salary</a>
+          <button id="manageItemsBtnCaveDate" class="btn small admin-only">Manage Items</button>
+          <button id="addCaveBtnFromDate" class="btn small admin-only">+ Log a Date</button>
+          <button id="addCaveBossBtn" class="btn primary admin-only">+ Log a Boss</button>
+        </div>
       </div>
 
       <section class="panel">
@@ -234,6 +241,12 @@
     <div id="view-cave-report" class="view hidden">
       <div class="view-header space-between">
         <a href="#/caves" class="back-link">← Back to Cave Attendance</a>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <a href="#/cave-loot-list" class="btn small">🧾 Loot List</a>
+          <a href="#/cave-salary" class="btn small">💰 Salary</a>
+          <button id="manageItemsBtnCaveReport" class="btn small admin-only">Manage Items</button>
+          <button id="addCaveBtnFromReport" class="btn primary admin-only">+ Log a Date</button>
+        </div>
       </div>
 
       <section class="panel">
@@ -251,9 +264,15 @@
     <div id="view-cave-loot-list" class="view hidden">
       <div class="view-header space-between">
         <a href="#/caves" class="back-link">← Back to Cave Attendance</a>
-        <label style="display:flex; align-items:center; gap:8px; margin:0;">Month
-          <input type="month" id="caveLootListMonthInput">
-        </label>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+          <a href="#/cave-report" class="btn small">📊 Attendance Report</a>
+          <a href="#/cave-salary" class="btn small">💰 Salary</a>
+          <button id="manageItemsBtnCaveLootList" class="btn small admin-only">Manage Items</button>
+          <button id="addCaveBtnFromLootList" class="btn primary admin-only">+ Log a Date</button>
+          <label style="display:flex; align-items:center; gap:8px; margin:0;">Month
+            <input type="month" id="caveLootListMonthInput">
+          </label>
+        </div>
       </div>
 
       <section class="panel">
@@ -283,9 +302,15 @@
     <div id="view-cave-salary" class="view hidden">
       <div class="view-header space-between">
         <a href="#/caves" class="back-link">← Back to Cave Attendance</a>
-        <label style="display:flex; align-items:center; gap:8px; margin:0;">Month
-          <input type="month" id="caveSalaryMonthInput">
-        </label>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+          <a href="#/cave-report" class="btn small">📊 Attendance Report</a>
+          <a href="#/cave-loot-list" class="btn small">🧾 Loot List</a>
+          <button id="manageItemsBtnCaveSalary" class="btn small admin-only">Manage Items</button>
+          <button id="addCaveBtnFromSalary" class="btn primary admin-only">+ Log a Date</button>
+          <label style="display:flex; align-items:center; gap:8px; margin:0;">Month
+            <input type="month" id="caveSalaryMonthInput">
+          </label>
+        </div>
       </div>
 
       <section class="panel">
@@ -565,12 +590,12 @@
   <div id="toast" class="toast hidden"></div>
 
   <script src="common.js?v=31"></script>
-  <script src="item-categories.js?v=29"></script>
+  <script src="item-categories.js?v=30"></script>
   <script src="members-view.js?v=31"></script>
   <script src="queue-view.js?v=30"></script>
   <script src="loot-view.js?v=30"></script>
   <script src="loot-session-view.js?v=31"></script>
-  <script src="cave-view.js?v=5"></script>
+  <script src="cave-view.js?v=6"></script>
   <script src="cave-date-view.js?v=1"></script>
   <script src="cave-session-view.js?v=7"></script>
   <script src="cave-report-view.js?v=2"></script>

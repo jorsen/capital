@@ -91,5 +91,9 @@ document.getElementById('manageItemsBtnLoot').addEventListener('click', openMana
 document.getElementById('manageItemsBtnSession').addEventListener('click', openManageItemsModal);
 document.getElementById('manageItemsBtnCave').addEventListener('click', openManageItemsModal);
 document.getElementById('manageItemsBtnCaveSession').addEventListener('click', openManageItemsModal);
+document.getElementById('manageItemsBtnCaveDate').addEventListener('click', openManageItemsModal);
+document.getElementById('manageItemsBtnCaveReport').addEventListener('click', openManageItemsModal);
+document.getElementById('manageItemsBtnCaveLootList').addEventListener('click', openManageItemsModal);
+document.getElementById('manageItemsBtnCaveSalary').addEventListener('click', openManageItemsModal);
 
 loadItemCategories().catch((err) => toast(err.message));
