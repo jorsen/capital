@@ -48,6 +48,11 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+function currentMonthValue() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
 function totalQty(session) {
   return session.records.reduce((sum, r) => sum + r.quantity, 0);
 }

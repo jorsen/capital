@@ -6,10 +6,12 @@ const VIEW_TITLES = {
   caves: 'Cave Attendance — Capital Records',
   'cave-session': 'Cave Details — Capital Records',
   'cave-report': 'Cave Attendance Report — Capital Records',
+  'cave-loot-list': 'Cave Loot List — Capital Records',
+  'cave-salary': 'Cave Salary — Capital Records',
   items: 'Item Report — Capital Records',
   bosses: 'Boss Timers — Capital Records',
 };
-const VALID_VIEWS = ['members', 'queue', 'loot', 'loot-session', 'caves', 'cave-session', 'cave-report', 'items', 'bosses'];
+const VALID_VIEWS = ['members', 'queue', 'loot', 'loot-session', 'caves', 'cave-session', 'cave-report', 'cave-loot-list', 'cave-salary', 'items', 'bosses'];
 
 function showView(name) {
   document.querySelectorAll('.view').forEach((v) => v.classList.add('hidden'));
@@ -36,6 +38,8 @@ function parseRoute() {
   if (activeView === 'caves') loadCaveData().catch((err) => toast(err.message));
   if (activeView === 'cave-session') loadCaveSessionData(param);
   if (activeView === 'cave-report') loadCaveReportData().catch((err) => toast(err.message));
+  if (activeView === 'cave-loot-list') loadCaveLootListData().catch((err) => toast(err.message));
+  if (activeView === 'cave-salary') loadCaveSalaryData().catch((err) => toast(err.message));
   if (activeView === 'items') loadItemReportData().catch((err) => toast(err.message));
   if (activeView === 'bosses') {
     loadBossTimerData().catch((err) => toast(err.message));

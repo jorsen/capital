@@ -4,6 +4,10 @@ function getPresentCaveMembers(session, sortedMembers) {
   return sortedMembers.filter((m) => session.attendees.includes(m.id));
 }
 
+function caveSessionFormatMoney(amount) {
+  return `₱${(amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
 function bossNameOptionsHtml(bosses, selectedName) {
   const options = bosses
     .map((b) => `<option value="${escapeHtml(b.name)}" ${b.name === selectedName ? 'selected' : ''}>${escapeHtml(b.name)}</option>`)
@@ -56,6 +60,9 @@ function renderCaveSessionContent() {
     <tr>
       <td style="font-weight:600;">${itemLabel(r.item)}</td>
       <td class="col-right"><input type="number" class="qty-input admin-disable" data-record-id="${r.id}" value="${r.quantity}" min="1" step="1" style="width:100px; text-align:right;"></td>
+      <td class="col-right"><input type="number" class="sold-price-input admin-disable" data-record-id="${r.id}" value="${r.soldPrice}" min="0" step="0.01" style="width:110px; text-align:right;"></td>
+      <td class="col-right">${caveSessionFormatMoney(r.quantity * r.soldPrice)}</td>
+      <td><input type="text" class="buyer-input admin-disable" data-record-id="${r.id}" value="${escapeHtml(r.buyer || '')}" placeholder="(optional)" style="width:130px;"></td>
       <td class="admin-only">
         <button class="icon-btn" data-del-record="${r.id}" title="Delete record">✕</button>
       </td>
@@ -117,10 +124,11 @@ function renderCaveSessionContent() {
     </form>
 
     <h3>Loot Records</h3>
+    <p style="color:var(--text-muted); font-size:13px; margin:-4px 0 8px;">Price × Qty feeds the Loot List and Salary tabs' monthly totals — fill it in once an item actually sells.</p>
     <div id="caveLootRecordsTableWrap" class="table-scroll">
       <table class="growth-table">
-        <thead><tr><th>Item</th><th class="col-right">Qty</th><th></th></tr></thead>
-        <tbody>${lootRecordsRows || '<tr><td colspan="3" style="color:var(--text-muted)">No loot logged yet.</td></tr>'}</tbody>
+        <thead><tr><th>Item</th><th class="col-right">Qty</th><th class="col-right">Price</th><th class="col-right">Total</th><th>Buyer</th><th></th></tr></thead>
+        <tbody>${lootRecordsRows || '<tr><td colspan="6" style="color:var(--text-muted)">No loot logged yet.</td></tr>'}</tbody>
       </table>
     </div>
   `;
@@ -229,6 +237,48 @@ function renderCaveSessionContent() {
         Object.assign(record, updated);
         renderCaveSessionContent();
         toast('Quantity updated');
+      } catch (err) {
+        toast(err.message);
+        renderCaveSessionContent();
+      }
+    });
+  });
+
+  content.querySelectorAll('.sold-price-input').forEach((input) => {
+    input.addEventListener('change', async () => {
+      const recordId = input.getAttribute('data-record-id');
+      const price = Number(input.value);
+      if (!Number.isFinite(price) || price < 0) {
+        toast('Sold price must be zero or a positive number');
+        renderCaveSessionContent();
+        return;
+      }
+      try {
+        const updated = await api(`/api/caves/${session.id}/records/${recordId}`, {
+          method: 'PUT',
+          body: JSON.stringify({ soldPrice: price }),
+        });
+        const record = session.records.find((r) => r.id === recordId);
+        Object.assign(record, updated);
+        renderCaveSessionContent();
+        toast('Sold price updated');
+      } catch (err) {
+        toast(err.message);
+        renderCaveSessionContent();
+      }
+    });
+  });
+
+  content.querySelectorAll('.buyer-input').forEach((input) => {
+    input.addEventListener('change', async () => {
+      const recordId = input.getAttribute('data-record-id');
+      try {
+        const updated = await api(`/api/caves/${session.id}/records/${recordId}`, {
+          method: 'PUT',
+          body: JSON.stringify({ buyer: input.value }),
+        });
+        const record = session.records.find((r) => r.id === recordId);
+        Object.assign(record, updated);
       } catch (err) {
         toast(err.message);
         renderCaveSessionContent();

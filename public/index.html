@@ -158,6 +158,8 @@
     <div id="view-caves" class="view hidden">
       <div class="view-header">
         <a href="#/cave-report" class="btn small">📊 Attendance Report</a>
+        <a href="#/cave-loot-list" class="btn small">🧾 Loot List</a>
+        <a href="#/cave-salary" class="btn small">💰 Salary</a>
         <button id="manageItemsBtnCave" class="btn small admin-only">Manage Items</button>
         <button id="addCaveBtn" class="btn primary admin-only">+ Log a Date</button>
       </div>
@@ -210,6 +212,106 @@
           </table>
         </div>
         <p id="caveReportEmptyState" class="empty-state hidden">No cave dates logged yet.</p>
+      </section>
+    </div>
+
+    <!-- ===================== CAVE LOOT LIST VIEW ===================== -->
+    <div id="view-cave-loot-list" class="view hidden">
+      <div class="view-header space-between">
+        <a href="#/caves" class="back-link">← Back to Cave Attendance</a>
+        <label style="display:flex; align-items:center; gap:8px; margin:0;">Month
+          <input type="month" id="caveLootListMonthInput">
+        </label>
+      </div>
+
+      <section class="panel">
+        <div class="table-scroll">
+          <table class="growth-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Boss</th>
+                <th>Loot</th>
+                <th class="col-right">Qty</th>
+                <th class="col-right">Price</th>
+                <th class="col-right">Total Price</th>
+                <th>Buyer</th>
+                <th class="col-right">Total Dias</th>
+              </tr>
+            </thead>
+            <tbody id="caveLootListBody"></tbody>
+          </table>
+        </div>
+        <p id="caveLootListEmptyState" class="empty-state hidden">No loot logged for this month yet.</p>
+      </section>
+    </div>
+
+    <!-- ===================== CAVE SALARY VIEW ===================== -->
+    <div id="view-cave-salary" class="view hidden">
+      <div class="view-header space-between">
+        <a href="#/caves" class="back-link">← Back to Cave Attendance</a>
+        <label style="display:flex; align-items:center; gap:8px; margin:0;">Month
+          <input type="month" id="caveSalaryMonthInput">
+        </label>
+      </div>
+
+      <section class="panel">
+        <div class="growth-form-row" style="align-items:end;">
+          <div class="stat-tile">
+            <span class="stat-label">Salary Pool</span>
+            <span class="stat-value" id="caveSalaryPoolValue">₱0</span>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-label">Accounting Fees</span>
+            <span class="stat-value" id="caveSalaryFeesValue">₱0</span>
+          </div>
+          <div class="stat-tile gold">
+            <span class="stat-label">Final Salary Pool</span>
+            <span class="stat-value" id="caveSalaryFinalPoolValue">₱0</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Accounting Fees</h2>
+        <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;">
+          Each entry takes a flat % of the raw Salary Pool off the top, then that amount is added back on top of the recipient's own distributed share.
+        </p>
+        <div class="table-scroll">
+          <table class="growth-table">
+            <thead><tr><th>Name</th><th class="col-right">Percent</th><th></th></tr></thead>
+            <tbody id="caveSalaryFeesBody"></tbody>
+          </table>
+        </div>
+        <form id="addCaveSalaryFeeForm" class="growth-form-row admin-only" style="margin-top:12px;">
+          <label style="flex:1.5;">Name / Member
+            <select name="memberId" id="caveSalaryFeeMemberSelect"></select>
+          </label>
+          <label><span>Custom name <span style="color:var(--text-muted); font-weight:400;">(if not a member)</span></span>
+            <input type="text" name="customName" placeholder="e.g. Attendance Marshals">
+          </label>
+          <label style="max-width:120px;">Percent<input type="number" name="percent" min="0" max="100" step="0.01" required></label>
+          <button type="submit" class="btn primary small">Add Fee</button>
+        </form>
+      </section>
+
+      <section class="panel">
+        <h2>Salary Breakdown</h2>
+        <div class="table-scroll">
+          <table class="members-table">
+            <thead>
+              <tr>
+                <th>IGN</th>
+                <th class="col-right">Attendance</th>
+                <th class="col-right">Multiplier</th>
+                <th class="col-right">Normalized Share</th>
+                <th class="col-right">Salary</th>
+              </tr>
+            </thead>
+            <tbody id="caveSalaryBody"></tbody>
+          </table>
+        </div>
+        <p id="caveSalaryEmptyState" class="empty-state hidden">No cave dates logged for this month yet.</p>
       </section>
     </div>
 
@@ -418,8 +520,10 @@
   <script src="loot-view.js?v=30"></script>
   <script src="loot-session-view.js?v=30"></script>
   <script src="cave-view.js?v=3"></script>
-  <script src="cave-session-view.js?v=3"></script>
+  <script src="cave-session-view.js?v=4"></script>
   <script src="cave-report-view.js?v=1"></script>
+  <script src="cave-loot-list-view.js?v=1"></script>
+  <script src="cave-salary-view.js?v=2"></script>
   <script src="item-report-view.js?v=29"></script>
   <script src="boss-timer-view.js?v=33"></script>
   <script src="boss-history-view.js?v=32"></script>
