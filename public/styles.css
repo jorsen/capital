@@ -915,18 +915,18 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
 }
 
 .attendance-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  columns: 220px;
+  column-gap: 6px;
   margin-bottom: 20px;
 }
 .attendance-item {
   display: flex;
-  flex: 0 0 auto;
   flex-direction: row;
   align-items: center;
   gap: 8px;
   padding: 6px 10px;
+  margin-bottom: 6px;
+  break-inside: avoid;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--surface-2);

@@ -406,7 +406,7 @@ function renderSessionContent() {
           <span>${escapeHtml(memberDisplayName(m))}</span>
         </label>`
           )
-          .join('') || '<p style="color:var(--text-muted); grid-column:1/-1;">No members yet.</p>'
+          .join('') || '<p style="color:var(--text-muted);">No members yet.</p>'
       }
     </div>
     <div style="display:flex; align-items:center; gap:10px; margin:10px 0 20px;">
