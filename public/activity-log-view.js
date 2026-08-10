@@ -3,6 +3,49 @@ async function loadActivityLogData() {
   renderActivityLog(entries);
 }
 
+// camelCase field name -> readable label, e.g. "className" -> "Class Name".
+function humanizeFieldName(key) {
+  return key
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/^./, (c) => c.toUpperCase());
+}
+
+function formatChangeValue(value) {
+  if (value === null || value === undefined || value === '') return '—';
+  if (Array.isArray(value)) return value.length ? escapeHtml(value.join(', ')) : '—';
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+  return escapeHtml(String(value));
+}
+
+// Renders what actually changed for one activity log entry:
+// - create: lists the fields the new record was created with
+// - delete: lists the fields the removed record had
+// - update: lists only the fields whose value actually changed, as old → new
+function renderEntryChanges(entry) {
+  const before = entry.before;
+  const after = entry.after;
+
+  if (before && after) {
+    const keys = new Set([...Object.keys(before), ...Object.keys(after)]);
+    const lines = [];
+    keys.forEach((key) => {
+      const a = before[key];
+      const b = after[key];
+      if (JSON.stringify(a) !== JSON.stringify(b)) {
+        lines.push(`<div><strong>${escapeHtml(humanizeFieldName(key))}:</strong> ${formatChangeValue(a)} → ${formatChangeValue(b)}</div>`);
+      }
+    });
+    if (!lines.length) return `<span style="color:var(--text-muted);">${escapeHtml(t('activityLog.noChanges'))}</span>`;
+    return lines.join('');
+  }
+
+  const snapshot = after || before;
+  if (!snapshot) return '';
+  return Object.keys(snapshot)
+    .map((key) => `<div><strong>${escapeHtml(humanizeFieldName(key))}:</strong> ${formatChangeValue(snapshot[key])}</div>`)
+    .join('');
+}
+
 function renderActivityLog(entries) {
   const body = document.getElementById('activityLogBody');
   document.getElementById('activityLogEmptyState').classList.toggle('hidden', entries.length !== 0);
@@ -15,6 +58,7 @@ function renderActivityLog(entries) {
       <td>${escapeHtml(e.username)} <span style="color:var(--text-muted); font-size:12px;">(${escapeHtml(e.role)})</span></td>
       <td><span class="class-badge">${escapeHtml(e.action)}</span></td>
       <td>${escapeHtml(e.description)}</td>
+      <td style="font-size:12px;">${renderEntryChanges(e)}</td>
     </tr>`
     )
     .join('');

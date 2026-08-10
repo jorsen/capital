@@ -74,8 +74,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 16px;
+  flex-wrap: nowrap;
+  gap: 10px;
   /* Bleed out of .app's horizontal padding so the background spans the
      full viewport edge-to-edge, while the added padding keeps the actual
      brand/nav/logout content aligned exactly where it was before. */
@@ -117,8 +117,15 @@ body {
 .topbar-left {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 10px;
   flex-wrap: wrap;
+  min-width: 0;
+}
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
 }
 .brand {
   display: flex;
@@ -146,22 +153,23 @@ body {
 
 .page-nav {
   display: flex;
-  gap: 4px;
+  gap: 2px;
   flex-wrap: wrap;
 }
 .nav-link {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 13px;
+  gap: 5px;
+  font-size: 12.5px;
   font-weight: 600;
   color: var(--text-secondary);
   text-decoration: none;
-  padding: 7px 14px;
+  padding: 6px 8px;
   border-radius: 999px;
+  white-space: nowrap;
   transition: background 0.15s, color 0.15s, transform 0.15s;
 }
-.nav-link svg { width: 14px; height: 14px; flex-shrink: 0; opacity: 0.85; }
+.nav-link svg { width: 13px; height: 13px; flex-shrink: 0; opacity: 0.85; }
 .nav-link:hover { background: var(--surface-2); color: var(--text-primary); transform: translateY(-1px); }
 .nav-link.active {
   background: linear-gradient(135deg, var(--series-1-strong), var(--series-1));
@@ -175,11 +183,10 @@ body {
   padding: 0 8px;
   font-size: 12px;
   font-weight: 600;
-  margin-right: 10px;
   flex-shrink: 0;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 960px) {
   .nav-toggle { display: flex; }
   .topbar { position: relative; }
   .page-nav {

@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=48">
+  <link rel="stylesheet" href="styles.css?v=49">
 </head>
 <body>
   <div class="app viz-root">
@@ -56,15 +56,17 @@
           </a>
         </nav>
       </div>
-      <select id="langPicker" class="lang-select" aria-label="Language" title="Language">
-        <option value="en">English</option>
-        <option value="zh">中文</option>
-        <option value="ko">한국어</option>
-        <option value="th">ไทย</option>
-      </select>
-      <span id="roleBadge" class="hidden" style="color:var(--text-muted); font-size:13px; margin-right:10px;" data-i18n="topbar.readonly">Viewing (read-only)</span>
-      <span id="whoamiBadge" class="hidden" style="color:var(--text-muted); font-size:13px; margin-right:10px;"></span>
-      <button id="logoutBtn" class="btn small admin-only" data-i18n="topbar.logout">Logout</button>
+      <div class="topbar-right">
+        <select id="langPicker" class="lang-select" aria-label="Language" title="Language">
+          <option value="en">English</option>
+          <option value="zh">中文</option>
+          <option value="ko">한국어</option>
+          <option value="th">ไทย</option>
+        </select>
+        <span id="roleBadge" class="hidden" style="color:var(--text-muted); font-size:13px;" data-i18n="topbar.readonly">Viewing (read-only)</span>
+        <span id="whoamiBadge" class="hidden" style="color:var(--text-muted); font-size:13px;"></span>
+        <button id="logoutBtn" class="btn small admin-only" data-i18n="topbar.logout">Logout</button>
+      </div>
     </header>
 
     <!-- ===================== MEMBERS VIEW ===================== -->
@@ -485,6 +487,7 @@
                 <th data-i18n="activityLog.thUser">User</th>
                 <th data-i18n="activityLog.thAction">Action</th>
                 <th data-i18n="activityLog.thDescription">Description</th>
+                <th data-i18n="activityLog.thChanges">Changes</th>
               </tr>
             </thead>
             <tbody id="activityLogBody"></tbody>
@@ -690,25 +693,25 @@
   <div id="toast" class="toast hidden"></div>
 
   <script src="common.js?v=33"></script>
-  <script src="item-categories.js?v=30"></script>
-  <script src="members-view.js?v=31"></script>
+  <script src="item-categories.js?v=31"></script>
+  <script src="members-view.js?v=32"></script>
   <script src="queue-view.js?v=30"></script>
   <script src="loot-view.js?v=30"></script>
-  <script src="loot-session-view.js?v=31"></script>
+  <script src="loot-session-view.js?v=32"></script>
   <script src="cave-view.js?v=9"></script>
   <script src="cave-discord-sync.js?v=2"></script>
   <script src="cave-date-view.js?v=4"></script>
-  <script src="cave-session-view.js?v=9"></script>
+  <script src="cave-session-view.js?v=10"></script>
   <script src="cave-report-view.js?v=3"></script>
   <script src="cave-loot-list-view.js?v=8"></script>
   <script src="cave-salary-view.js?v=8"></script>
-  <script src="item-report-view.js?v=29"></script>
+  <script src="item-report-view.js?v=30"></script>
   <script src="boss-timer-view.js?v=33"></script>
   <script src="boss-history-view.js?v=32"></script>
-  <script src="users-view.js?v=1"></script>
-  <script src="activity-log-view.js?v=1"></script>
+  <script src="users-view.js?v=2"></script>
+  <script src="activity-log-view.js?v=2"></script>
   <script src="auth.js?v=29"></script>
-  <script src="i18n.js?v=1"></script>
+  <script src="i18n.js?v=2"></script>
   <script src="router.js?v=33"></script>
 </body>
 </html>
