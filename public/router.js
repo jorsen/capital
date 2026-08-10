@@ -11,8 +11,11 @@ const VIEW_TITLES = {
   'cave-salary': 'Cave Salary — Capital Records',
   items: 'Item Report — Capital Records',
   bosses: 'Boss Timers — Capital Records',
+  users: 'Users — Capital Records',
+  'activity-log': 'Activity Log — Capital Records',
 };
-const VALID_VIEWS = ['members', 'queue', 'loot', 'loot-session', 'caves', 'cave-date', 'cave-session', 'cave-report', 'cave-loot-list', 'cave-salary', 'items', 'bosses'];
+const VALID_VIEWS = ['members', 'queue', 'loot', 'loot-session', 'caves', 'cave-date', 'cave-session', 'cave-report', 'cave-loot-list', 'cave-salary', 'items', 'bosses', 'users', 'activity-log'];
+const ADMIN_ONLY_VIEWS = ['users', 'activity-log'];
 
 function showView(name) {
   document.querySelectorAll('.view').forEach((v) => v.classList.add('hidden'));
@@ -27,7 +30,11 @@ function showView(name) {
 function parseRoute() {
   const hash = window.location.hash.replace(/^#\/?/, '');
   const [view, param] = hash.split('/');
-  const activeView = VALID_VIEWS.includes(view) ? view : 'members';
+  let activeView = VALID_VIEWS.includes(view) ? view : 'members';
+  if (ADMIN_ONLY_VIEWS.includes(activeView) && !isAdmin()) {
+    window.location.hash = '#/members';
+    return;
+  }
 
   showView(activeView);
   document.title = VIEW_TITLES[activeView] || 'Capital Records';
@@ -47,6 +54,8 @@ function parseRoute() {
     loadBossTimerData().catch((err) => toast(err.message));
     loadBossHistoryData().catch((err) => toast(err.message));
   }
+  if (activeView === 'users') loadUsersData().catch((err) => toast(err.message));
+  if (activeView === 'activity-log') loadActivityLogData().catch((err) => toast(err.message));
 }
 
 window.addEventListener('hashchange', parseRoute);

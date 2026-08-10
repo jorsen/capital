@@ -530,6 +530,7 @@ select:focus, input:focus, textarea:focus {
    is just UX polish so a viewer isn't shown controls that would just 403. */
 body.view-only .admin-only { display: none !important; }
 body.view-only .admin-disable { pointer-events: none; opacity: 0.55; }
+body.not-admin .owner-only { display: none !important; }
 
 /* Chart */
 .chart-root { position: relative; }

@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=46">
+  <link rel="stylesheet" href="styles.css?v=47">
 </head>
 <body>
   <div class="app viz-root">
@@ -46,9 +46,18 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             Boss Timers
           </a>
+          <a href="#/users" data-view="users" class="nav-link owner-only">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Users
+          </a>
+          <a href="#/activity-log" data-view="activity-log" class="nav-link owner-only">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+            Activity Log
+          </a>
         </nav>
       </div>
       <span id="roleBadge" class="hidden" style="color:var(--text-muted); font-size:13px; margin-right:10px;">Viewing (read-only)</span>
+      <span id="whoamiBadge" class="hidden" style="color:var(--text-muted); font-size:13px; margin-right:10px;"></span>
       <button id="logoutBtn" class="btn small admin-only">Logout</button>
     </header>
 
@@ -435,6 +444,50 @@
       </section>
     </div>
 
+    <!-- ===================== USERS VIEW ===================== -->
+    <div id="view-users" class="view hidden">
+      <div class="view-header">
+        <p style="color:var(--text-muted); font-size:13px; margin:0; flex:1;">Admin: full access, including this page. Editor: same day-to-day access as Admin, minus user management. Viewer: read-only.</p>
+        <button id="addUserBtn" class="btn primary">+ Add User</button>
+      </div>
+      <section class="panel">
+        <div class="table-scroll">
+          <table class="members-table">
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Created</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="usersBody"></tbody>
+          </table>
+        </div>
+        <p id="usersEmptyState" class="empty-state hidden">No users yet.</p>
+      </section>
+    </div>
+
+    <!-- ===================== ACTIVITY LOG VIEW ===================== -->
+    <div id="view-activity-log" class="view hidden">
+      <section class="panel">
+        <div class="table-scroll">
+          <table class="members-table">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>User</th>
+                <th>Action</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody id="activityLogBody"></tbody>
+          </table>
+        </div>
+        <p id="activityLogEmptyState" class="empty-state hidden">No activity logged yet.</p>
+      </section>
+    </div>
+
     <!-- ===================== LOOT SESSION DETAIL VIEW ===================== -->
     <div id="view-loot-session" class="view hidden">
       <div class="view-header space-between">
@@ -603,11 +656,34 @@
     </div>
   </div>
 
+  <div id="userModal" class="modal-overlay hidden">
+    <div class="modal">
+      <button class="modal-close" data-close="userModal" aria-label="Close">×</button>
+      <h2 id="userModalTitle">Add User</h2>
+      <form id="userForm">
+        <label>Username
+          <input type="text" name="username" required maxlength="40" autocomplete="off">
+        </label>
+        <label><span id="userFormPasswordLabel">Password</span>
+          <input type="password" name="password" autocomplete="new-password" placeholder="At least 8 characters">
+        </label>
+        <label>Role
+          <select name="role" required>
+            <option value="admin">Admin</option>
+            <option value="editor">Editor</option>
+            <option value="viewer">Viewer</option>
+          </select>
+        </label>
+        <button type="submit" class="btn primary">Save</button>
+      </form>
+    </div>
+  </div>
+
   <datalist id="itemCategoriesList"></datalist>
 
   <div id="toast" class="toast hidden"></div>
 
-  <script src="common.js?v=32"></script>
+  <script src="common.js?v=33"></script>
   <script src="item-categories.js?v=30"></script>
   <script src="members-view.js?v=31"></script>
   <script src="queue-view.js?v=30"></script>
@@ -623,7 +699,9 @@
   <script src="item-report-view.js?v=29"></script>
   <script src="boss-timer-view.js?v=33"></script>
   <script src="boss-history-view.js?v=32"></script>
+  <script src="users-view.js?v=1"></script>
+  <script src="activity-log-view.js?v=1"></script>
   <script src="auth.js?v=29"></script>
-  <script src="router.js?v=31"></script>
+  <script src="router.js?v=33"></script>
 </body>
 </html>

@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=18">
+  <link rel="stylesheet" href="styles.css?v=47">
 </head>
 <body class="login-page">
   <div class="login-card">
@@ -16,15 +16,18 @@
     <h1>Capital Records</h1>
     <p class="login-sub">Browsing is open to everyone — sign in only if you need to make changes.</p>
     <form id="loginForm">
-      <label>Admin Password
-        <input type="password" name="password" required autofocus placeholder="••••••••">
+      <label>Username
+        <input type="text" name="username" required autofocus autocomplete="username" placeholder="e.g. admin">
+      </label>
+      <label>Password
+        <input type="password" name="password" required autocomplete="current-password" placeholder="••••••••">
       </label>
       <button type="submit" class="btn primary">Enter</button>
-      <p id="loginError" class="login-error hidden">Incorrect password.</p>
+      <p id="loginError" class="login-error hidden">Incorrect username or password.</p>
     </form>
     <a href="/" class="login-back-link">← Back to browsing</a>
   </div>
 
-  <script src="login.js?v=17"></script>
+  <script src="login.js?v=18"></script>
 </body>
 </html>

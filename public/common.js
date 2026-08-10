@@ -1,7 +1,16 @@
 // Populated before the first route renders (see router.js) so every view's
 // first render already reflects the real role — avoids a flash of admin
 // controls that then disappear once the session check resolves.
-const appSession = { role: null };
+const appSession = { role: null, username: null };
+
+// Admin and editor share the same day-to-day editing powers (members, cave
+// attendance, loot, salary, boss timers, etc.) — the existing .admin-only /
+// .admin-disable classes gate on this. Only a few areas (Users management,
+// the Activity Log) are admin-exclusive — those use .owner-only instead,
+// gated by isAdmin() specifically.
+function canEdit() {
+  return appSession.role === 'admin' || appSession.role === 'editor';
+}
 
 function isAdmin() {
   return appSession.role === 'admin';
@@ -9,14 +18,22 @@ function isAdmin() {
 
 async function loadSession() {
   try {
-    const { role } = await api('/api/session');
+    const { role, username } = await api('/api/session');
     appSession.role = role;
+    appSession.username = username;
   } catch (err) {
     appSession.role = null;
+    appSession.username = null;
   }
-  document.body.classList.toggle('view-only', !isAdmin());
+  document.body.classList.toggle('view-only', !canEdit());
+  document.body.classList.toggle('not-admin', !isAdmin());
   const badge = document.getElementById('roleBadge');
-  if (badge) badge.classList.toggle('hidden', isAdmin());
+  if (badge) badge.classList.toggle('hidden', canEdit());
+  const whoami = document.getElementById('whoamiBadge');
+  if (whoami) {
+    whoami.classList.toggle('hidden', !appSession.username);
+    if (appSession.username) whoami.textContent = `${appSession.username} (${appSession.role})`;
+  }
 }
 
 const sessionReady = loadSession();
