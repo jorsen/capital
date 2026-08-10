@@ -50,7 +50,7 @@ function renderCaveLootList() {
 
       return rows
         .map((r, i) => {
-          const dateCell = i === 0 ? `<td rowspan="${rows.length}" style="font-weight:600;"><a href="#/cave-date/${group.date}" class="cave-date-link">${escapeHtml(formatCaveReportDate(group.date))}</a></td>` : '';
+          const dateCell = i === 0 ? `<td rowspan="${rows.length}" style="font-weight:600;"><a href="#/cave-date/${group.date}" class="cave-date-link">${escapeHtml(formatLongDate(group.date))}</a></td>` : '';
           const totalDiasCell = i === 0 ? `<td rowspan="${rows.length}" style="font-weight:600;">${caveLootListFormatMoney(totalDias)}</td>` : '';
           if (!r.item) {
             return `<tr>${dateCell}<td>${escapeHtml(r.boss || '(No boss)')}</td><td>${r.attendees}</td><td colspan="5" style="color:var(--text-muted)">No loot logged</td>${totalDiasCell}</tr>`;

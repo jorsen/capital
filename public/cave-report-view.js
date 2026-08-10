@@ -44,7 +44,7 @@ function renderCaveReport() {
       <th class="cave-report-name-col" rowspan="2">IGN</th>
       <th class="cave-report-total-col" rowspan="2">Total Attendance</th>
       ${dateGroups
-        .map((g) => `<th colspan="${g.sessions.length}">${escapeHtml(formatCaveReportDate(g.date))}</th>`)
+        .map((g) => `<th colspan="${g.sessions.length}">${escapeHtml(formatLongDate(g.date))}</th>`)
         .join('')}
     </tr>
     <tr>
@@ -104,8 +104,3 @@ function renderCaveReport() {
   });
 }
 
-function formatCaveReportDate(dateStr) {
-  const d = new Date(`${dateStr}T00:00:00`);
-  if (Number.isNaN(d.getTime())) return dateStr;
-  return d.toLocaleDateString(undefined, { month: 'numeric', day: 'numeric', year: 'numeric' });
-}

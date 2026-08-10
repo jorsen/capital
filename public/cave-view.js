@@ -61,7 +61,7 @@ function renderCaveView() {
   groups.forEach((g) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td style="font-weight:600;">${escapeHtml(g.date)}</td>
+      <td style="font-weight:600;">${escapeHtml(formatLongDate(g.date))}</td>
       <td>${g.sessions.length}</td>
       <td>${g.attendees}</td>
       <td>${g.records}</td>

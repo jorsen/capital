@@ -8,7 +8,7 @@ async function loadCaveDateData(date) {
     document.getElementById('caveDateHeading').textContent = 'No date specified';
     return;
   }
-  document.getElementById('caveDateHeading').textContent = date;
+  document.getElementById('caveDateHeading').textContent = formatLongDate(date);
   body.innerHTML = '<tr><td colspan="4" style="color:var(--text-muted)">Loading…</td></tr>';
   const [caves, bosses] = await Promise.all([api('/api/caves'), api('/api/boss-timers')]);
   caveDateState.sessions = caves.filter((s) => s.date === date);
@@ -53,7 +53,7 @@ const addCaveBossForm = document.getElementById('addCaveBossForm');
 document.getElementById('addCaveBossBtn').addEventListener('click', () => {
   addCaveBossForm.reset();
   addCaveBossForm.run.innerHTML = bossNameSelectOptionsHtml();
-  document.getElementById('addCaveBossDateLabel').textContent = caveDateState.date;
+  document.getElementById('addCaveBossDateLabel').textContent = formatLongDate(caveDateState.date);
   addCaveBossModal.classList.remove('hidden');
 });
 

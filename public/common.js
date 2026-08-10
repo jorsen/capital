@@ -52,6 +52,14 @@ function memberDisplayName(member) {
   return member.alias ? `${member.name} (${member.alias})` : member.name;
 }
 
+// "2026-08-10" -> "August 10, 2026" — used wherever a cave-attendance date
+// is displayed to a person, rather than typed into a date input.
+function formatLongDate(dateStr) {
+  const d = new Date(`${dateStr}T00:00:00`);
+  if (Number.isNaN(d.getTime())) return dateStr;
+  return d.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
+}
+
 function currentMonthValue() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;

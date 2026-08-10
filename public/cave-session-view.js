@@ -73,12 +73,12 @@ function renderCaveSessionContent() {
 
   const backLink = document.getElementById('caveSessionBackLink');
   backLink.href = `#/cave-date/${session.date}`;
-  backLink.textContent = `← Back to ${session.date}`;
+  backLink.textContent = `← Back to ${formatLongDate(session.date)}`;
 
   content.innerHTML = `
     <div class="member-header">
       <div>
-        <h2>${escapeHtml(session.date)}${session.run ? ` — ${escapeHtml(session.run)}` : ''}</h2>
+        <h2>${escapeHtml(formatLongDate(session.date))}${session.run ? ` — ${escapeHtml(session.run)}` : ''}</h2>
         <div class="member-meta">${session.records.length} record${session.records.length === 1 ? '' : 's'} · ${totalQty(session)} total qty</div>
       </div>
     </div>
@@ -138,7 +138,7 @@ function renderCaveSessionContent() {
     </div>
   `;
 
-  document.title = `${session.date}${session.run ? ` — ${session.run}` : ''} — Capital Records`;
+  document.title = `${formatLongDate(session.date)}${session.run ? ` — ${session.run}` : ''} — Capital Records`;
 
   content.querySelector('#editCaveSessionForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -157,14 +157,14 @@ function renderCaveSessionContent() {
   });
 
   content.querySelector('#deleteCaveSessionBtn').addEventListener('click', async () => {
-    if (!confirm(`Delete ${session.run || 'this boss log'} (${session.date}) and all its loot records?`)) return;
+    if (!confirm(`Delete ${session.run || 'this boss log'} (${formatLongDate(session.date)}) and all its loot records?`)) return;
     await api(`/api/caves/${session.id}`, { method: 'DELETE' });
     window.location.hash = `#/cave-date/${session.date}`;
   });
 
   content.querySelector('#copyCavePresentBtn').addEventListener('click', async () => {
     const presentNames = getPresentCaveMembers(session, sortedMembers).map((m) => memberDisplayName(m));
-    const dateLine = `${session.date}${session.run ? ` — ${session.run}` : ''}`;
+    const dateLine = `${formatLongDate(session.date)}${session.run ? ` — ${session.run}` : ''}`;
     const text = [dateLine, ...presentNames.map((name, i) => `${i + 1}. ${name}`)].join('\n');
     try {
       await navigator.clipboard.writeText(text);
