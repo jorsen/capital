@@ -161,6 +161,7 @@
         <a href="#/cave-loot-list" class="btn small">🧾 Loot List</a>
         <a href="#/cave-salary" class="btn small">💰 Salary</a>
         <button id="manageItemsBtnCave" class="btn small admin-only">Manage Items</button>
+        <button id="discordSyncBtn" class="btn small admin-only">🔗 Sync from Discord</button>
         <button id="addCaveBtn" class="btn primary admin-only">+ Log a Date</button>
       </div>
 
@@ -555,6 +556,21 @@
     </div>
   </div>
 
+  <div id="discordSyncModal" class="modal-overlay hidden">
+    <div class="modal modal-wide">
+      <button class="modal-close" data-close="discordSyncModal" aria-label="Close">×</button>
+      <h2>Sync Attendance from Discord</h2>
+      <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;">
+        Scans #cave-attendance for the selected month, matches each message's attendee list against the roster (name or alias, fuzzy — handles typos and shortcuts), and logs attendance onto the matching boss log, creating it if it doesn't exist yet. Posts a confirmation back into the channel for each one.
+      </p>
+      <form id="discordSyncForm" style="display:flex; gap:8px; align-items:flex-end; margin:14px 0;">
+        <label style="flex:1;">Month<input type="month" name="month" required></label>
+        <button type="submit" class="btn primary">Sync Now</button>
+      </form>
+      <div id="discordSyncResults"></div>
+    </div>
+  </div>
+
   <div id="manageItemsModal" class="modal-overlay hidden">
     <div class="modal modal-wide">
       <button class="modal-close" data-close="manageItemsModal" aria-label="Close">×</button>
@@ -596,6 +612,7 @@
   <script src="loot-view.js?v=30"></script>
   <script src="loot-session-view.js?v=31"></script>
   <script src="cave-view.js?v=7"></script>
+  <script src="cave-discord-sync.js?v=1"></script>
   <script src="cave-date-view.js?v=2"></script>
   <script src="cave-session-view.js?v=8"></script>
   <script src="cave-report-view.js?v=2"></script>
