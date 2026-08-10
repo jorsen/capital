@@ -42,7 +42,7 @@ function renderDiscordSyncResults(result) {
     <p style="font-weight:600;">Scanned ${result.scanned} message${result.scanned === 1 ? '' : 's'} — logged ${applied.length}, skipped ${skipped.length}.</p>
     <div class="table-scroll">
       <table class="growth-table">
-        <thead><tr><th>Boss</th><th>Date</th><th>Matched</th><th>Not recognized</th><th></th></tr></thead>
+        <thead><tr><th>Boss</th><th>Date</th><th>Attendees</th><th>Matched</th><th>Not recognized</th><th></th></tr></thead>
         <tbody>
           ${
             applied
@@ -51,8 +51,9 @@ function renderDiscordSyncResults(result) {
           <tr>
             <td>${escapeHtml(r.boss)}</td>
             <td>${escapeHtml(r.date)}</td>
-            <td>${r.matchedNames.map(escapeHtml).join(', ')}</td>
-            <td style="color:${r.unmatched.length ? 'var(--gold)' : 'var(--text-muted)'};">${r.unmatched.map(escapeHtml).join(', ') || '—'}</td>
+            <td>${r.matchedNames.length}</td>
+            <td>${r.matchedNames.map((n) => `<div>${escapeHtml(n)}</div>`).join('')}</td>
+            <td style="color:${r.unmatched.length ? 'var(--gold)' : 'var(--text-muted)'};">${r.unmatched.length ? r.unmatched.map((t) => `<div>${escapeHtml(t)}</div>`).join('') : '—'}</td>
             <td><a href="#/cave-session/${r.sessionId}" class="cave-date-link" data-close-sync-modal>Open</a></td>
           </tr>`
               )
@@ -63,7 +64,7 @@ function renderDiscordSyncResults(result) {
               .map(
                 (r) => `
           <tr>
-            <td colspan="5" style="color:var(--text-muted);">Skipped${r.boss ? ` (${escapeHtml(r.boss)}${r.date ? ` ${escapeHtml(r.date)}` : ''})` : ''}: ${escapeHtml(r.reason)}</td>
+            <td colspan="6" style="color:var(--text-muted);">Skipped${r.boss ? ` (${escapeHtml(r.boss)}${r.date ? ` ${escapeHtml(r.date)}` : ''})` : ''}: ${escapeHtml(r.reason)}</td>
           </tr>`
               )
               .join('')
