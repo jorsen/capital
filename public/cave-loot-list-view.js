@@ -60,7 +60,7 @@ function renderCaveLootList() {
           ${dateCell}
           <td>${escapeHtml(r.boss || '(No boss)')}</td>
           <td>${r.attendees}</td>
-          <td>${itemLabel(r.item)}</td>
+          <td>${escapeHtml(r.item)}</td>
           <td><input type="number" class="cave-loot-list-qty admin-disable" data-session-id="${r.sessionId}" data-record-id="${r.recordId}" value="${r.quantity}" min="1" step="1" style="width:90px;"></td>
           <td><input type="number" class="cave-loot-list-price admin-disable" data-session-id="${r.sessionId}" data-record-id="${r.recordId}" value="${r.price}" min="0" step="0.01" style="width:110px;"></td>
           <td>${caveLootListFormatMoney(r.quantity * r.price)}</td>
