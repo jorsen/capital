@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=53">
+  <link rel="stylesheet" href="styles.css?v=54">
 </head>
 <body>
   <div class="app viz-root">
@@ -174,6 +174,7 @@
         <a href="#/cave-report" class="btn small" data-i18n="common.attendanceReportBtn">📊 Attendance Report</a>
         <a href="#/cave-loot-list" class="btn small" data-i18n="common.lootListBtn">🧾 Loot List</a>
         <a href="#/cave-salary" class="btn small" data-i18n="common.salaryBtn">💰 Salary</a>
+        <a href="#/cave-schedule" class="btn small" data-i18n="common.scheduleBtn">📅 Schedule</a>
         <button id="manageItemsBtnCave" class="btn small admin-only" data-i18n="common.manageItems">Manage Items</button>
         <button id="discordSyncBtn" class="btn small admin-only" data-i18n="caves.syncFromDiscord">🔗 Sync from Discord</button>
         <button id="addCaveBtn" class="btn primary admin-only" data-i18n="common.logADate">+ Log a Date</button>
@@ -210,6 +211,7 @@
           <a href="#/cave-report" class="btn small" data-i18n="common.attendanceReportBtn">📊 Attendance Report</a>
           <a href="#/cave-loot-list" class="btn small" data-i18n="common.lootListBtn">🧾 Loot List</a>
           <a href="#/cave-salary" class="btn small" data-i18n="common.salaryBtn">💰 Salary</a>
+          <a href="#/cave-schedule" class="btn small" data-i18n="common.scheduleBtn">📅 Schedule</a>
           <button id="manageItemsBtnCaveDate" class="btn small admin-only" data-i18n="common.manageItems">Manage Items</button>
           <button id="addCaveBtnFromDate" class="btn small admin-only" data-i18n="common.logADate">+ Log a Date</button>
           <button id="addCaveBossBtn" class="btn primary admin-only" data-i18n="caveDate.logABoss">+ Log a Boss</button>
@@ -244,6 +246,7 @@
           <a href="#/cave-report" class="btn small" data-i18n="common.attendanceReportBtn">📊 Attendance Report</a>
           <a href="#/cave-loot-list" class="btn small" data-i18n="common.lootListBtn">🧾 Loot List</a>
           <a href="#/cave-salary" class="btn small" data-i18n="common.salaryBtn">💰 Salary</a>
+          <a href="#/cave-schedule" class="btn small" data-i18n="common.scheduleBtn">📅 Schedule</a>
           <button id="manageItemsBtnCaveSession" class="btn small admin-only" data-i18n="common.manageItems">Manage Items</button>
           <button id="addCaveBtnFromSession" class="btn primary admin-only" data-i18n="common.logADate">+ Log a Date</button>
         </div>
@@ -261,6 +264,7 @@
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
           <a href="#/cave-loot-list" class="btn small" data-i18n="common.lootListBtn">🧾 Loot List</a>
           <a href="#/cave-salary" class="btn small" data-i18n="common.salaryBtn">💰 Salary</a>
+          <a href="#/cave-schedule" class="btn small" data-i18n="common.scheduleBtn">📅 Schedule</a>
           <button id="manageItemsBtnCaveReport" class="btn small admin-only" data-i18n="common.manageItems">Manage Items</button>
           <button id="addCaveBtnFromReport" class="btn primary admin-only" data-i18n="common.logADate">+ Log a Date</button>
         </div>
@@ -284,6 +288,7 @@
         <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
           <a href="#/cave-report" class="btn small" data-i18n="common.attendanceReportBtn">📊 Attendance Report</a>
           <a href="#/cave-salary" class="btn small" data-i18n="common.salaryBtn">💰 Salary</a>
+          <a href="#/cave-schedule" class="btn small" data-i18n="common.scheduleBtn">📅 Schedule</a>
           <button id="manageItemsBtnCaveLootList" class="btn small admin-only" data-i18n="common.manageItems">Manage Items</button>
           <button id="addCaveBtnFromLootList" class="btn primary admin-only" data-i18n="common.logADate">+ Log a Date</button>
           <input type="month" id="caveLootListMonthInput" aria-label="Month">
@@ -320,6 +325,7 @@
         <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
           <a href="#/cave-report" class="btn small" data-i18n="common.attendanceReportBtn">📊 Attendance Report</a>
           <a href="#/cave-loot-list" class="btn small" data-i18n="common.lootListBtn">🧾 Loot List</a>
+          <a href="#/cave-schedule" class="btn small" data-i18n="common.scheduleBtn">📅 Schedule</a>
           <button id="manageItemsBtnCaveSalary" class="btn small admin-only" data-i18n="common.manageItems">Manage Items</button>
           <button id="addCaveBtnFromSalary" class="btn primary admin-only" data-i18n="common.logADate">+ Log a Date</button>
           <input type="month" id="caveSalaryMonthInput" aria-label="Month">
@@ -388,6 +394,49 @@
           </table>
         </div>
         <p id="caveSalaryEmptyState" class="empty-state hidden" data-i18n="caveSalary.emptyState">No cave dates logged for this month yet.</p>
+      </section>
+    </div>
+
+    <!-- ===================== CAVE SCHEDULE VIEW ===================== -->
+    <div id="view-cave-schedule" class="view hidden">
+      <div class="view-header space-between">
+        <a href="#/caves" class="back-link" data-i18n="common.backToCaveAttendance">← Back to Cave Attendance</a>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+          <a href="#/cave-report" class="btn small" data-i18n="common.attendanceReportBtn">📊 Attendance Report</a>
+          <a href="#/cave-loot-list" class="btn small" data-i18n="common.lootListBtn">🧾 Loot List</a>
+          <a href="#/cave-salary" class="btn small" data-i18n="common.salaryBtn">💰 Salary</a>
+          <button id="manageScheduleServersBtn" class="btn small admin-only" data-i18n="schedule.manageServers">Manage Servers</button>
+          <input type="month" id="caveScheduleMonthInput" aria-label="Month">
+        </div>
+      </div>
+
+      <section class="panel admin-only">
+        <h2 data-i18n="schedule.heading">Assign Servers</h2>
+        <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:center; margin-bottom:14px;">
+          <label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--text-secondary);">
+            <input type="radio" name="scheduleMode" value="manual" checked> <span data-i18n="schedule.modeManual">Manual</span>
+          </label>
+          <label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--text-secondary);">
+            <input type="radio" name="scheduleMode" value="evenly"> <span data-i18n="schedule.modeEvenly">Evenly</span>
+          </label>
+        </div>
+
+        <p id="scheduleManualHint" style="color:var(--text-muted); font-size:13px; margin-top:-6px;" data-i18n="schedule.manualHint">Click a server on any date below to assign it — click again to change it.</p>
+
+        <div id="scheduleEvenlyControls" class="hidden">
+          <p style="color:var(--text-muted); font-size:13px; margin-top:-4px;" data-i18n="schedule.evenlyHint">
+            Order the servers below — the first one starts on day 1 of the month, then it rotates day by day through the rest. Applying overwrites the whole month's schedule.
+          </p>
+          <div id="scheduleEvenlyOrderList" style="display:flex; flex-direction:column; gap:6px; max-width:360px; margin-bottom:12px;"></div>
+          <button type="button" id="applyEvenlyScheduleBtn" class="btn primary small" data-i18n="schedule.applyEvenly">Apply to This Month</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div id="scheduleCalendarLegend" class="schedule-legend"></div>
+        <div id="scheduleWeekdayRow" class="schedule-weekdays"></div>
+        <div id="scheduleCalendarGrid" class="schedule-calendar"></div>
+        <p id="scheduleNoServersState" class="empty-state hidden" data-i18n="schedule.noServers">No servers added yet — click "Manage Servers" to add one.</p>
       </section>
     </div>
 
@@ -666,6 +715,19 @@
     </div>
   </div>
 
+  <div id="manageScheduleServersModal" class="modal-overlay hidden">
+    <div class="modal">
+      <button class="modal-close" data-close="manageScheduleServersModal" aria-label="Close">×</button>
+      <h2 data-i18n="schedule.manageServersTitle">Manage Servers</h2>
+      <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;" data-i18n="schedule.manageServersHint">These are the server names offered on the Cave Schedule calendar. Remove any, or add new ones.</p>
+      <ul id="scheduleServerList" style="list-style:none; padding:0; margin:14px 0; display:flex; flex-direction:column; gap:8px;"></ul>
+      <form id="addScheduleServerForm" style="display:flex; gap:8px;">
+        <input type="text" name="name" placeholder="New server name…" required style="flex:1;" data-i18n-placeholder="schedule.newServerPlaceholder">
+        <button type="submit" class="btn primary small" data-i18n="common.add">Add</button>
+      </form>
+    </div>
+  </div>
+
   <div id="userModal" class="modal-overlay hidden">
     <div class="modal">
       <button class="modal-close" data-close="userModal" aria-label="Close">×</button>
@@ -706,13 +768,14 @@
   <script src="cave-report-view.js?v=3"></script>
   <script src="cave-loot-list-view.js?v=9"></script>
   <script src="cave-salary-view.js?v=8"></script>
+  <script src="cave-schedule-view.js?v=1"></script>
   <script src="item-report-view.js?v=30"></script>
   <script src="boss-timer-view.js?v=33"></script>
   <script src="boss-history-view.js?v=33"></script>
   <script src="users-view.js?v=3"></script>
   <script src="activity-log-view.js?v=4"></script>
   <script src="auth.js?v=29"></script>
-  <script src="i18n.js?v=4"></script>
-  <script src="router.js?v=33"></script>
+  <script src="i18n.js?v=5"></script>
+  <script src="router.js?v=34"></script>
 </body>
 </html>

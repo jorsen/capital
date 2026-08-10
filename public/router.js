@@ -9,12 +9,13 @@ const VIEW_TITLES = {
   'cave-report': 'Cave Attendance Report — Capital Records',
   'cave-loot-list': 'Cave Loot List — Capital Records',
   'cave-salary': 'Cave Salary — Capital Records',
+  'cave-schedule': 'Cave Schedule — Capital Records',
   items: 'Item Report — Capital Records',
   bosses: 'Boss Timers — Capital Records',
   users: 'Users — Capital Records',
   'activity-log': 'Activity Log — Capital Records',
 };
-const VALID_VIEWS = ['members', 'queue', 'loot', 'loot-session', 'caves', 'cave-date', 'cave-session', 'cave-report', 'cave-loot-list', 'cave-salary', 'items', 'bosses', 'users', 'activity-log'];
+const VALID_VIEWS = ['members', 'queue', 'loot', 'loot-session', 'caves', 'cave-date', 'cave-session', 'cave-report', 'cave-loot-list', 'cave-salary', 'cave-schedule', 'items', 'bosses', 'users', 'activity-log'];
 const ADMIN_ONLY_VIEWS = ['users', 'activity-log'];
 
 function showView(name) {
@@ -49,6 +50,7 @@ function parseRoute() {
   if (activeView === 'cave-report') loadCaveReportData().catch((err) => toast(err.message));
   if (activeView === 'cave-loot-list') loadCaveLootListData().catch((err) => toast(err.message));
   if (activeView === 'cave-salary') loadCaveSalaryData().catch((err) => toast(err.message));
+  if (activeView === 'cave-schedule') loadCaveScheduleData().catch((err) => toast(err.message));
   if (activeView === 'items') loadItemReportData().catch((err) => toast(err.message));
   if (activeView === 'bosses') {
     loadBossTimerData().catch((err) => toast(err.message));

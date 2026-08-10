@@ -584,6 +584,69 @@ select:focus, input:focus, textarea:focus {
 .item-input-unmatched { border-color: var(--bad) !important; }
 .item-input-unmatched:focus { box-shadow: 0 0 0 3px rgba(239,68,68,0.18) !important; }
 
+/* Cave Schedule calendar */
+.schedule-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 12px; }
+.schedule-legend-item { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary); }
+.schedule-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.schedule-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.schedule-weekday { text-align: center; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; color: var(--text-muted); text-transform: uppercase; }
+.schedule-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+.schedule-day {
+  min-height: 76px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface-2);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.schedule-day-empty { background: transparent; border-color: transparent; }
+.schedule-day-number { font-size: 12px; font-weight: 700; color: var(--text-secondary); }
+.schedule-day-select {
+  font-size: 11px;
+  padding: 4px 6px;
+  height: auto;
+  width: 100%;
+}
+.schedule-day-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #0a0f1a;
+  background: var(--surface-1);
+  border-radius: 4px;
+  padding: 3px 6px;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.schedule-order-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+
+@media (max-width: 720px) {
+  .schedule-weekdays, .schedule-calendar { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+  .schedule-day { min-height: 56px; padding: 4px; }
+  .schedule-day-select { font-size: 10px; padding: 2px 4px; }
+}
+
 /* Read-only "viewer" role (see common.js isAdmin/loadSession): the real
    enforcement is server-side (non-GET /api/* requires the admin role) — this
    is just UX polish so a viewer isn't shown controls that would just 403. */
