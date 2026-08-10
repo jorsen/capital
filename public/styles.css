@@ -661,7 +661,7 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
 .cave-report-table .cave-report-name-col { left: 0; }
 .cave-report-table .cave-report-total-col { left: 150px; min-width: 90px; }
 .cave-report-table tbody tr:hover td { background: var(--surface-2); }
-.cave-report-table input[type="checkbox"] { width: 16px; height: 16px; }
+.cave-report-table input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--good); }
 
 .raffle-log-list {
   display: block;
@@ -920,6 +920,7 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
   accent-color: var(--bad);
   cursor: pointer;
 }
+.attendance-item input.attendance-check { accent-color: var(--good); }
 .attendance-item span {
   overflow: hidden;
   white-space: nowrap;
@@ -927,10 +928,18 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
   font-weight: 500;
 }
 .attendance-item:hover { border-color: var(--border-strong); }
-.attendance-item:has(input:checked) {
+/* Loot Log checks mark an ABSENT member (red); Cave Attendance checks mark
+   a PRESENT member (green) — same widget, opposite meaning. */
+.attendance-item:has(input.absence-check:checked) {
   border-color: var(--bad);
   background: rgba(242,104,95,0.14);
   color: #ff9a92;
+  font-weight: 600;
+}
+.attendance-item:has(input.attendance-check:checked) {
+  border-color: var(--good);
+  background: rgba(74,222,128,0.14);
+  color: var(--good);
   font-weight: 600;
 }
 
