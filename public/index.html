@@ -164,14 +164,14 @@
 
       <section class="panel">
         <div class="table-toolbar">
-          <input id="caveSearchInput" type="search" placeholder="Search by date, cave, or item…">
+          <input id="caveSearchInput" type="search" placeholder="Search by date, boss, or item…">
         </div>
         <div class="table-scroll">
           <table class="members-table">
             <thead>
               <tr>
                 <th data-sort="date">Date</th>
-                <th data-sort="run">Cave</th>
+                <th data-sort="run">Boss</th>
                 <th class="col-right">Records</th>
                 <th class="col-right">Total Qty</th>
                 <th></th>
@@ -369,8 +369,8 @@
         <label>Date
           <input type="date" name="date" required>
         </label>
-        <label><span>Cave <span style="color:var(--text-muted); font-weight:400;">(optional)</span></span>
-          <input type="text" name="run" placeholder="e.g. Cave of Trials 7/23">
+        <label>Boss Name
+          <select name="run"></select>
         </label>
         <button type="submit" class="btn primary">Create & Add Loot</button>
       </form>
@@ -417,8 +417,8 @@
   <script src="queue-view.js?v=30"></script>
   <script src="loot-view.js?v=30"></script>
   <script src="loot-session-view.js?v=30"></script>
-  <script src="cave-view.js?v=2"></script>
-  <script src="cave-session-view.js?v=2"></script>
+  <script src="cave-view.js?v=3"></script>
+  <script src="cave-session-view.js?v=3"></script>
   <script src="cave-report-view.js?v=1"></script>
   <script src="item-report-view.js?v=29"></script>
   <script src="boss-timer-view.js?v=33"></script>

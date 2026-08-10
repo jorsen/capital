@@ -1,16 +1,25 @@
 const caveState = {
   caves: [],
   members: [],
+  bosses: [],
   search: '',
   sortKey: 'date',
   sortDir: -1,
 };
 
 async function loadCaveData() {
-  const [caves, members] = await Promise.all([api('/api/caves'), api('/api/members')]);
+  const [caves, members, bosses] = await Promise.all([api('/api/caves'), api('/api/members'), api('/api/boss-timers')]);
   caveState.caves = caves;
   caveState.members = members;
+  caveState.bosses = bosses;
   renderCaveView();
+}
+
+function bossNameSelectOptionsHtml() {
+  const options = caveState.bosses
+    .map((b) => `<option value="${escapeHtml(b.name)}">${escapeHtml(b.name)}</option>`)
+    .join('');
+  return `<option value="" selected>Select a boss…</option>${options}`;
 }
 
 // ---------- Sessions table ----------
@@ -72,6 +81,7 @@ const addCaveForm = document.getElementById('addCaveForm');
 document.getElementById('addCaveBtn').addEventListener('click', () => {
   addCaveForm.reset();
   addCaveForm.date.value = new Date().toISOString().slice(0, 10);
+  addCaveForm.run.innerHTML = bossNameSelectOptionsHtml();
   addCaveModal.classList.remove('hidden');
 });
 

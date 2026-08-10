@@ -48,7 +48,7 @@ function renderCaveReport() {
         .join('')}
     </tr>
     <tr>
-      ${sessions.map((s) => `<th title="${escapeHtml(s.run || 'Cave')}">${escapeHtml(s.run || 'Cave')}</th>`).join('')}
+      ${sessions.map((s) => `<th title="${escapeHtml(s.run || '(No boss)')}">${escapeHtml(s.run || '(No boss)')}</th>`).join('')}
     </tr>
   `;
 

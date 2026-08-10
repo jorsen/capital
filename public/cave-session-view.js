@@ -1,7 +1,17 @@
-const caveSessionState = { id: null, session: null, members: [] };
+const caveSessionState = { id: null, session: null, members: [], bosses: [] };
 
 function getPresentCaveMembers(session, sortedMembers) {
   return sortedMembers.filter((m) => session.attendees.includes(m.id));
+}
+
+function bossNameOptionsHtml(bosses, selectedName) {
+  const options = bosses
+    .map((b) => `<option value="${escapeHtml(b.name)}" ${b.name === selectedName ? 'selected' : ''}>${escapeHtml(b.name)}</option>`)
+    .join('');
+  const noMatch = selectedName && !bosses.some((b) => b.name === selectedName)
+    ? `<option value="${escapeHtml(selectedName)}" selected>${escapeHtml(selectedName)}</option>`
+    : '';
+  return `<option value="" ${selectedName ? '' : 'selected'}>Select a boss…</option>${noMatch}${options}`;
 }
 
 async function loadCaveSessionData(id) {
@@ -13,12 +23,14 @@ async function loadCaveSessionData(id) {
   }
   content.innerHTML = 'Loading…';
   try {
-    const [session, members] = await Promise.all([
+    const [session, members, bosses] = await Promise.all([
       api(`/api/caves/${id}`),
       api('/api/members'),
+      api('/api/boss-timers'),
     ]);
     caveSessionState.session = session;
     caveSessionState.members = members;
+    caveSessionState.bosses = bosses;
     renderCaveSessionContent();
   } catch (err) {
     content.innerHTML = `<p class="empty-state">${escapeHtml(err.message)}</p>`;
@@ -44,12 +56,6 @@ function renderCaveSessionContent() {
     <tr>
       <td style="font-weight:600;">${itemLabel(r.item)}</td>
       <td class="col-right"><input type="number" class="qty-input admin-disable" data-record-id="${r.id}" value="${r.quantity}" min="1" step="1" style="width:100px; text-align:right;"></td>
-      <td>
-        <label class="sent-check-label" title="Mark as sent">
-          <input type="checkbox" class="sent-check admin-disable" data-record-id="${r.id}" ${r.sent ? 'checked' : ''}>
-          Sent
-        </label>
-      </td>
       <td class="admin-only">
         <button class="icon-btn" data-del-record="${r.id}" title="Delete record">✕</button>
       </td>
@@ -67,7 +73,7 @@ function renderCaveSessionContent() {
 
     <form id="editCaveSessionForm" style="display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap; margin-bottom:20px;">
       <label style="flex:1; min-width:140px;">Date<input type="date" name="date" value="${session.date}" required></label>
-      <label style="flex:1; min-width:160px;">Cave<input type="text" name="run" value="${escapeHtml(session.run || '')}"></label>
+      <label style="flex:1; min-width:160px;">Boss Name<select name="run">${bossNameOptionsHtml(caveSessionState.bosses, session.run)}</select></label>
       <button type="submit" class="btn small admin-only">Save Changes</button>
       <button type="button" class="btn small danger admin-only" id="deleteCaveSessionBtn">Delete Date</button>
     </form>
@@ -113,8 +119,8 @@ function renderCaveSessionContent() {
     <h3>Loot Records</h3>
     <div id="caveLootRecordsTableWrap" class="table-scroll">
       <table class="growth-table">
-        <thead><tr><th>Item</th><th class="col-right">Qty</th><th>Sent</th><th></th></tr></thead>
-        <tbody>${lootRecordsRows || '<tr><td colspan="4" style="color:var(--text-muted)">No loot logged yet.</td></tr>'}</tbody>
+        <thead><tr><th>Item</th><th class="col-right">Qty</th><th></th></tr></thead>
+        <tbody>${lootRecordsRows || '<tr><td colspan="3" style="color:var(--text-muted)">No loot logged yet.</td></tr>'}</tbody>
       </table>
     </div>
   `;
@@ -202,25 +208,6 @@ function renderCaveSessionContent() {
       await api(`/api/caves/${session.id}/records/${recordId}`, { method: 'DELETE' });
       session.records = session.records.filter((r) => r.id !== recordId);
       renderCaveSessionContent();
-    });
-  });
-
-  content.querySelectorAll('.sent-check').forEach((cb) => {
-    cb.addEventListener('change', async () => {
-      const recordId = cb.getAttribute('data-record-id');
-      const record = session.records.find((r) => r.id === recordId);
-      if (!record) return;
-      try {
-        const updated = await api(`/api/caves/${session.id}/records/${recordId}`, {
-          method: 'PUT',
-          body: JSON.stringify({ sent: cb.checked }),
-        });
-        Object.assign(record, updated);
-        renderCaveSessionContent();
-      } catch (err) {
-        cb.checked = !cb.checked;
-        toast(err.message);
-      }
     });
   });
 
