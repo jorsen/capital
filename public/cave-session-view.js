@@ -200,11 +200,13 @@ function renderCaveSessionContent() {
   content.querySelector('#addCaveRecordForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
+    const itemName = resolveKnownItemName(fd.get('item'));
+    if (!itemName) return;
     try {
       const record = await api(`/api/caves/${session.id}/records`, {
         method: 'POST',
         body: JSON.stringify({
-          item: fd.get('item'),
+          item: itemName,
           quantity: Number(fd.get('quantity')) || 1,
         }),
       });

@@ -125,9 +125,13 @@ function wireItemDropdown({ inputId, menuId, iconId, iconSize }) {
   const iconEl = iconId ? document.getElementById(iconId) : null;
 
   function updateIcon() {
-    if (!iconEl) return;
-    const category = itemCategoriesState.list.find((c) => c.name.toLowerCase() === input.value.trim().toLowerCase());
-    iconEl.innerHTML = category ? itemIconImg(category.iconUrl, category.name, iconSize || 32) : '';
+    const typed = input.value.trim();
+    const category = itemCategoriesState.list.find((c) => c.name.toLowerCase() === typed.toLowerCase());
+    // Live feedback that what's typed isn't (yet) a real selection — matches
+    // the same known-item check the form blocks submission on, so the input
+    // doesn't just silently reject an unmatched value only once submitted.
+    input.classList.toggle('item-input-unmatched', !!typed && !category);
+    if (iconEl) iconEl.innerHTML = category ? itemIconImg(category.iconUrl, category.name, iconSize || 32) : '';
   }
 
   function renderMenu() {
@@ -167,6 +171,21 @@ function wireItemDropdown({ inputId, menuId, iconId, iconSize }) {
   });
   input.addEventListener('focus', renderMenu);
   updateIcon();
+}
+
+// Requires the typed value to match a known item exactly (case-insensitive)
+// rather than accepting arbitrary free text — someone must pick from the
+// search dropdown, not type a name that doesn't exist as an item category.
+// Returns the item's canonical stored name on a match, or null (after
+// toasting why) if it doesn't match anything.
+function resolveKnownItemName(typedValue) {
+  const trimmed = (typedValue || '').trim();
+  const category = itemCategoriesState.list.find((c) => c.name.toLowerCase() === trimmed.toLowerCase());
+  if (!category) {
+    toast(trimmed ? `"${trimmed}" isn't a known item — pick one from the list` : 'Select an item from the list');
+    return null;
+  }
+  return category.name;
 }
 
 function itemLabel(itemName) {
@@ -719,12 +738,14 @@ function renderSessionContent() {
   content.querySelector('#addRecordForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
+    const itemName = resolveKnownItemName(fd.get('item'));
+    if (!itemName) return;
     try {
       const record = await api(`/api/loot/${session.id}/records`, {
         method: 'POST',
         body: JSON.stringify({
           recipientId: fd.get('recipientId'),
-          item: fd.get('item'),
+          item: itemName,
           quantity: Number(fd.get('quantity')) || 1,
         }),
       });

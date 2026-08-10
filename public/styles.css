@@ -578,6 +578,12 @@ select:focus, input:focus, textarea:focus {
 }
 .pagination-status { font-size: 13px; color: var(--text-secondary); }
 
+/* Add Loot's item field — a live cue that what's typed doesn't match a real
+   item yet, so picking one from the search dropdown (not free typing) is
+   clearly what's expected before the row can actually be added. */
+.item-input-unmatched { border-color: var(--bad) !important; }
+.item-input-unmatched:focus { box-shadow: 0 0 0 3px rgba(239,68,68,0.18) !important; }
+
 /* Read-only "viewer" role (see common.js isAdmin/loadSession): the real
    enforcement is server-side (non-GET /api/* requires the admin role) — this
    is just UX polish so a viewer isn't shown controls that would just 403. */
