@@ -38,10 +38,6 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V10.5C5 6.36 8.13 3 12 3s7 3.36 7 7.5V21"/><path d="M9 21v-5a3 3 0 0 1 6 0v5"/></svg>
             <span data-i18n="nav.caves">Cave Attendance</span>
           </a>
-          <a href="#/items" data-view="items" class="nav-link">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
-            <span data-i18n="nav.items">Item Report</span>
-          </a>
           <a href="#/bosses" data-view="bosses" class="nav-link">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             <span data-i18n="nav.bosses">Boss Timers</span>
@@ -145,6 +141,7 @@
     <!-- ===================== LOOT LOG VIEW ===================== -->
     <div id="view-loot" class="view hidden">
       <div class="view-header">
+        <a href="#/items" class="btn small" data-i18n="common.itemReportBtn">📊 Item Report</a>
         <button id="manageItemsBtnLoot" class="btn small admin-only" data-i18n="common.manageItems">Manage Items</button>
         <button id="addSessionBtn" class="btn primary admin-only" data-i18n="common.logADate">+ Log a Date</button>
       </div>
@@ -396,7 +393,8 @@
 
     <!-- ===================== ITEM REPORT VIEW ===================== -->
     <div id="view-items" class="view hidden">
-      <div class="view-header">
+      <div class="view-header space-between">
+        <a href="#/loot" class="back-link" data-i18n="lootSession.backLink">← Back to Guild Dungeon Loot</a>
         <div class="icon-select" id="itemReportDropdown">
           <button type="button" class="icon-select-trigger" id="itemReportTrigger">
             <span id="itemReportTriggerIcon"></span>
@@ -713,7 +711,7 @@
   <script src="users-view.js?v=3"></script>
   <script src="activity-log-view.js?v=2"></script>
   <script src="auth.js?v=29"></script>
-  <script src="i18n.js?v=3"></script>
+  <script src="i18n.js?v=4"></script>
   <script src="router.js?v=33"></script>
 </body>
 </html>
