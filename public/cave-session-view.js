@@ -5,7 +5,7 @@ function getPresentCaveMembers(session, sortedMembers) {
 }
 
 function caveSessionFormatMoney(amount) {
-  return `₱${(amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `${(amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 💎`;
 }
 
 function bossNameOptionsHtml(bosses, selectedName) {
@@ -60,9 +60,9 @@ function renderCaveSessionContent() {
       (r) => `
     <tr>
       <td style="font-weight:600;">${itemLabel(r.item)}</td>
-      <td class="col-right"><input type="number" class="qty-input admin-disable" data-record-id="${r.id}" value="${r.quantity}" min="1" step="1" style="width:100px; text-align:right;"></td>
-      <td class="col-right"><input type="number" class="sold-price-input admin-disable" data-record-id="${r.id}" value="${r.soldPrice}" min="0" step="0.01" style="width:110px; text-align:right;"></td>
-      <td class="col-right">${caveSessionFormatMoney(r.quantity * r.soldPrice)}</td>
+      <td><input type="number" class="qty-input admin-disable" data-record-id="${r.id}" value="${r.quantity}" min="1" step="1" style="width:100px;"></td>
+      <td><input type="number" class="sold-price-input admin-disable" data-record-id="${r.id}" value="${r.soldPrice}" min="0" step="0.01" style="width:110px;"></td>
+      <td>${caveSessionFormatMoney(r.quantity * r.soldPrice)}</td>
       <td><input type="text" class="buyer-input admin-disable" data-record-id="${r.id}" value="${escapeHtml(r.buyer || '')}" placeholder="(optional)" style="width:130px;"></td>
       <td class="admin-only">
         <button class="icon-btn" data-del-record="${r.id}" title="Delete record">✕</button>
@@ -132,7 +132,7 @@ function renderCaveSessionContent() {
     <p style="color:var(--text-muted); font-size:13px; margin:-4px 0 8px;">Price × Qty feeds the Loot List and Salary tabs' monthly totals — fill it in once an item actually sells.</p>
     <div id="caveLootRecordsTableWrap" class="table-scroll">
       <table class="growth-table">
-        <thead><tr><th>Item</th><th class="col-right">Qty</th><th class="col-right">Price</th><th class="col-right">Total</th><th>Buyer</th><th></th></tr></thead>
+        <thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th><th>Buyer</th><th></th></tr></thead>
         <tbody>${lootRecordsRows || '<tr><td colspan="6" style="color:var(--text-muted)">No loot logged yet.</td></tr>'}</tbody>
       </table>
     </div>

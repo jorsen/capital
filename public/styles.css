@@ -645,7 +645,7 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
   padding: 6px 10px;
   border-bottom: 1px solid var(--gridline);
   border-right: 1px solid var(--gridline);
-  text-align: center;
+  text-align: left;
   white-space: nowrap;
 }
 .cave-report-table th { color: var(--text-muted); font-weight: 600; background: var(--surface-1); }

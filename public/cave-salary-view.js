@@ -20,7 +20,7 @@ function caveSalaryMultiplier(member) {
 }
 
 function caveSalaryFormatMoney(amount) {
-  return `₱${(amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `${(amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 💎`;
 }
 
 async function loadCaveSalaryData() {
@@ -103,7 +103,7 @@ function renderCaveSalary() {
       (f) => `
     <tr>
       <td>${escapeHtml(f.name)}</td>
-      <td class="col-right">${f.percent}%</td>
+      <td>${f.percent}%</td>
       <td class="admin-only"><button class="icon-btn" data-delete-fee="${f.id}" title="Remove fee">✕</button></td>
     </tr>`
     )
@@ -134,11 +134,11 @@ function renderCaveSalary() {
       (r) => `
     <tr>
       <td style="font-weight:600;">${escapeHtml(memberDisplayName(r.member))}</td>
-      <td class="col-center">${r.growthRate === null ? '–' : r.growthRate.toLocaleString()}</td>
-      <td class="col-center">${r.attendance}</td>
-      <td class="col-center">${r.multiplier}×</td>
-      <td class="col-center">${(r.normalizedShare * 100).toFixed(2)}%</td>
-      <td class="col-center" style="font-weight:600;">${caveSalaryFormatMoney(r.salary)}</td>
+      <td>${r.growthRate === null ? '–' : r.growthRate.toLocaleString()}</td>
+      <td>${r.attendance}</td>
+      <td>${r.multiplier}×</td>
+      <td>${(r.normalizedShare * 100).toFixed(2)}%</td>
+      <td style="font-weight:600;">${caveSalaryFormatMoney(r.salary)}</td>
     </tr>`
     )
     .join('');

@@ -26,9 +26,9 @@ function renderCaveDateView() {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td style="font-weight:600;">${sess.run ? `<span class="class-badge">${escapeHtml(sess.run)}</span>` : '(No boss)'}</td>
-      <td class="col-right">${sess.records.length}</td>
-      <td class="col-right">${totalQty(sess)}</td>
-      <td class="col-right"><button class="icon-btn admin-only" data-delete="${sess.id}" title="Delete boss log">✕</button></td>
+      <td>${sess.records.length}</td>
+      <td>${totalQty(sess)}</td>
+      <td><button class="icon-btn admin-only" data-delete="${sess.id}" title="Delete boss log">✕</button></td>
     `;
     tr.addEventListener('click', (e) => {
       if (e.target.closest('[data-delete]')) return;

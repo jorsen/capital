@@ -61,10 +61,10 @@ function renderCaveView() {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td style="font-weight:600;">${escapeHtml(g.date)}</td>
-      <td class="col-right">${g.sessions.length}</td>
-      <td class="col-right">${g.records}</td>
-      <td class="col-right">${g.totalQty}</td>
-      <td class="col-right"><button class="icon-btn admin-only" data-delete="${g.date}" title="Delete date">✕</button></td>
+      <td>${g.sessions.length}</td>
+      <td>${g.records}</td>
+      <td>${g.totalQty}</td>
+      <td><button class="icon-btn admin-only" data-delete="${g.date}" title="Delete date">✕</button></td>
     `;
     tr.addEventListener('click', (e) => {
       if (e.target.closest('[data-delete]')) return;
