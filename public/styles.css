@@ -915,13 +915,14 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
 }
 
 .attendance-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   margin-bottom: 20px;
 }
 .attendance-item {
   display: flex;
+  flex: 0 0 auto;
   flex-direction: row;
   align-items: center;
   gap: 8px;
@@ -932,6 +933,7 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
   font-size: 13px;
   cursor: pointer;
   transition: background 0.12s, border-color 0.12s, color 0.12s;
+  min-width: 0;
 }
 .attendance-item input {
   flex-shrink: 0;
@@ -943,6 +945,9 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
 .attendance-item input.attendance-check { accent-color: var(--good); }
 .attendance-item span {
   font-weight: 500;
+  white-space: nowrap;
+  min-width: 0;
+  font-size: 12px;
 }
 .attendance-item:hover { border-color: var(--border-strong); }
 /* Loot Log checks mark an ABSENT member (red); Cave Attendance checks mark
