@@ -21,9 +21,7 @@ function getFilteredSortedCaves() {
     if (!q) return true;
     if (s.date.toLowerCase().includes(q)) return true;
     if ((s.run || '').toLowerCase().includes(q)) return true;
-    return s.records.some(
-      (r) => r.item.toLowerCase().includes(q) || r.recipientName.toLowerCase().includes(q)
-    );
+    return s.records.some((r) => r.item.toLowerCase().includes(q));
   });
   list = list.slice().sort((a, b) => {
     let av = (a[caveState.sortKey] || '').toString().toLowerCase();

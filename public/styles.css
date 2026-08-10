@@ -638,6 +638,31 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
 .growth-table tr.loot-status-reserved td { background: var(--reserved-soft); color: var(--reserved); }
 .growth-table tr.loot-status-reserved td:first-child { box-shadow: inset 3px 0 0 var(--reserved); }
 
+/* Cave Attendance Report — wide members x cave-run matrix, first two columns
+   pinned while the rest scrolls horizontally under it. */
+.cave-report-table { width: max-content; min-width: 100%; border-collapse: collapse; font-size: 13px; }
+.cave-report-table th, .cave-report-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--gridline);
+  border-right: 1px solid var(--gridline);
+  text-align: center;
+  white-space: nowrap;
+}
+.cave-report-table th { color: var(--text-muted); font-weight: 600; background: var(--surface-1); }
+.cave-report-table .cave-report-name-col { text-align: left; min-width: 150px; }
+.cave-report-table .cave-report-name-col,
+.cave-report-table .cave-report-total-col {
+  position: sticky;
+  background: var(--surface-1);
+  z-index: 2;
+}
+.cave-report-table thead .cave-report-name-col,
+.cave-report-table thead .cave-report-total-col { z-index: 3; }
+.cave-report-table .cave-report-name-col { left: 0; }
+.cave-report-table .cave-report-total-col { left: 150px; min-width: 90px; }
+.cave-report-table tbody tr:hover td { background: var(--surface-2); }
+.cave-report-table input[type="checkbox"] { width: 16px; height: 16px; }
+
 .raffle-log-list {
   display: block;
   column-width: 240px;

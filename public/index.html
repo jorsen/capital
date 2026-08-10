@@ -157,13 +157,14 @@
     <!-- ===================== CAVE ATTENDANCE VIEW ===================== -->
     <div id="view-caves" class="view hidden">
       <div class="view-header">
+        <a href="#/cave-report" class="btn small">📊 Attendance Report</a>
         <button id="manageItemsBtnCave" class="btn small admin-only">Manage Items</button>
         <button id="addCaveBtn" class="btn primary admin-only">+ Log a Date</button>
       </div>
 
       <section class="panel">
         <div class="table-toolbar">
-          <input id="caveSearchInput" type="search" placeholder="Search by date, cave, item, or recipient…">
+          <input id="caveSearchInput" type="search" placeholder="Search by date, cave, or item…">
         </div>
         <div class="table-scroll">
           <table class="members-table">
@@ -192,6 +193,23 @@
 
       <section class="panel">
         <div id="caveSessionContent">Loading…</div>
+      </section>
+    </div>
+
+    <!-- ===================== CAVE ATTENDANCE REPORT VIEW ===================== -->
+    <div id="view-cave-report" class="view hidden">
+      <div class="view-header space-between">
+        <a href="#/caves" class="back-link">← Back to Cave Attendance</a>
+      </div>
+
+      <section class="panel">
+        <div class="table-scroll">
+          <table class="cave-report-table" id="caveReportTable">
+            <thead id="caveReportHead"></thead>
+            <tbody id="caveReportBody"></tbody>
+          </table>
+        </div>
+        <p id="caveReportEmptyState" class="empty-state hidden">No cave dates logged yet.</p>
       </section>
     </div>
 
@@ -399,8 +417,9 @@
   <script src="queue-view.js?v=30"></script>
   <script src="loot-view.js?v=30"></script>
   <script src="loot-session-view.js?v=30"></script>
-  <script src="cave-view.js?v=1"></script>
-  <script src="cave-session-view.js?v=1"></script>
+  <script src="cave-view.js?v=2"></script>
+  <script src="cave-session-view.js?v=2"></script>
+  <script src="cave-report-view.js?v=1"></script>
   <script src="item-report-view.js?v=29"></script>
   <script src="boss-timer-view.js?v=33"></script>
   <script src="boss-history-view.js?v=32"></script>

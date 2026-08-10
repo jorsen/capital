@@ -29,21 +29,13 @@ function renderCaveSessionContent() {
   const session = caveSessionState.session;
   const content = document.getElementById('caveSessionContent');
 
-  // Highest growth rate first everywhere a member picker shows up (Recipient
-  // dropdown, Attendance checklist) — same metric and ordering as the
-  // Members table's default sort.
+  // Highest growth rate first in the Attendance checklist — same metric and
+  // ordering as the Members table's default sort.
   const sortedMembers = caveSessionState.members.slice().sort((a, b) => {
     const av = latestGrowth(a)?.rate ?? -Infinity;
     const bv = latestGrowth(b)?.rate ?? -Infinity;
     return bv - av;
   });
-
-  function recipientOptionsHtml(selectedId) {
-    const options = sortedMembers
-      .map((m) => `<option value="${m.id}" ${m.id === selectedId ? 'selected' : ''}>${escapeHtml(m.name)}</option>`)
-      .join('');
-    return `<option value="" ${selectedId ? '' : 'selected'}>Unassigned</option>${options}`;
-  }
 
   const records = session.records.slice().reverse();
   const lootRecordsRows = records
@@ -52,7 +44,6 @@ function renderCaveSessionContent() {
     <tr>
       <td style="font-weight:600;">${itemLabel(r.item)}</td>
       <td class="col-right"><input type="number" class="qty-input admin-disable" data-record-id="${r.id}" value="${r.quantity}" min="1" step="1" style="width:100px; text-align:right;"></td>
-      <td><select class="recipient-select admin-disable" data-record-id="${r.id}">${recipientOptionsHtml(r.recipientId)}</select></td>
       <td>
         <label class="sent-check-label" title="Mark as sent">
           <input type="checkbox" class="sent-check admin-disable" data-record-id="${r.id}" ${r.sent ? 'checked' : ''}>
@@ -115,9 +106,6 @@ function renderCaveSessionContent() {
           <div class="icon-select-menu hidden" id="addCaveRecordItemMenu"></div>
         </div>
       </label>
-      <label><span>Recipient <span style="color:var(--text-muted); font-weight:400;">(optional)</span></span>
-        <select name="recipientId">${recipientOptionsHtml(null)}</select>
-      </label>
       <label style="max-width:120px;">Qty<input type="number" name="quantity" min="1" step="1" value="1"></label>
       <button type="submit" class="btn primary small">Add</button>
     </form>
@@ -125,8 +113,8 @@ function renderCaveSessionContent() {
     <h3>Loot Records</h3>
     <div id="caveLootRecordsTableWrap" class="table-scroll">
       <table class="growth-table">
-        <thead><tr><th>Item</th><th class="col-right">Qty</th><th>Recipient</th><th>Sent</th><th></th></tr></thead>
-        <tbody>${lootRecordsRows || '<tr><td colspan="5" style="color:var(--text-muted)">No loot logged yet.</td></tr>'}</tbody>
+        <thead><tr><th>Item</th><th class="col-right">Qty</th><th>Sent</th><th></th></tr></thead>
+        <tbody>${lootRecordsRows || '<tr><td colspan="4" style="color:var(--text-muted)">No loot logged yet.</td></tr>'}</tbody>
       </table>
     </div>
   `;
@@ -197,7 +185,6 @@ function renderCaveSessionContent() {
       const record = await api(`/api/caves/${session.id}/records`, {
         method: 'POST',
         body: JSON.stringify({
-          recipientId: fd.get('recipientId'),
           item: fd.get('item'),
           quantity: Number(fd.get('quantity')) || 1,
         }),
@@ -215,25 +202,6 @@ function renderCaveSessionContent() {
       await api(`/api/caves/${session.id}/records/${recordId}`, { method: 'DELETE' });
       session.records = session.records.filter((r) => r.id !== recordId);
       renderCaveSessionContent();
-    });
-  });
-
-  content.querySelectorAll('.recipient-select').forEach((select) => {
-    select.addEventListener('change', async () => {
-      const recordId = select.getAttribute('data-record-id');
-      const record = session.records.find((r) => r.id === recordId);
-      if (!record) return;
-      try {
-        const updated = await api(`/api/caves/${session.id}/records/${recordId}`, {
-          method: 'PUT',
-          body: JSON.stringify({ recipientId: select.value }),
-        });
-        Object.assign(record, updated);
-        renderCaveSessionContent();
-      } catch (err) {
-        toast(err.message);
-        renderCaveSessionContent();
-      }
     });
   });
 
