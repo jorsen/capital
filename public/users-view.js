@@ -25,7 +25,7 @@ function renderUsersView() {
     .join('');
 
   body.querySelectorAll('[data-edit]').forEach((btn) => {
-    btn.addEventListener('click', () => openUserModal(btn.getAttribute('data-edit')));
+    btn.addEventListener('click', () => openUserModal(btn.getAttribute('data-edit')).catch((err) => toast(err.message)));
   });
   body.querySelectorAll('[data-delete]').forEach((btn) => {
     btn.addEventListener('click', async () => {
@@ -47,14 +47,23 @@ function renderUsersView() {
 const userModal = document.getElementById('userModal');
 const userForm = document.getElementById('userForm');
 
-function openUserModal(id) {
+async function openUserModal(id) {
   usersState.editingId = id || null;
   userForm.reset();
   const passwordInput = userForm.password;
   const passwordLabel = document.getElementById('userFormPasswordLabel');
 
   if (id) {
+    // Re-fetch rather than trusting the cached list from page load — another
+    // admin (or another tab) may have changed this user since then, and the
+    // edit form should always start from their current, not stale, details.
+    usersState.users = await api('/api/users');
+    renderUsersView();
     const user = usersState.users.find((u) => u.id === id);
+    if (!user) {
+      toast('That user no longer exists');
+      return;
+    }
     document.getElementById('userModalTitle').textContent = `${t('modal.editUserTitle')} "${user.username}"`;
     userForm.username.value = user.username;
     userForm.role.value = user.role;
