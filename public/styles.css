@@ -942,9 +942,6 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
 }
 .attendance-item input.attendance-check { accent-color: var(--good); }
 .attendance-item span {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
   font-weight: 500;
 }
 .attendance-item:hover { border-color: var(--border-strong); }
