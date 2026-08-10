@@ -26,7 +26,9 @@ async function loadCaveScheduleData() {
   scheduleState.servers = servers;
   scheduleState.schedule = {};
   schedule.forEach((s) => {
-    scheduleState.schedule[s.date] = s.serverName;
+    // Defensive: keys used elsewhere are plain YYYY-MM-DD — normalize in
+    // case a date ever comes back as a full timestamp instead.
+    scheduleState.schedule[String(s.date).slice(0, 10)] = s.serverName;
   });
 
   // Keep any custom ordering the admin already set up, but drop servers that
