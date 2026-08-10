@@ -151,6 +151,8 @@ const TRANSLATIONS = {
     'activityLog.thDescription': 'Description',
     'activityLog.thChanges': 'Changes',
     'activityLog.noChanges': 'No field changes',
+    'activityLog.searchPlaceholder': 'Search by user, action, or description…',
+    'activityLog.noMatch': 'No activity matches your search.',
     'activityLog.emptyState': 'No activity logged yet.',
 
     'lootSession.backLink': '← Back to Guild Dungeon Loot',
@@ -349,6 +351,8 @@ const TRANSLATIONS = {
     'activityLog.thDescription': '描述',
     'activityLog.thChanges': '变更内容',
     'activityLog.noChanges': '无字段变更',
+    'activityLog.searchPlaceholder': '按用户、操作或描述搜索…',
+    'activityLog.noMatch': '没有符合搜索条件的活动。',
     'activityLog.emptyState': '尚无活动记录。',
 
     'lootSession.backLink': '← 返回公会副本战利品',
@@ -547,6 +551,8 @@ const TRANSLATIONS = {
     'activityLog.thDescription': '설명',
     'activityLog.thChanges': '변경 내용',
     'activityLog.noChanges': '필드 변경 없음',
+    'activityLog.searchPlaceholder': '사용자, 작업 또는 설명으로 검색…',
+    'activityLog.noMatch': '검색과 일치하는 활동이 없습니다.',
     'activityLog.emptyState': '아직 기록된 활동이 없습니다.',
 
     'lootSession.backLink': '← 길드 던전 전리품으로 돌아가기',
@@ -745,6 +751,8 @@ const TRANSLATIONS = {
     'activityLog.thDescription': 'คำอธิบาย',
     'activityLog.thChanges': 'การเปลี่ยนแปลง',
     'activityLog.noChanges': 'ไม่มีการเปลี่ยนแปลงฟิลด์',
+    'activityLog.searchPlaceholder': 'ค้นหาตามผู้ใช้ การกระทำ หรือคำอธิบาย…',
+    'activityLog.noMatch': 'ไม่พบกิจกรรมที่ตรงกับการค้นหา',
     'activityLog.emptyState': 'ยังไม่มีการบันทึกกิจกรรม',
 
     'lootSession.backLink': '← กลับไปที่ของรางวัลดันเจี้ยนกิลด์',

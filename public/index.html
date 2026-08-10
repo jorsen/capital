@@ -530,6 +530,9 @@
     <!-- ===================== ACTIVITY LOG VIEW ===================== -->
     <div id="view-activity-log" class="view hidden">
       <section class="panel">
+        <div class="table-toolbar">
+          <input id="activityLogSearchInput" type="search" placeholder="Search by user, action, or description…" data-i18n-placeholder="activityLog.searchPlaceholder">
+        </div>
         <div class="table-scroll">
           <table class="members-table">
             <thead>
@@ -545,6 +548,8 @@
           </table>
         </div>
         <p id="activityLogEmptyState" class="empty-state hidden" data-i18n="activityLog.emptyState">No activity logged yet.</p>
+        <p id="activityLogNoMatchState" class="empty-state hidden" data-i18n="activityLog.noMatch">No activity matches your search.</p>
+        <div id="activityLogPagination" class="pagination"></div>
       </section>
     </div>
 
@@ -776,9 +781,9 @@
   <script src="boss-timer-view.js?v=33"></script>
   <script src="boss-history-view.js?v=33"></script>
   <script src="users-view.js?v=3"></script>
-  <script src="activity-log-view.js?v=4"></script>
+  <script src="activity-log-view.js?v=5"></script>
   <script src="auth.js?v=29"></script>
-  <script src="i18n.js?v=5"></script>
+  <script src="i18n.js?v=6"></script>
   <script src="router.js?v=34"></script>
 </body>
 </html>

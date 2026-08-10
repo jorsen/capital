@@ -1,6 +1,10 @@
+const ACTIVITY_LOG_PAGE_SIZE = 20;
+const activityLogState = { entries: [], search: '', page: 1 };
+
 async function loadActivityLogData() {
-  const entries = await api('/api/activity-log?limit=300');
-  renderActivityLog(entries);
+  activityLogState.entries = await api('/api/activity-log?limit=300');
+  activityLogState.page = 1;
+  renderActivityLog();
 }
 
 // camelCase field name -> readable label, e.g. "className" -> "Class Name".
@@ -60,11 +64,28 @@ function renderEntryChanges(entry) {
     .join('');
 }
 
-function renderActivityLog(entries) {
-  const body = document.getElementById('activityLogBody');
-  document.getElementById('activityLogEmptyState').classList.toggle('hidden', entries.length !== 0);
+function getFilteredActivityLogEntries() {
+  const query = activityLogState.search.trim().toLowerCase();
+  if (!query) return activityLogState.entries;
+  return activityLogState.entries.filter((e) =>
+    [e.username, e.role, e.action, e.description].some((field) => (field || '').toLowerCase().includes(query))
+  );
+}
 
-  body.innerHTML = entries
+function renderActivityLog() {
+  const allEntries = activityLogState.entries;
+  const filtered = getFilteredActivityLogEntries();
+
+  document.getElementById('activityLogEmptyState').classList.toggle('hidden', allEntries.length !== 0);
+  document.getElementById('activityLogNoMatchState').classList.toggle('hidden', allEntries.length === 0 || filtered.length !== 0);
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / ACTIVITY_LOG_PAGE_SIZE));
+  activityLogState.page = Math.min(Math.max(1, activityLogState.page), pageCount);
+  const start = (activityLogState.page - 1) * ACTIVITY_LOG_PAGE_SIZE;
+  const pageEntries = filtered.slice(start, start + ACTIVITY_LOG_PAGE_SIZE);
+
+  const body = document.getElementById('activityLogBody');
+  body.innerHTML = pageEntries
     .map(
       (e) => `
     <tr>
@@ -76,4 +97,30 @@ function renderActivityLog(entries) {
     </tr>`
     )
     .join('');
+
+  renderActivityLogPagination(pageCount);
 }
+
+function renderActivityLogPagination(pageCount) {
+  const el = document.getElementById('activityLogPagination');
+  if (pageCount <= 1) {
+    el.innerHTML = '';
+    return;
+  }
+  const { page } = activityLogState;
+  el.innerHTML = `
+    <button type="button" class="btn small" id="activityLogPrevBtn" ${page <= 1 ? 'disabled' : ''}>‹ Prev</button>
+    <span class="pagination-status">Page ${page} of ${pageCount}</span>
+    <button type="button" class="btn small" id="activityLogNextBtn" ${page >= pageCount ? 'disabled' : ''}>Next ›</button>
+  `;
+  const prevBtn = document.getElementById('activityLogPrevBtn');
+  const nextBtn = document.getElementById('activityLogNextBtn');
+  if (prevBtn) prevBtn.addEventListener('click', () => { activityLogState.page -= 1; renderActivityLog(); });
+  if (nextBtn) nextBtn.addEventListener('click', () => { activityLogState.page += 1; renderActivityLog(); });
+}
+
+document.getElementById('activityLogSearchInput').addEventListener('input', (e) => {
+  activityLogState.search = e.target.value;
+  activityLogState.page = 1;
+  renderActivityLog();
+});
