@@ -79,7 +79,7 @@ function renderCaveSessionContent() {
     <div class="member-header">
       <div>
         <h2>${escapeHtml(formatLongDate(session.date))}${session.run ? ` — ${escapeHtml(session.run)}` : ''}</h2>
-        <div class="member-meta">${session.records.length} record${session.records.length === 1 ? '' : 's'} · ${totalQty(session)} total qty</div>
+        <div class="member-meta">Logged ${escapeHtml(formatTimeOfDay(session.createdAt))} · ${session.records.length} record${session.records.length === 1 ? '' : 's'} · ${totalQty(session)} total qty</div>
       </div>
     </div>
 

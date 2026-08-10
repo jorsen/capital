@@ -77,6 +77,15 @@ function formatLongDate(dateStr) {
   return d.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
 }
 
+// Formats just the time-of-day portion of a full timestamp (e.g. a
+// cave_sessions.created_at) — paired with formatLongDate(session.date) so a
+// cave session shows when it was actually logged, not just which day.
+function formatTimeOfDay(isoString) {
+  const d = new Date(isoString);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+}
+
 function currentMonthValue() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
