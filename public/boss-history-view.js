@@ -1,6 +1,11 @@
+const BOSS_HISTORY_PAGE_SIZE = 15;
+const bossHistoryState = { entries: [], page: 1 };
+
 async function loadBossHistoryData() {
   const history = await api('/api/boss-history');
-  renderBossHistory(history);
+  bossHistoryState.entries = history;
+  bossHistoryState.page = 1;
+  renderBossHistory();
 }
 
 function formatHistoryTimestamp(iso) {
@@ -12,9 +17,15 @@ function formatHistoryTimestamp(iso) {
   });
 }
 
-function renderBossHistory(history) {
+function renderBossHistory() {
+  const { entries } = bossHistoryState;
+  const pageCount = Math.max(1, Math.ceil(entries.length / BOSS_HISTORY_PAGE_SIZE));
+  bossHistoryState.page = Math.min(Math.max(1, bossHistoryState.page), pageCount);
+  const start = (bossHistoryState.page - 1) * BOSS_HISTORY_PAGE_SIZE;
+  const pageEntries = entries.slice(start, start + BOSS_HISTORY_PAGE_SIZE);
+
   const body = document.getElementById('bossHistoryBody');
-  body.innerHTML = history
+  body.innerHTML = pageEntries
     .map(
       (h) => `
     <tr>
@@ -27,7 +38,8 @@ function renderBossHistory(history) {
     )
     .join('');
 
-  document.getElementById('bossHistoryEmptyState').classList.toggle('hidden', history.length !== 0);
+  document.getElementById('bossHistoryEmptyState').classList.toggle('hidden', entries.length !== 0);
+  renderBossHistoryPagination(pageCount);
 
   body.querySelectorAll('[data-delete-history]').forEach((btn) => {
     btn.addEventListener('click', async () => {
@@ -48,4 +60,22 @@ function renderBossHistory(history) {
       }
     });
   });
+}
+
+function renderBossHistoryPagination(pageCount) {
+  const el = document.getElementById('bossHistoryPagination');
+  if (pageCount <= 1) {
+    el.innerHTML = '';
+    return;
+  }
+  const { page } = bossHistoryState;
+  el.innerHTML = `
+    <button type="button" class="btn small" id="bossHistoryPrevBtn" ${page <= 1 ? 'disabled' : ''}>‹ Prev</button>
+    <span class="pagination-status">Page ${page} of ${pageCount}</span>
+    <button type="button" class="btn small" id="bossHistoryNextBtn" ${page >= pageCount ? 'disabled' : ''}>Next ›</button>
+  `;
+  const prevBtn = document.getElementById('bossHistoryPrevBtn');
+  const nextBtn = document.getElementById('bossHistoryNextBtn');
+  if (prevBtn) prevBtn.addEventListener('click', () => { bossHistoryState.page -= 1; renderBossHistory(); });
+  if (nextBtn) nextBtn.addEventListener('click', () => { bossHistoryState.page += 1; renderBossHistory(); });
 }

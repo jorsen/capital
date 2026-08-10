@@ -569,6 +569,15 @@ select:focus, input:focus, textarea:focus {
 }
 .hidden { display: none !important; }
 
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 14px;
+}
+.pagination-status { font-size: 13px; color: var(--text-secondary); }
+
 /* Read-only "viewer" role (see common.js isAdmin/loadSession): the real
    enforcement is server-side (non-GET /api/* requires the admin role) — this
    is just UX polish so a viewer isn't shown controls that would just 403. */
