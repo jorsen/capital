@@ -134,11 +134,11 @@ function renderCaveSalary() {
       (r) => `
     <tr>
       <td style="font-weight:600;">${escapeHtml(r.member.name)}</td>
-      <td class="col-right">${r.growthRate === null ? '–' : r.growthRate.toLocaleString()}</td>
-      <td class="col-right">${r.attendance}</td>
-      <td class="col-right">${r.multiplier}×</td>
-      <td class="col-right">${(r.normalizedShare * 100).toFixed(2)}%</td>
-      <td class="col-right" style="font-weight:600;">${caveSalaryFormatMoney(r.salary)}</td>
+      <td class="col-center">${r.growthRate === null ? '–' : r.growthRate.toLocaleString()}</td>
+      <td class="col-center">${r.attendance}</td>
+      <td class="col-center">${r.multiplier}×</td>
+      <td class="col-center">${(r.normalizedShare * 100).toFixed(2)}%</td>
+      <td class="col-center" style="font-weight:600;">${caveSalaryFormatMoney(r.salary)}</td>
     </tr>`
     )
     .join('');
