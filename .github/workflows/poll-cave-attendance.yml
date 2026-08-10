@@ -2,7 +2,12 @@ name: Poll Discord cave attendance
 
 # Vercel Cron on the Hobby plan can only run once a day (see vercel.json),
 # which is too slow to pick up attendance posted in #cave-attendance
-# promptly. This runs the same endpoint every 5 minutes instead.
+# promptly. GitHub Actions' `schedule` trigger has its own floor — it will
+# never fire more often than every 5 minutes no matter what cron string is
+# used here — so instead of relying on the schedule cadence alone, each
+# triggered run loops internally and hits the endpoint once a minute for
+# the full 5-minute gap until the next scheduled run. Net effect: attendance
+# posted in Discord is picked up within about a minute, not five.
 on:
   schedule:
     - cron: '*/5 * * * *'
@@ -12,7 +17,10 @@ jobs:
   poll:
     runs-on: ubuntu-latest
     steps:
-      - name: Hit poll-cave-attendance endpoint
+      - name: Poll every minute for 5 minutes
         run: |
-          curl -sf -X POST "https://capital-records.vercel.app/api/discord/poll-cave-attendance" \
-            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
+          for i in 1 2 3 4 5; do
+            curl -sf -X POST "https://capital-records.vercel.app/api/discord/poll-cave-attendance" \
+              -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
+            if [ "$i" -lt 5 ]; then sleep 60; fi
+          done
