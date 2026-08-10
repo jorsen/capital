@@ -71,10 +71,11 @@ function computeCaveSalary() {
 
   const rows = members.map((m) => {
     const attendance = attendanceByMember.get(m.id) || 0;
+    const growthRate = latestGrowth(m)?.rate ?? null;
     const multiplier = caveSalaryMultiplier(m);
     const baseShare = totalAttendance > 0 ? attendance / totalAttendance : 0;
     const baseWithMultiplier = baseShare * multiplier;
-    return { member: m, attendance, multiplier, baseWithMultiplier };
+    return { member: m, attendance, growthRate, multiplier, baseWithMultiplier };
   });
   const sumBaseWithMultiplier = rows.reduce((sum, r) => sum + r.baseWithMultiplier, 0);
 
@@ -84,7 +85,7 @@ function computeCaveSalary() {
     r.salary = initialComputation + (feeAmountByMemberId.get(r.member.id) || 0);
   });
 
-  rows.sort((a, b) => b.salary - a.salary);
+  rows.sort((a, b) => (b.growthRate ?? -Infinity) - (a.growthRate ?? -Infinity));
 
   return { rows, rawPool, totalFeeAmount, finalPool };
 }
@@ -133,6 +134,7 @@ function renderCaveSalary() {
       (r) => `
     <tr>
       <td style="font-weight:600;">${escapeHtml(r.member.name)}</td>
+      <td class="col-right">${r.growthRate === null ? '–' : r.growthRate.toLocaleString()}</td>
       <td class="col-right">${r.attendance}</td>
       <td class="col-right">${r.multiplier}×</td>
       <td class="col-right">${(r.normalizedShare * 100).toFixed(2)}%</td>
