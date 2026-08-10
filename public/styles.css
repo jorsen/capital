@@ -170,6 +170,15 @@ body {
 }
 .nav-link.active svg { opacity: 1; }
 
+.lang-select {
+  height: 36px;
+  padding: 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
 @media (max-width: 720px) {
   .nav-toggle { display: flex; }
   .topbar { position: relative; }

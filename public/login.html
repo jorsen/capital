@@ -8,26 +8,33 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=47">
+  <link rel="stylesheet" href="styles.css?v=48">
 </head>
 <body class="login-page">
+  <select id="langPicker" class="lang-select" aria-label="Language" title="Language" style="position:absolute; top:16px; right:16px;">
+    <option value="en">English</option>
+    <option value="zh">中文</option>
+    <option value="ko">한국어</option>
+    <option value="th">ไทย</option>
+  </select>
   <div class="login-card">
     <img class="login-mark" src="favicon.svg" alt="">
     <h1>Capital Records</h1>
-    <p class="login-sub">Browsing is open to everyone — sign in only if you need to make changes.</p>
+    <p class="login-sub" data-i18n="login.subtitle">Browsing is open to everyone — sign in only if you need to make changes.</p>
     <form id="loginForm">
-      <label>Username
+      <label><span data-i18n="common.username">Username</span>
         <input type="text" name="username" required autofocus autocomplete="username" placeholder="e.g. admin">
       </label>
-      <label>Password
+      <label><span data-i18n="modal.passwordLabel">Password</span>
         <input type="password" name="password" required autocomplete="current-password" placeholder="••••••••">
       </label>
-      <button type="submit" class="btn primary">Enter</button>
-      <p id="loginError" class="login-error hidden">Incorrect username or password.</p>
+      <button type="submit" class="btn primary" data-i18n="login.enter">Enter</button>
+      <p id="loginError" class="login-error hidden" data-i18n="login.error">Incorrect username or password.</p>
     </form>
-    <a href="/" class="login-back-link">← Back to browsing</a>
+    <a href="/" class="login-back-link" data-i18n="login.backLink">← Back to browsing</a>
   </div>
 
+  <script src="i18n.js?v=1"></script>
   <script src="login.js?v=18"></script>
 </body>
 </html>

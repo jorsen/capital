@@ -47,7 +47,7 @@ function populateClassOptions() {
   const filter = document.getElementById('classFilter');
   const current = filter.value;
   filter.innerHTML =
-    '<option value="">All Classes</option>' +
+    `<option value="">${t('members.allClasses')}</option>` +
     membersState.classes.map((c) => `<option value="${c}">${c}</option>`).join('');
   filter.value = current;
 }

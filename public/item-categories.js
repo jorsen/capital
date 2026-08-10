@@ -27,7 +27,7 @@ function renderItemCategoryList() {
         <span class="item-icon-preview">${itemIconImg(c.iconUrl, c.name, 36)}</span>
         <input type="text" value="${escapeHtml(c.name)}" class="category-name-input" style="flex:1 1 160px; min-width:0;">
         <input type="text" value="${escapeHtml(c.iconUrl || '')}" class="category-icon-input" placeholder="Icon URL (optional)" style="flex:1 1 200px; min-width:0;">
-        <button class="btn small" data-save-category="${c.id}">Save</button>
+        <button class="btn small" data-save-category="${c.id}">${t('common.save')}</button>
         <button class="icon-btn" data-delete-category="${c.id}" title="Delete item">✕</button>
       </li>`
     )

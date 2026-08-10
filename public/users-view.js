@@ -55,18 +55,18 @@ function openUserModal(id) {
 
   if (id) {
     const user = usersState.users.find((u) => u.id === id);
-    document.getElementById('userModalTitle').textContent = `Edit "${user.username}"`;
+    document.getElementById('userModalTitle').textContent = `${t('modal.editUserTitle')} "${user.username}"`;
     userForm.username.value = user.username;
     userForm.role.value = user.role;
     passwordInput.required = false;
-    passwordInput.placeholder = 'Leave blank to keep current password';
-    passwordLabel.innerHTML = 'Password <span style="color:var(--text-muted); font-weight:400;">(optional)</span>';
+    passwordInput.placeholder = t('modal.leaveBlankPassword');
+    passwordLabel.innerHTML = `${t('modal.passwordLabel')} <span style="color:var(--text-muted); font-weight:400;">${t('modal.optionalHint')}</span>`;
   } else {
-    document.getElementById('userModalTitle').textContent = 'Add User';
+    document.getElementById('userModalTitle').textContent = t('modal.addUserTitle');
     userForm.role.value = 'viewer';
     passwordInput.required = true;
-    passwordInput.placeholder = 'At least 8 characters';
-    passwordLabel.textContent = 'Password';
+    passwordInput.placeholder = t('modal.passwordPlaceholder');
+    passwordLabel.textContent = t('modal.passwordLabel');
   }
   userModal.classList.remove('hidden');
 }

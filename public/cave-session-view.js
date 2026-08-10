@@ -92,10 +92,10 @@ function renderCaveSessionContent() {
 
     <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
       <h3 style="margin-bottom:6px;">
-        Cave Attendance
+        ${t('nav.caves')}
         <span id="caveAttendanceCount" style="color:var(--text-muted); font-weight:400; font-size:13px;">(${session.attendees.length} / ${sortedMembers.length} present)</span>
       </h3>
-      <button type="button" class="btn small" id="copyCavePresentBtn">Copy Present Names</button>
+      <button type="button" class="btn small" id="copyCavePresentBtn">${t('common.copyPresentNames')}</button>
     </div>
     <p style="color:var(--text-muted); font-size:13px; margin:-4px 0 8px;">Everyone is assumed absent — check anyone who attended.</p>
     <div id="caveAttendanceList" class="attendance-grid">

@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=47">
+  <link rel="stylesheet" href="styles.css?v=48">
 </head>
 <body>
   <div class="app viz-root">
@@ -24,90 +24,96 @@
         <nav class="page-nav" id="pageNav">
           <a href="#/members" data-view="members" class="nav-link">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            Members
+            <span data-i18n="nav.members">Members</span>
           </a>
           <a href="#/queue" data-view="queue" class="nav-link">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-            Insignia Queue
+            <span data-i18n="nav.queue">Insignia Queue</span>
           </a>
           <a href="#/loot" data-view="loot" class="nav-link">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="M3.29 7 12 12l8.71-5"/><line x1="12" y1="22" x2="12" y2="12"/></svg>
-            Guild Dungeon Loot
+            <span data-i18n="nav.loot">Guild Dungeon Loot</span>
           </a>
           <a href="#/caves" data-view="caves" class="nav-link">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V10.5C5 6.36 8.13 3 12 3s7 3.36 7 7.5V21"/><path d="M9 21v-5a3 3 0 0 1 6 0v5"/></svg>
-            Cave Attendance
+            <span data-i18n="nav.caves">Cave Attendance</span>
           </a>
           <a href="#/items" data-view="items" class="nav-link">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
-            Item Report
+            <span data-i18n="nav.items">Item Report</span>
           </a>
           <a href="#/bosses" data-view="bosses" class="nav-link">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            Boss Timers
+            <span data-i18n="nav.bosses">Boss Timers</span>
           </a>
           <a href="#/users" data-view="users" class="nav-link owner-only">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            Users
+            <span data-i18n="nav.users">Users</span>
           </a>
           <a href="#/activity-log" data-view="activity-log" class="nav-link owner-only">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
-            Activity Log
+            <span data-i18n="nav.activityLog">Activity Log</span>
           </a>
         </nav>
       </div>
-      <span id="roleBadge" class="hidden" style="color:var(--text-muted); font-size:13px; margin-right:10px;">Viewing (read-only)</span>
+      <select id="langPicker" class="lang-select" aria-label="Language" title="Language">
+        <option value="en">English</option>
+        <option value="zh">中文</option>
+        <option value="ko">한국어</option>
+        <option value="th">ไทย</option>
+      </select>
+      <span id="roleBadge" class="hidden" style="color:var(--text-muted); font-size:13px; margin-right:10px;" data-i18n="topbar.readonly">Viewing (read-only)</span>
       <span id="whoamiBadge" class="hidden" style="color:var(--text-muted); font-size:13px; margin-right:10px;"></span>
-      <button id="logoutBtn" class="btn small admin-only">Logout</button>
+      <button id="logoutBtn" class="btn small admin-only" data-i18n="topbar.logout">Logout</button>
     </header>
 
     <!-- ===================== MEMBERS VIEW ===================== -->
     <div id="view-members" class="view hidden">
       <div class="view-header">
-        <a href="/api/members/export" class="btn small">Export to Excel</a>
-        <button id="manageClassesBtn" class="btn small admin-only">Manage Classes</button>
-        <button id="addMemberBtn" class="btn primary admin-only">+ Add Member</button>
+        <a href="/api/members/export" class="btn small" data-i18n="members.exportExcel">Export to Excel</a>
+        <button id="manageClassesBtn" class="btn small admin-only" data-i18n="common.manageClasses">Manage Classes</button>
+        <button id="addMemberBtn" class="btn primary admin-only" data-i18n="members.addMember">+ Add Member</button>
       </div>
 
       <div class="dashboard-grid">
         <aside class="sidebar">
           <div class="stat-tile">
-            <span class="stat-label">Members</span>
+            <span class="stat-label" data-i18n="members.statMembers">Members</span>
             <span class="stat-value" id="statTotal">0</span>
           </div>
           <div class="stat-tile gold">
-            <span class="stat-label">Top Grower</span>
+            <span class="stat-label" data-i18n="members.statTopGrower">Top Grower</span>
             <span class="stat-value" id="statTop">–</span>
           </div>
         </aside>
 
         <main class="main-panel panel">
           <div class="table-toolbar">
-            <input id="membersSearchInput" type="search" placeholder="Search members…">
+            <input id="membersSearchInput" type="search" placeholder="Search members…" data-i18n-placeholder="members.searchPlaceholder">
             <select id="classFilter">
-              <option value="">All Classes</option>
+              <option value="" data-i18n="members.allClasses">All Classes</option>
             </select>
           </div>
           <div class="table-scroll">
             <table class="members-table">
               <thead>
                 <tr>
-                  <th data-sort="name">Name<span class="sort-icon"></span></th>
-                  <th data-sort="className">Class<span class="sort-icon"></span></th>
-                  <th class="col-right" data-sort="latest">Latest Growth<span class="sort-icon"></span></th>
-                  <th class="col-center">Trend</th>
+                  <th data-sort="name"><span data-i18n="common.name">Name</span><span class="sort-icon"></span></th>
+                  <th data-sort="className"><span data-i18n="common.class">Class</span><span class="sort-icon"></span></th>
+                  <th class="col-right" data-sort="latest"><span data-i18n="members.thLatestGrowth">Latest Growth</span><span class="sort-icon"></span></th>
+                  <th class="col-center" data-i18n="members.thTrend">Trend</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody id="membersBody"></tbody>
             </table>
           </div>
-          <p id="membersEmptyState" class="empty-state hidden">No members yet — add your first guild member above.</p>
+          <p id="membersEmptyState" class="empty-state hidden" data-i18n="members.emptyState">No members yet — add your first guild member above.</p>
         </main>
       </div>
 
       <section class="panel">
-        <h2>Members by Class</h2>
+        <h2 data-i18n="members.byClassHeading">Members by Class</h2>
         <div id="classChart" class="chart-root"></div>
       </section>
     </div>
@@ -115,8 +121,8 @@
     <!-- ===================== INSIGNIA QUEUE VIEW ===================== -->
     <div id="view-queue" class="view hidden">
       <div class="queue-banner">
-        <strong>Legendary Insignia Queue</strong>
-        <div class="queue-banner-note">⚠ Subject to change, depending on GR (growth rate) ranking.</div>
+        <strong data-i18n="queue.heading">Legendary Insignia Queue</strong>
+        <div class="queue-banner-note" data-i18n="queue.note">⚠ Subject to change, depending on GR (growth rate) ranking.</div>
       </div>
 
       <section class="panel">
@@ -125,8 +131,8 @@
         </div>
       </section>
 
-      <h3 style="margin-bottom:6px;">✅ Already Received</h3>
-      <p style="color:var(--text-muted); font-size:13px; margin:-4px 0 8px;">Who's already gotten each insignia part — they can't be re-queued for the same part.</p>
+      <h3 style="margin-bottom:6px;" data-i18n="queue.alreadyReceived">✅ Already Received</h3>
+      <p style="color:var(--text-muted); font-size:13px; margin:-4px 0 8px;" data-i18n="queue.alreadyReceivedHint">Who's already gotten each insignia part — they can't be re-queued for the same part.</p>
       <section class="panel">
         <div class="table-scroll">
           <div id="queueHistory" class="queue-history-columns"></div>
@@ -137,77 +143,77 @@
     <!-- ===================== LOOT LOG VIEW ===================== -->
     <div id="view-loot" class="view hidden">
       <div class="view-header">
-        <button id="manageItemsBtnLoot" class="btn small admin-only">Manage Items</button>
-        <button id="addSessionBtn" class="btn primary admin-only">+ Log a Date</button>
+        <button id="manageItemsBtnLoot" class="btn small admin-only" data-i18n="common.manageItems">Manage Items</button>
+        <button id="addSessionBtn" class="btn primary admin-only" data-i18n="common.logADate">+ Log a Date</button>
       </div>
 
       <section class="panel">
         <div class="table-toolbar">
-          <input id="lootSearchInput" type="search" placeholder="Search by date, run, item, or recipient…">
+          <input id="lootSearchInput" type="search" placeholder="Search by date, run, item, or recipient…" data-i18n-placeholder="loot.searchPlaceholder">
         </div>
         <div class="table-scroll">
           <table class="members-table">
             <thead>
               <tr>
-                <th data-sort="date">Date</th>
-                <th data-sort="run">Run</th>
-                <th class="col-right">Records</th>
-                <th class="col-right">Total Qty</th>
+                <th data-sort="date" data-i18n="common.date">Date</th>
+                <th data-sort="run" data-i18n="common.run">Run</th>
+                <th class="col-right" data-i18n="common.records">Records</th>
+                <th class="col-right" data-i18n="common.totalQty">Total Qty</th>
                 <th></th>
               </tr>
             </thead>
             <tbody id="sessionsBody"></tbody>
           </table>
         </div>
-        <p id="lootEmptyState" class="empty-state hidden">No dates logged yet — click "Log a Date" to start recording loot.</p>
+        <p id="lootEmptyState" class="empty-state hidden" data-i18n="loot.emptyState">No dates logged yet — click "Log a Date" to start recording loot.</p>
       </section>
     </div>
 
     <!-- ===================== CAVE ATTENDANCE VIEW ===================== -->
     <div id="view-caves" class="view hidden">
       <div class="view-header">
-        <a href="#/cave-report" class="btn small">📊 Attendance Report</a>
-        <a href="#/cave-loot-list" class="btn small">🧾 Loot List</a>
-        <a href="#/cave-salary" class="btn small">💰 Salary</a>
-        <button id="manageItemsBtnCave" class="btn small admin-only">Manage Items</button>
-        <button id="discordSyncBtn" class="btn small admin-only">🔗 Sync from Discord</button>
-        <button id="addCaveBtn" class="btn primary admin-only">+ Log a Date</button>
+        <a href="#/cave-report" class="btn small" data-i18n="common.attendanceReportBtn">📊 Attendance Report</a>
+        <a href="#/cave-loot-list" class="btn small" data-i18n="common.lootListBtn">🧾 Loot List</a>
+        <a href="#/cave-salary" class="btn small" data-i18n="common.salaryBtn">💰 Salary</a>
+        <button id="manageItemsBtnCave" class="btn small admin-only" data-i18n="common.manageItems">Manage Items</button>
+        <button id="discordSyncBtn" class="btn small admin-only" data-i18n="caves.syncFromDiscord">🔗 Sync from Discord</button>
+        <button id="addCaveBtn" class="btn primary admin-only" data-i18n="common.logADate">+ Log a Date</button>
       </div>
 
       <section class="panel">
         <div class="table-toolbar">
-          <input id="caveSearchInput" type="search" placeholder="Search by date, boss, or item…">
+          <input id="caveSearchInput" type="search" placeholder="Search by date, boss, or item…" data-i18n-placeholder="caves.searchPlaceholder">
         </div>
         <div class="table-scroll">
           <table class="members-table">
             <thead>
               <tr>
-                <th data-sort="date">Date</th>
-                <th>Boss Logs</th>
-                <th>Total Attendees</th>
-                <th>Records</th>
-                <th>Total Qty</th>
+                <th data-sort="date" data-i18n="common.date">Date</th>
+                <th data-i18n="caves.thBossLogs">Boss Logs</th>
+                <th data-i18n="common.totalAttendees">Total Attendees</th>
+                <th data-i18n="common.records">Records</th>
+                <th data-i18n="common.totalQty">Total Qty</th>
                 <th></th>
               </tr>
             </thead>
             <tbody id="caveSessionsBody"></tbody>
           </table>
         </div>
-        <p id="caveEmptyState" class="empty-state hidden">No dates logged yet — click "Log a Date" to start recording cave runs.</p>
+        <p id="caveEmptyState" class="empty-state hidden" data-i18n="caves.emptyState">No dates logged yet — click "Log a Date" to start recording cave runs.</p>
       </section>
     </div>
 
     <!-- ===================== CAVE DATE DETAIL VIEW ===================== -->
     <div id="view-cave-date" class="view hidden">
       <div class="view-header space-between">
-        <a href="#/caves" class="back-link">← Back to Cave Attendance</a>
+        <a href="#/caves" class="back-link" data-i18n="common.backToCaveAttendance">← Back to Cave Attendance</a>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <a href="#/cave-report" class="btn small">📊 Attendance Report</a>
-          <a href="#/cave-loot-list" class="btn small">🧾 Loot List</a>
-          <a href="#/cave-salary" class="btn small">💰 Salary</a>
-          <button id="manageItemsBtnCaveDate" class="btn small admin-only">Manage Items</button>
-          <button id="addCaveBtnFromDate" class="btn small admin-only">+ Log a Date</button>
-          <button id="addCaveBossBtn" class="btn primary admin-only">+ Log a Boss</button>
+          <a href="#/cave-report" class="btn small" data-i18n="common.attendanceReportBtn">📊 Attendance Report</a>
+          <a href="#/cave-loot-list" class="btn small" data-i18n="common.lootListBtn">🧾 Loot List</a>
+          <a href="#/cave-salary" class="btn small" data-i18n="common.salaryBtn">💰 Salary</a>
+          <button id="manageItemsBtnCaveDate" class="btn small admin-only" data-i18n="common.manageItems">Manage Items</button>
+          <button id="addCaveBtnFromDate" class="btn small admin-only" data-i18n="common.logADate">+ Log a Date</button>
+          <button id="addCaveBossBtn" class="btn primary admin-only" data-i18n="caveDate.logABoss">+ Log a Boss</button>
         </div>
       </div>
 
@@ -217,30 +223,30 @@
           <table class="members-table">
             <thead>
               <tr>
-                <th>Boss</th>
-                <th>Total Attendees</th>
-                <th>Records</th>
-                <th>Total Qty</th>
+                <th data-i18n="common.boss">Boss</th>
+                <th data-i18n="common.totalAttendees">Total Attendees</th>
+                <th data-i18n="common.records">Records</th>
+                <th data-i18n="common.totalQty">Total Qty</th>
                 <th></th>
               </tr>
             </thead>
             <tbody id="caveDateBody"></tbody>
           </table>
         </div>
-        <p id="caveDateEmptyState" class="empty-state hidden">No boss logs for this date yet — click "Log a Boss" to add one.</p>
+        <p id="caveDateEmptyState" class="empty-state hidden" data-i18n="caveDate.emptyState">No boss logs for this date yet — click "Log a Boss" to add one.</p>
       </section>
     </div>
 
     <!-- ===================== CAVE SESSION DETAIL VIEW ===================== -->
     <div id="view-cave-session" class="view hidden">
       <div class="view-header space-between">
-        <a href="#/caves" class="back-link" id="caveSessionBackLink">← Back to Cave Attendance</a>
+        <a href="#/caves" class="back-link" id="caveSessionBackLink" data-i18n="common.backToCaveAttendance">← Back to Cave Attendance</a>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <a href="#/cave-report" class="btn small">📊 Attendance Report</a>
-          <a href="#/cave-loot-list" class="btn small">🧾 Loot List</a>
-          <a href="#/cave-salary" class="btn small">💰 Salary</a>
-          <button id="manageItemsBtnCaveSession" class="btn small admin-only">Manage Items</button>
-          <button id="addCaveBtnFromSession" class="btn primary admin-only">+ Log a Date</button>
+          <a href="#/cave-report" class="btn small" data-i18n="common.attendanceReportBtn">📊 Attendance Report</a>
+          <a href="#/cave-loot-list" class="btn small" data-i18n="common.lootListBtn">🧾 Loot List</a>
+          <a href="#/cave-salary" class="btn small" data-i18n="common.salaryBtn">💰 Salary</a>
+          <button id="manageItemsBtnCaveSession" class="btn small admin-only" data-i18n="common.manageItems">Manage Items</button>
+          <button id="addCaveBtnFromSession" class="btn primary admin-only" data-i18n="common.logADate">+ Log a Date</button>
         </div>
       </div>
 
@@ -252,12 +258,12 @@
     <!-- ===================== CAVE ATTENDANCE REPORT VIEW ===================== -->
     <div id="view-cave-report" class="view hidden">
       <div class="view-header space-between">
-        <a href="#/caves" class="back-link">← Back to Cave Attendance</a>
+        <a href="#/caves" class="back-link" data-i18n="common.backToCaveAttendance">← Back to Cave Attendance</a>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <a href="#/cave-loot-list" class="btn small">🧾 Loot List</a>
-          <a href="#/cave-salary" class="btn small">💰 Salary</a>
-          <button id="manageItemsBtnCaveReport" class="btn small admin-only">Manage Items</button>
-          <button id="addCaveBtnFromReport" class="btn primary admin-only">+ Log a Date</button>
+          <a href="#/cave-loot-list" class="btn small" data-i18n="common.lootListBtn">🧾 Loot List</a>
+          <a href="#/cave-salary" class="btn small" data-i18n="common.salaryBtn">💰 Salary</a>
+          <button id="manageItemsBtnCaveReport" class="btn small admin-only" data-i18n="common.manageItems">Manage Items</button>
+          <button id="addCaveBtnFromReport" class="btn primary admin-only" data-i18n="common.logADate">+ Log a Date</button>
         </div>
       </div>
 
@@ -268,19 +274,19 @@
             <tbody id="caveReportBody"></tbody>
           </table>
         </div>
-        <p id="caveReportEmptyState" class="empty-state hidden">No cave dates logged yet.</p>
+        <p id="caveReportEmptyState" class="empty-state hidden" data-i18n="caveReport.emptyState">No cave dates logged yet.</p>
       </section>
     </div>
 
     <!-- ===================== CAVE LOOT LIST VIEW ===================== -->
     <div id="view-cave-loot-list" class="view hidden">
       <div class="view-header space-between">
-        <a href="#/caves" class="back-link">← Back to Cave Attendance</a>
+        <a href="#/caves" class="back-link" data-i18n="common.backToCaveAttendance">← Back to Cave Attendance</a>
         <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-          <a href="#/cave-report" class="btn small">📊 Attendance Report</a>
-          <a href="#/cave-salary" class="btn small">💰 Salary</a>
-          <button id="manageItemsBtnCaveLootList" class="btn small admin-only">Manage Items</button>
-          <button id="addCaveBtnFromLootList" class="btn primary admin-only">+ Log a Date</button>
+          <a href="#/cave-report" class="btn small" data-i18n="common.attendanceReportBtn">📊 Attendance Report</a>
+          <a href="#/cave-salary" class="btn small" data-i18n="common.salaryBtn">💰 Salary</a>
+          <button id="manageItemsBtnCaveLootList" class="btn small admin-only" data-i18n="common.manageItems">Manage Items</button>
+          <button id="addCaveBtnFromLootList" class="btn primary admin-only" data-i18n="common.logADate">+ Log a Date</button>
           <input type="month" id="caveLootListMonthInput" aria-label="Month">
         </div>
       </div>
@@ -290,33 +296,33 @@
           <table class="growth-table">
             <thead>
               <tr>
-                <th>Date</th>
-                <th>Boss</th>
-                <th>Attendees</th>
-                <th>Loot</th>
-                <th>Qty</th>
-                <th>Price</th>
-                <th>Total Price</th>
-                <th>Buyer</th>
-                <th>Total Dias</th>
+                <th data-i18n="common.date">Date</th>
+                <th data-i18n="common.boss">Boss</th>
+                <th data-i18n="caveLootList.thAttendees">Attendees</th>
+                <th data-i18n="caveLootList.thLoot">Loot</th>
+                <th data-i18n="common.qty">Qty</th>
+                <th data-i18n="caveLootList.thPrice">Price</th>
+                <th data-i18n="caveLootList.thTotalPrice">Total Price</th>
+                <th data-i18n="caveLootList.thBuyer">Buyer</th>
+                <th data-i18n="caveLootList.thTotalDias">Total Dias</th>
               </tr>
             </thead>
             <tbody id="caveLootListBody"></tbody>
           </table>
         </div>
-        <p id="caveLootListEmptyState" class="empty-state hidden">No loot logged for this month yet.</p>
+        <p id="caveLootListEmptyState" class="empty-state hidden" data-i18n="caveLootList.emptyState">No loot logged for this month yet.</p>
       </section>
     </div>
 
     <!-- ===================== CAVE SALARY VIEW ===================== -->
     <div id="view-cave-salary" class="view hidden">
       <div class="view-header space-between">
-        <a href="#/caves" class="back-link">← Back to Cave Attendance</a>
+        <a href="#/caves" class="back-link" data-i18n="common.backToCaveAttendance">← Back to Cave Attendance</a>
         <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-          <a href="#/cave-report" class="btn small">📊 Attendance Report</a>
-          <a href="#/cave-loot-list" class="btn small">🧾 Loot List</a>
-          <button id="manageItemsBtnCaveSalary" class="btn small admin-only">Manage Items</button>
-          <button id="addCaveBtnFromSalary" class="btn primary admin-only">+ Log a Date</button>
+          <a href="#/cave-report" class="btn small" data-i18n="common.attendanceReportBtn">📊 Attendance Report</a>
+          <a href="#/cave-loot-list" class="btn small" data-i18n="common.lootListBtn">🧾 Loot List</a>
+          <button id="manageItemsBtnCaveSalary" class="btn small admin-only" data-i18n="common.manageItems">Manage Items</button>
+          <button id="addCaveBtnFromSalary" class="btn primary admin-only" data-i18n="common.logADate">+ Log a Date</button>
           <input type="month" id="caveSalaryMonthInput" aria-label="Month">
         </div>
       </div>
@@ -324,65 +330,65 @@
       <section class="panel">
         <div class="growth-form-row" style="align-items:end;">
           <div class="stat-tile">
-            <span class="stat-label">Salary Pool</span>
+            <span class="stat-label" data-i18n="caveSalary.statPool">Salary Pool</span>
             <span class="stat-value" id="caveSalaryPoolValue">₱0</span>
           </div>
           <div class="stat-tile">
-            <span class="stat-label">Accounting Fees</span>
+            <span class="stat-label" data-i18n="caveSalary.statFees">Accounting Fees</span>
             <span class="stat-value" id="caveSalaryFeesValue">₱0</span>
           </div>
           <div class="stat-tile gold">
-            <span class="stat-label">Final Salary Pool</span>
+            <span class="stat-label" data-i18n="caveSalary.statFinalPool">Final Salary Pool</span>
             <span class="stat-value" id="caveSalaryFinalPoolValue">₱0</span>
           </div>
         </div>
       </section>
 
       <section class="panel">
-        <h2>Accounting Fees</h2>
-        <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;">
+        <h2 data-i18n="caveSalary.feesHeading">Accounting Fees</h2>
+        <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;" data-i18n="caveSalary.feesHint">
           Each entry takes a flat % of the raw Salary Pool off the top, then that amount is added back on top of the recipient's own distributed share.
         </p>
         <div class="table-scroll">
           <table class="growth-table">
-            <thead><tr><th>Name</th><th>Percent</th><th></th></tr></thead>
+            <thead><tr><th data-i18n="common.name">Name</th><th data-i18n="common.percent">Percent</th><th></th></tr></thead>
             <tbody id="caveSalaryFeesBody"></tbody>
           </table>
         </div>
         <form id="addCaveSalaryFeeForm" class="growth-form-row admin-only" style="margin-top:12px;">
-          <label style="flex:1.5;">Name / Member
+          <label style="flex:1.5;"><span data-i18n="caveSalary.labelNameMember">Name / Member</span>
             <select name="memberId" id="caveSalaryFeeMemberSelect"></select>
           </label>
-          <label><span>Custom name <span style="color:var(--text-muted); font-weight:400;">(if not a member)</span></span>
+          <label><span><span data-i18n="caveSalary.labelCustomName">Custom name</span> <span style="color:var(--text-muted); font-weight:400;" data-i18n="caveSalary.hintIfNotMember">(if not a member)</span></span>
             <input type="text" name="customName" placeholder="e.g. Attendance Marshals">
           </label>
-          <label style="max-width:120px;">Percent<input type="number" name="percent" min="0" max="100" step="0.01" required></label>
-          <button type="submit" class="btn primary small">Add Fee</button>
+          <label style="max-width:120px;"><span data-i18n="common.percent">Percent</span><input type="number" name="percent" min="0" max="100" step="0.01" required></label>
+          <button type="submit" class="btn primary small" data-i18n="caveSalary.addFee">Add Fee</button>
         </form>
       </section>
 
       <section class="panel">
-        <h2>Salary Breakdown</h2>
+        <h2 data-i18n="caveSalary.breakdownHeading">Salary Breakdown</h2>
         <div class="table-scroll">
           <table class="members-table">
             <thead>
               <tr>
-                <th>IGN</th>
-                <th>Growth Rate</th>
-                <th>Attendance</th>
-                <th title="Tier lookup based on Growth Rate">Multiplier<br><span class="th-formula">by Growth Rate tier</span></th>
-                <th title="Base Share = Attendance ÷ Total Attendance">Base Share<br><span class="th-formula">Attendance ÷ Σ Attendance</span></th>
-                <th title="Base + Multiplier = Base Share × Multiplier">Base + Multiplier<br><span class="th-formula">Base Share × Multiplier</span></th>
-                <th title="Normalized Share = (Base + Multiplier) ÷ Σ(Base + Multiplier)">Normalized Share<br><span class="th-formula">(Base+Mult) ÷ Σ(Base+Mult)</span></th>
-                <th title="Initial Computation = Normalized Share × Final Salary Pool">Initial Computation<br><span class="th-formula">Norm. Share × Final Pool</span></th>
-                <th title="Final Salary = Initial Computation + Accounting Fee (if applicable)">Final Salary<br><span class="th-formula">Initial Comp. + Fee</span></th>
-                <th>Sent</th>
+                <th data-i18n="caveSalary.thIgn">IGN</th>
+                <th data-i18n="caveSalary.thGrowthRate">Growth Rate</th>
+                <th data-i18n="caveSalary.thAttendance">Attendance</th>
+                <th title="Tier lookup based on Growth Rate" data-i18n-title="caveSalary.titleMultiplier"><span data-i18n="caveSalary.thMultiplier">Multiplier</span><br><span class="th-formula" data-i18n="caveSalary.subMultiplier">by Growth Rate tier</span></th>
+                <th title="Base Share = Attendance ÷ Total Attendance" data-i18n-title="caveSalary.titleBaseShare"><span data-i18n="caveSalary.thBaseShare">Base Share</span><br><span class="th-formula" data-i18n="caveSalary.subBaseShare">Attendance ÷ Σ Attendance</span></th>
+                <th title="Base + Multiplier = Base Share × Multiplier" data-i18n-title="caveSalary.titleBasePlusMult"><span data-i18n="caveSalary.thBasePlusMult">Base + Multiplier</span><br><span class="th-formula" data-i18n="caveSalary.subBasePlusMult">Base Share × Multiplier</span></th>
+                <th title="Normalized Share = (Base + Multiplier) ÷ Σ(Base + Multiplier)" data-i18n-title="caveSalary.titleNormShare"><span data-i18n="caveSalary.thNormShare">Normalized Share</span><br><span class="th-formula" data-i18n="caveSalary.subNormShare">(Base+Mult) ÷ Σ(Base+Mult)</span></th>
+                <th title="Initial Computation = Normalized Share × Final Salary Pool" data-i18n-title="caveSalary.titleInitialComp"><span data-i18n="caveSalary.thInitialComp">Initial Computation</span><br><span class="th-formula" data-i18n="caveSalary.subInitialComp">Norm. Share × Final Pool</span></th>
+                <th title="Final Salary = Initial Computation + Accounting Fee (if applicable)" data-i18n-title="caveSalary.titleFinalSalary"><span data-i18n="caveSalary.thFinalSalary">Final Salary</span><br><span class="th-formula" data-i18n="caveSalary.subFinalSalary">Initial Comp. + Fee</span></th>
+                <th data-i18n="caveSalary.thSent">Sent</th>
               </tr>
             </thead>
             <tbody id="caveSalaryBody"></tbody>
           </table>
         </div>
-        <p id="caveSalaryEmptyState" class="empty-state hidden">No cave dates logged for this month yet.</p>
+        <p id="caveSalaryEmptyState" class="empty-state hidden" data-i18n="caveSalary.emptyState">No cave dates logged for this month yet.</p>
       </section>
     </div>
 
@@ -392,7 +398,7 @@
         <div class="icon-select" id="itemReportDropdown">
           <button type="button" class="icon-select-trigger" id="itemReportTrigger">
             <span id="itemReportTriggerIcon"></span>
-            <span id="itemReportTriggerLabel">Select item</span>
+            <span id="itemReportTriggerLabel" data-i18n="items.selectItem">Select item</span>
             <span class="icon-select-caret">▾</span>
           </button>
           <div class="icon-select-menu hidden" id="itemReportMenu"></div>
@@ -404,67 +410,67 @@
           <table class="members-table">
             <thead>
               <tr>
-                <th>Date / Member</th>
-                <th>Qty</th>
+                <th data-i18n="items.thDateMember">Date / Member</th>
+                <th data-i18n="common.qty">Qty</th>
               </tr>
             </thead>
             <tbody id="itemReportBody"></tbody>
           </table>
         </div>
-        <p id="itemReportEmptyState" class="empty-state hidden">No records for this item yet.</p>
+        <p id="itemReportEmptyState" class="empty-state hidden" data-i18n="items.emptyState">No records for this item yet.</p>
       </section>
     </div>
 
     <!-- ===================== BOSS TIMERS VIEW ===================== -->
     <div id="view-bosses" class="view hidden">
       <div class="view-header">
-        <p style="color:var(--text-muted); font-size:13px; margin:0; flex:1;">Times are in <strong>your local time</strong> — enter each spawn time as it appears on your own clock.</p>
-        <button id="addBossBtn" class="btn primary admin-only">+ Add Boss</button>
+        <p style="color:var(--text-muted); font-size:13px; margin:0; flex:1;" data-i18n="bosses.hint">Times are in <strong>your local time</strong> — enter each spawn time as it appears on your own clock.</p>
+        <button id="addBossBtn" class="btn primary admin-only" data-i18n="bosses.addBoss">+ Add Boss</button>
       </div>
       <div id="bossTimerGrid" class="boss-timer-grid"></div>
-      <p id="bossTimerEmptyState" class="empty-state hidden">No bosses tracked yet — click "Add Boss" to start.</p>
+      <p id="bossTimerEmptyState" class="empty-state hidden" data-i18n="bosses.emptyState">No bosses tracked yet — click "Add Boss" to start.</p>
 
-      <h2 class="section-heading">Boss History</h2>
+      <h2 class="section-heading" data-i18n="bosses.historyHeading">Boss History</h2>
       <section class="panel">
         <div class="table-scroll">
           <table class="members-table">
             <thead>
               <tr>
-                <th>Boss</th>
-                <th>Killed At</th>
-                <th>Source</th>
-                <th>Attendance Posted By</th>
+                <th data-i18n="common.boss">Boss</th>
+                <th data-i18n="bosses.thKilledAt">Killed At</th>
+                <th data-i18n="bosses.thSource">Source</th>
+                <th data-i18n="bosses.thAttendancePostedBy">Attendance Posted By</th>
                 <th></th>
               </tr>
             </thead>
             <tbody id="bossHistoryBody"></tbody>
           </table>
         </div>
-        <p id="bossHistoryEmptyState" class="empty-state hidden">No boss kills logged yet.</p>
+        <p id="bossHistoryEmptyState" class="empty-state hidden" data-i18n="bosses.historyEmptyState">No boss kills logged yet.</p>
       </section>
     </div>
 
     <!-- ===================== USERS VIEW ===================== -->
     <div id="view-users" class="view hidden">
       <div class="view-header">
-        <p style="color:var(--text-muted); font-size:13px; margin:0; flex:1;">Admin: full access, including this page. Editor: same day-to-day access as Admin, minus user management. Viewer: read-only.</p>
-        <button id="addUserBtn" class="btn primary">+ Add User</button>
+        <p style="color:var(--text-muted); font-size:13px; margin:0; flex:1;" data-i18n="users.hint">Admin: full access, including this page. Editor: same day-to-day access as Admin, minus user management. Viewer: read-only.</p>
+        <button id="addUserBtn" class="btn primary" data-i18n="users.addUser">+ Add User</button>
       </div>
       <section class="panel">
         <div class="table-scroll">
           <table class="members-table">
             <thead>
               <tr>
-                <th>Username</th>
-                <th>Role</th>
-                <th>Created</th>
+                <th data-i18n="common.username">Username</th>
+                <th data-i18n="common.role">Role</th>
+                <th data-i18n="users.thCreated">Created</th>
                 <th></th>
               </tr>
             </thead>
             <tbody id="usersBody"></tbody>
           </table>
         </div>
-        <p id="usersEmptyState" class="empty-state hidden">No users yet.</p>
+        <p id="usersEmptyState" class="empty-state hidden" data-i18n="users.emptyState">No users yet.</p>
       </section>
     </div>
 
@@ -475,24 +481,24 @@
           <table class="members-table">
             <thead>
               <tr>
-                <th>Time</th>
-                <th>User</th>
-                <th>Action</th>
-                <th>Description</th>
+                <th data-i18n="activityLog.thTime">Time</th>
+                <th data-i18n="activityLog.thUser">User</th>
+                <th data-i18n="activityLog.thAction">Action</th>
+                <th data-i18n="activityLog.thDescription">Description</th>
               </tr>
             </thead>
             <tbody id="activityLogBody"></tbody>
           </table>
         </div>
-        <p id="activityLogEmptyState" class="empty-state hidden">No activity logged yet.</p>
+        <p id="activityLogEmptyState" class="empty-state hidden" data-i18n="activityLog.emptyState">No activity logged yet.</p>
       </section>
     </div>
 
     <!-- ===================== LOOT SESSION DETAIL VIEW ===================== -->
     <div id="view-loot-session" class="view hidden">
       <div class="view-header space-between">
-        <a href="#/loot" class="back-link">← Back to Guild Dungeon Loot</a>
-        <button id="manageItemsBtnSession" class="btn small admin-only">Manage Items</button>
+        <a href="#/loot" class="back-link" data-i18n="lootSession.backLink">← Back to Guild Dungeon Loot</a>
+        <button id="manageItemsBtnSession" class="btn small admin-only" data-i18n="common.manageItems">Manage Items</button>
       </div>
 
       <section class="panel">
@@ -520,15 +526,15 @@
   <div id="killTimeModal" class="modal-overlay hidden">
     <div class="modal">
       <button class="modal-close" data-close="killTimeModal" aria-label="Close">×</button>
-      <h2>Set Kill Time</h2>
-      <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;">
+      <h2 data-i18n="modal.setKillTime">Set Kill Time</h2>
+      <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;" data-i18n="modal.killTimeHint">
         Corrects when this boss was actually killed — useful when a Discord-detected time was wrong.
       </p>
       <form id="killTimeForm" style="display:flex; flex-direction:column; gap:12px; margin-top:10px;">
-        <label>Killed At <span style="color:var(--text-muted); font-weight:400;">(your local time)</span>
+        <label><span data-i18n="modal.killedAtLabel">Killed At</span> <span style="color:var(--text-muted); font-weight:400;" data-i18n="modal.killedAtHint">(your local time)</span>
           <input type="datetime-local" name="killedAt" required>
         </label>
-        <button type="submit" class="btn primary">Save</button>
+        <button type="submit" class="btn primary" data-i18n="common.save">Save</button>
       </form>
     </div>
   </div>
@@ -536,18 +542,18 @@
   <div id="addModal" class="modal-overlay hidden">
     <div class="modal">
       <button class="modal-close" data-close="addModal" aria-label="Close">×</button>
-      <h2>Add Member</h2>
+      <h2 data-i18n="modal.addMemberTitle">Add Member</h2>
       <form id="addMemberForm">
-        <label>Name
+        <label><span data-i18n="common.name">Name</span>
           <input required name="name" type="text" maxlength="40" placeholder="e.g. Ashwing">
         </label>
-        <label><span>Alias <span style="color:var(--text-muted); font-weight:400;">(optional)</span></span>
+        <label><span><span data-i18n="modal.aliasLabel">Alias</span> <span style="color:var(--text-muted); font-weight:400;" data-i18n="modal.aliasHint">(optional)</span></span>
           <input name="alias" type="text" maxlength="40" placeholder="e.g. old IGN or nickname">
         </label>
-        <label>Class
+        <label><span data-i18n="common.class">Class</span>
           <select required name="className" id="classSelect"></select>
         </label>
-        <button type="submit" class="btn primary">Add Member</button>
+        <button type="submit" class="btn primary" data-i18n="members.addMember">Add Member</button>
       </form>
     </div>
   </div>
@@ -555,12 +561,12 @@
   <div id="multiAssignModal" class="modal-overlay hidden">
     <div class="modal">
       <button class="modal-close" data-close="multiAssignModal" aria-label="Close">×</button>
-      <h2>Assign Loot</h2>
+      <h2 data-i18n="modal.assignLoot">Assign Loot</h2>
       <p id="multiAssignItemInfo" style="color:var(--text-muted); font-size:13px; margin-top:-8px;"></p>
       <div id="multiAssignMembersList" style="max-height:320px; overflow-y:auto; display:flex; flex-direction:column; gap:6px; margin:14px 0;"></div>
       <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
         <span id="multiAssignTotal" style="font-size:13px; color:var(--text-secondary);"></span>
-        <button id="multiAssignConfirmBtn" class="btn primary small" disabled>Assign</button>
+        <button id="multiAssignConfirmBtn" class="btn primary small" disabled data-i18n="modal.assign">Assign</button>
       </div>
     </div>
   </div>
@@ -568,15 +574,15 @@
   <div id="addSessionModal" class="modal-overlay hidden">
     <div class="modal">
       <button class="modal-close" data-close="addSessionModal" aria-label="Close">×</button>
-      <h2>Log a Date</h2>
+      <h2 data-i18n="common.logADateTitle">Log a Date</h2>
       <form id="addSessionForm">
-        <label>Date
+        <label><span data-i18n="common.date">Date</span>
           <input type="date" name="date" required>
         </label>
-        <label><span>Dungeon Run <span style="color:var(--text-muted); font-weight:400;">(optional)</span></span>
+        <label><span><span data-i18n="modal.dungeonRunLabel">Dungeon Run</span> <span style="color:var(--text-muted); font-weight:400;" data-i18n="modal.optionalHint">(optional)</span></span>
           <input type="text" name="run" placeholder="e.g. Weekly Dungeon 7/23">
         </label>
-        <button type="submit" class="btn primary">Create & Add Loot</button>
+        <button type="submit" class="btn primary" data-i18n="common.createAddLoot">Create & Add Loot</button>
       </form>
     </div>
   </div>
@@ -584,15 +590,15 @@
   <div id="addCaveModal" class="modal-overlay hidden">
     <div class="modal">
       <button class="modal-close" data-close="addCaveModal" aria-label="Close">×</button>
-      <h2>Log a Date</h2>
+      <h2 data-i18n="common.logADateTitle">Log a Date</h2>
       <form id="addCaveForm">
-        <label>Date
+        <label><span data-i18n="common.date">Date</span>
           <input type="date" name="date" required>
         </label>
-        <label>Boss Name
+        <label><span data-i18n="modal.bossNameLabel">Boss Name</span>
           <select name="run"></select>
         </label>
-        <button type="submit" class="btn primary">Create & Add Loot</button>
+        <button type="submit" class="btn primary" data-i18n="common.createAddLoot">Create & Add Loot</button>
       </form>
     </div>
   </div>
@@ -600,13 +606,13 @@
   <div id="addCaveBossModal" class="modal-overlay hidden">
     <div class="modal">
       <button class="modal-close" data-close="addCaveBossModal" aria-label="Close">×</button>
-      <h2>Log a Boss</h2>
+      <h2 data-i18n="caveDate.logABoss">Log a Boss</h2>
       <p id="addCaveBossDateLabel" style="color:var(--text-muted); font-size:13px; margin-top:-8px;"></p>
       <form id="addCaveBossForm">
-        <label>Boss Name
+        <label><span data-i18n="modal.bossNameLabel">Boss Name</span>
           <select name="run"></select>
         </label>
-        <button type="submit" class="btn primary">Create & Add Loot</button>
+        <button type="submit" class="btn primary" data-i18n="common.createAddLoot">Create & Add Loot</button>
       </form>
     </div>
   </div>
@@ -614,13 +620,13 @@
   <div id="discordSyncModal" class="modal-overlay hidden">
     <div class="modal modal-wide">
       <button class="modal-close" data-close="discordSyncModal" aria-label="Close">×</button>
-      <h2>Sync Attendance from Discord</h2>
-      <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;">
+      <h2 data-i18n="modal.discordSyncTitle">Sync Attendance from Discord</h2>
+      <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;" data-i18n="modal.discordSyncHint">
         Scans #cave-attendance for the selected month, matches each message's attendee list against the roster (name or alias, fuzzy — handles typos and shortcuts), and logs attendance onto the matching boss log, creating it if it doesn't exist yet. Posts a confirmation back into the channel for each one.
       </p>
       <form id="discordSyncForm" style="display:flex; gap:8px; align-items:flex-end; margin:14px 0;">
-        <label style="flex:1;">Month<input type="month" name="month" required></label>
-        <button type="submit" class="btn primary">Sync Now</button>
+        <label style="flex:1;"><span data-i18n="modal.month">Month</span><input type="month" name="month" required></label>
+        <button type="submit" class="btn primary" data-i18n="modal.syncNow">Sync Now</button>
       </form>
       <div id="discordSyncResults"></div>
     </div>
@@ -629,14 +635,14 @@
   <div id="manageItemsModal" class="modal-overlay hidden">
     <div class="modal modal-wide">
       <button class="modal-close" data-close="manageItemsModal" aria-label="Close">×</button>
-      <h2>Manage Loot Items</h2>
-      <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;">
+      <h2 data-i18n="modal.manageItemsTitle">Manage Loot Items</h2>
+      <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;" data-i18n="modal.manageItemsHint">
         These are the item names suggested when logging loot. Rename or remove any, or add new ones.
       </p>
       <ul id="itemCategoryList" style="list-style:none; padding:0; margin:14px 0; display:flex; flex-direction:column; gap:8px;"></ul>
       <form id="addItemCategoryForm" style="display:flex; gap:8px;">
-        <input type="text" name="name" placeholder="New item name…" required style="flex:1;">
-        <button type="submit" class="btn primary small">Add</button>
+        <input type="text" name="name" placeholder="New item name…" required style="flex:1;" data-i18n-placeholder="modal.newItemPlaceholder">
+        <button type="submit" class="btn primary small" data-i18n="common.add">Add</button>
       </form>
     </div>
   </div>
@@ -644,14 +650,14 @@
   <div id="manageClassesModal" class="modal-overlay hidden">
     <div class="modal">
       <button class="modal-close" data-close="manageClassesModal" aria-label="Close">×</button>
-      <h2>Manage Classes</h2>
-      <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;">
+      <h2 data-i18n="modal.manageClassesTitle">Manage Classes</h2>
+      <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;" data-i18n="modal.manageClassesHint">
         Adding a class here also updates it in Discord's <code>/growth</code> command automatically.
       </p>
       <ul id="classList" style="list-style:none; padding:0; margin:14px 0; display:flex; flex-direction:column; gap:8px;"></ul>
       <form id="addClassForm" style="display:flex; gap:8px;">
-        <input type="text" name="name" placeholder="New class name…" required style="flex:1;">
-        <button type="submit" class="btn primary small">Add</button>
+        <input type="text" name="name" placeholder="New class name…" required style="flex:1;" data-i18n-placeholder="modal.newClassPlaceholder">
+        <button type="submit" class="btn primary small" data-i18n="common.add">Add</button>
       </form>
     </div>
   </div>
@@ -659,22 +665,22 @@
   <div id="userModal" class="modal-overlay hidden">
     <div class="modal">
       <button class="modal-close" data-close="userModal" aria-label="Close">×</button>
-      <h2 id="userModalTitle">Add User</h2>
+      <h2 id="userModalTitle" data-i18n="modal.addUserTitle">Add User</h2>
       <form id="userForm">
-        <label>Username
+        <label><span data-i18n="common.username">Username</span>
           <input type="text" name="username" required maxlength="40" autocomplete="off">
         </label>
-        <label><span id="userFormPasswordLabel">Password</span>
-          <input type="password" name="password" autocomplete="new-password" placeholder="At least 8 characters">
+        <label><span id="userFormPasswordLabel" data-i18n="modal.passwordLabel">Password</span>
+          <input type="password" name="password" autocomplete="new-password" placeholder="At least 8 characters" data-i18n-placeholder="modal.passwordPlaceholder">
         </label>
-        <label>Role
+        <label><span data-i18n="common.role">Role</span>
           <select name="role" required>
-            <option value="admin">Admin</option>
-            <option value="editor">Editor</option>
-            <option value="viewer">Viewer</option>
+            <option value="admin" data-i18n="modal.roleAdmin">Admin</option>
+            <option value="editor" data-i18n="modal.roleEditor">Editor</option>
+            <option value="viewer" data-i18n="modal.roleViewer">Viewer</option>
           </select>
         </label>
-        <button type="submit" class="btn primary">Save</button>
+        <button type="submit" class="btn primary" data-i18n="common.save">Save</button>
       </form>
     </div>
   </div>
@@ -702,6 +708,7 @@
   <script src="users-view.js?v=1"></script>
   <script src="activity-log-view.js?v=1"></script>
   <script src="auth.js?v=29"></script>
+  <script src="i18n.js?v=1"></script>
   <script src="router.js?v=33"></script>
 </body>
 </html>

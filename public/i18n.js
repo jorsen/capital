@@ -1,0 +1,774 @@
+// Static UI translation: every translatable label carries a data-i18n="key"
+// (or data-i18n-placeholder / data-i18n-title) attribute in the HTML. Data
+// values (member names, item names, boss names, formatted numbers/dates)
+// are never touched — only the English chrome baked into the HTML.
+const I18N_STORAGE_KEY = 'capitalRecordsLang';
+
+const TRANSLATIONS = {
+  en: {
+    'nav.members': 'Members',
+    'nav.queue': 'Insignia Queue',
+    'nav.loot': 'Guild Dungeon Loot',
+    'nav.caves': 'Cave Attendance',
+    'nav.items': 'Item Report',
+    'nav.bosses': 'Boss Timers',
+    'nav.users': 'Users',
+    'nav.activityLog': 'Activity Log',
+
+    'topbar.readonly': 'Viewing (read-only)',
+    'topbar.logout': 'Logout',
+
+    'common.manageItems': 'Manage Items',
+    'common.manageClasses': 'Manage Classes',
+    'common.logADate': '+ Log a Date',
+    'common.logADateTitle': 'Log a Date',
+    'common.createAddLoot': 'Create & Add Loot',
+    'common.save': 'Save',
+    'common.add': 'Add',
+    'common.date': 'Date',
+    'common.run': 'Run',
+    'common.records': 'Records',
+    'common.totalQty': 'Total Qty',
+    'common.boss': 'Boss',
+    'common.name': 'Name',
+    'common.class': 'Class',
+    'common.qty': 'Qty',
+    'common.backToCaveAttendance': '← Back to Cave Attendance',
+    'common.attendanceReportBtn': '📊 Attendance Report',
+    'common.lootListBtn': '🧾 Loot List',
+    'common.salaryBtn': '💰 Salary',
+    'common.totalAttendees': 'Total Attendees',
+    'common.percent': 'Percent',
+    'common.role': 'Role',
+    'common.username': 'Username',
+    'common.copyPresentNames': 'Copy Present Names',
+
+    'members.exportExcel': 'Export to Excel',
+    'members.addMember': '+ Add Member',
+    'members.statMembers': 'Members',
+    'members.statTopGrower': 'Top Grower',
+    'members.searchPlaceholder': 'Search members…',
+    'members.allClasses': 'All Classes',
+    'members.thLatestGrowth': 'Latest Growth',
+    'members.thTrend': 'Trend',
+    'members.emptyState': 'No members yet — add your first guild member above.',
+    'members.byClassHeading': 'Members by Class',
+
+    'queue.heading': 'Legendary Insignia Queue',
+    'queue.note': '⚠ Subject to change, depending on GR (growth rate) ranking.',
+    'queue.alreadyReceived': '✅ Already Received',
+    'queue.alreadyReceivedHint': "Who's already gotten each insignia part — they can't be re-queued for the same part.",
+
+    'loot.searchPlaceholder': 'Search by date, run, item, or recipient…',
+    'loot.emptyState': 'No dates logged yet — click "Log a Date" to start recording loot.',
+
+    'caves.syncFromDiscord': '🔗 Sync from Discord',
+    'caves.searchPlaceholder': 'Search by date, boss, or item…',
+    'caves.thBossLogs': 'Boss Logs',
+    'caves.emptyState': 'No dates logged yet — click "Log a Date" to start recording cave runs.',
+
+    'caveDate.logABoss': '+ Log a Boss',
+    'caveDate.emptyState': 'No boss logs for this date yet — click "Log a Boss" to add one.',
+
+    'caveReport.emptyState': 'No cave dates logged yet.',
+
+    'caveLootList.thAttendees': 'Attendees',
+    'caveLootList.thLoot': 'Loot',
+    'caveLootList.thPrice': 'Price',
+    'caveLootList.thTotalPrice': 'Total Price',
+    'caveLootList.thBuyer': 'Buyer',
+    'caveLootList.thTotalDias': 'Total Dias',
+    'caveLootList.emptyState': 'No loot logged for this month yet.',
+
+    'caveSalary.statPool': 'Salary Pool',
+    'caveSalary.statFees': 'Accounting Fees',
+    'caveSalary.statFinalPool': 'Final Salary Pool',
+    'caveSalary.feesHeading': 'Accounting Fees',
+    'caveSalary.feesHint': "Each entry takes a flat % of the raw Salary Pool off the top, then that amount is added back on top of the recipient's own distributed share.",
+    'caveSalary.labelNameMember': 'Name / Member',
+    'caveSalary.labelCustomName': 'Custom name',
+    'caveSalary.hintIfNotMember': '(if not a member)',
+    'caveSalary.addFee': 'Add Fee',
+    'caveSalary.breakdownHeading': 'Salary Breakdown',
+    'caveSalary.thIgn': 'IGN',
+    'caveSalary.thGrowthRate': 'Growth Rate',
+    'caveSalary.thAttendance': 'Attendance',
+    'caveSalary.thMultiplier': 'Multiplier',
+    'caveSalary.subMultiplier': 'by Growth Rate tier',
+    'caveSalary.thBaseShare': 'Base Share',
+    'caveSalary.subBaseShare': 'Attendance ÷ Σ Attendance',
+    'caveSalary.thBasePlusMult': 'Base + Multiplier',
+    'caveSalary.subBasePlusMult': 'Base Share × Multiplier',
+    'caveSalary.thNormShare': 'Normalized Share',
+    'caveSalary.subNormShare': '(Base+Mult) ÷ Σ(Base+Mult)',
+    'caveSalary.thInitialComp': 'Initial Computation',
+    'caveSalary.subInitialComp': 'Norm. Share × Final Pool',
+    'caveSalary.thFinalSalary': 'Final Salary',
+    'caveSalary.subFinalSalary': 'Initial Comp. + Fee',
+    'caveSalary.thSent': 'Sent',
+    'caveSalary.emptyState': 'No cave dates logged for this month yet.',
+    'caveSalary.titleMultiplier': 'Tier lookup based on Growth Rate',
+    'caveSalary.titleBaseShare': 'Base Share = Attendance ÷ Total Attendance',
+    'caveSalary.titleBasePlusMult': 'Base + Multiplier = Base Share × Multiplier',
+    'caveSalary.titleNormShare': 'Normalized Share = (Base + Multiplier) ÷ Σ(Base + Multiplier)',
+    'caveSalary.titleInitialComp': 'Initial Computation = Normalized Share × Final Salary Pool',
+    'caveSalary.titleFinalSalary': 'Final Salary = Initial Computation + Accounting Fee (if applicable)',
+
+    'items.selectItem': 'Select item',
+    'items.thDateMember': 'Date / Member',
+    'items.emptyState': 'No records for this item yet.',
+
+    'bosses.hint': 'Times are in your local time — enter each spawn time as it appears on your own clock.',
+    'bosses.addBoss': '+ Add Boss',
+    'bosses.emptyState': 'No bosses tracked yet — click "Add Boss" to start.',
+    'bosses.historyHeading': 'Boss History',
+    'bosses.thKilledAt': 'Killed At',
+    'bosses.thSource': 'Source',
+    'bosses.thAttendancePostedBy': 'Attendance Posted By',
+    'bosses.historyEmptyState': 'No boss kills logged yet.',
+
+    'users.hint': 'Admin: full access, including this page. Editor: same day-to-day access as Admin, minus user management. Viewer: read-only.',
+    'users.addUser': '+ Add User',
+    'users.thCreated': 'Created',
+    'users.emptyState': 'No users yet.',
+
+    'activityLog.thTime': 'Time',
+    'activityLog.thUser': 'User',
+    'activityLog.thAction': 'Action',
+    'activityLog.thDescription': 'Description',
+    'activityLog.emptyState': 'No activity logged yet.',
+
+    'lootSession.backLink': '← Back to Guild Dungeon Loot',
+    'lootSession.attendanceHeading': 'Guild Dungeon Attendance',
+
+    'modal.setKillTime': 'Set Kill Time',
+    'modal.killTimeHint': 'Corrects when this boss was actually killed — useful when a Discord-detected time was wrong.',
+    'modal.killedAtLabel': 'Killed At',
+    'modal.killedAtHint': '(your local time)',
+
+    'modal.addMemberTitle': 'Add Member',
+    'modal.aliasLabel': 'Alias',
+    'modal.aliasHint': '(optional)',
+
+    'modal.assignLoot': 'Assign Loot',
+    'modal.assign': 'Assign',
+
+    'modal.dungeonRunLabel': 'Dungeon Run',
+    'modal.optionalHint': '(optional)',
+
+    'modal.bossNameLabel': 'Boss Name',
+
+    'modal.discordSyncTitle': 'Sync Attendance from Discord',
+    'modal.discordSyncHint': "Scans #cave-attendance for the selected month, matches each message's attendee list against the roster (name or alias, fuzzy — handles typos and shortcuts), and logs attendance onto the matching boss log, creating it if it doesn't exist yet. Posts a confirmation back into the channel for each one.",
+    'modal.month': 'Month',
+    'modal.syncNow': 'Sync Now',
+
+    'modal.manageItemsTitle': 'Manage Loot Items',
+    'modal.manageItemsHint': 'These are the item names suggested when logging loot. Rename or remove any, or add new ones.',
+    'modal.newItemPlaceholder': 'New item name…',
+
+    'modal.manageClassesTitle': 'Manage Classes',
+    'modal.manageClassesHint': "Adding a class here also updates it in Discord's /growth command automatically.",
+    'modal.newClassPlaceholder': 'New class name…',
+
+    'modal.addUserTitle': 'Add User',
+    'modal.editUserTitle': 'Edit',
+    'modal.leaveBlankPassword': 'Leave blank to keep current password',
+    'modal.passwordLabel': 'Password',
+    'modal.passwordPlaceholder': 'At least 8 characters',
+    'modal.roleAdmin': 'Admin',
+    'modal.roleEditor': 'Editor',
+    'modal.roleViewer': 'Viewer',
+
+    'login.subtitle': 'Browsing is open to everyone — sign in only if you need to make changes.',
+    'login.enter': 'Enter',
+    'login.error': 'Incorrect username or password.',
+    'login.backLink': '← Back to browsing',
+  },
+
+  zh: {
+    'nav.members': '成员',
+    'nav.queue': '徽章队列',
+    'nav.loot': '公会副本战利品',
+    'nav.caves': '洞穴出勤',
+    'nav.items': '物品报告',
+    'nav.bosses': 'Boss计时器',
+    'nav.users': '用户',
+    'nav.activityLog': '活动日志',
+
+    'topbar.readonly': '仅查看（只读）',
+    'topbar.logout': '登出',
+
+    'common.manageItems': '管理物品',
+    'common.manageClasses': '管理职业',
+    'common.logADate': '+ 记录日期',
+    'common.logADateTitle': '记录日期',
+    'common.createAddLoot': '创建并添加战利品',
+    'common.save': '保存',
+    'common.add': '添加',
+    'common.date': '日期',
+    'common.run': '场次',
+    'common.records': '记录',
+    'common.totalQty': '总数量',
+    'common.boss': 'Boss',
+    'common.name': '名称',
+    'common.class': '职业',
+    'common.qty': '数量',
+    'common.backToCaveAttendance': '← 返回洞穴出勤',
+    'common.attendanceReportBtn': '📊 出勤报告',
+    'common.lootListBtn': '🧾 战利品清单',
+    'common.salaryBtn': '💰 薪资',
+    'common.totalAttendees': '出勤总人数',
+    'common.percent': '百分比',
+    'common.role': '角色',
+    'common.username': '用户名',
+    'common.copyPresentNames': '复制出勤名单',
+
+    'members.exportExcel': '导出到Excel',
+    'members.addMember': '+ 添加成员',
+    'members.statMembers': '成员',
+    'members.statTopGrower': '成长最快',
+    'members.searchPlaceholder': '搜索成员…',
+    'members.allClasses': '所有职业',
+    'members.thLatestGrowth': '最新成长值',
+    'members.thTrend': '趋势',
+    'members.emptyState': '暂无成员——请在上方添加第一位公会成员。',
+    'members.byClassHeading': '按职业分类的成员',
+
+    'queue.heading': '传说徽章队列',
+    'queue.note': '⚠ 可能会根据GR（成长率）排名而变动。',
+    'queue.alreadyReceived': '✅ 已领取',
+    'queue.alreadyReceivedHint': '已经获得各徽章部件的人——同一部件不能再次排队。',
+
+    'loot.searchPlaceholder': '按日期、场次、物品或领取人搜索…',
+    'loot.emptyState': '尚未记录日期——点击"记录日期"开始记录战利品。',
+
+    'caves.syncFromDiscord': '🔗 从Discord同步',
+    'caves.searchPlaceholder': '按日期、Boss或物品搜索…',
+    'caves.thBossLogs': 'Boss记录',
+    'caves.emptyState': '尚未记录日期——点击"记录日期"开始记录洞穴。',
+
+    'caveDate.logABoss': '+ 记录Boss',
+    'caveDate.emptyState': '该日期尚无Boss记录——点击"记录Boss"添加一个。',
+
+    'caveReport.emptyState': '尚未记录洞穴日期。',
+
+    'caveLootList.thAttendees': '出勤者',
+    'caveLootList.thLoot': '战利品',
+    'caveLootList.thPrice': '价格',
+    'caveLootList.thTotalPrice': '总价',
+    'caveLootList.thBuyer': '买家',
+    'caveLootList.thTotalDias': '总钻石数',
+    'caveLootList.emptyState': '本月尚未记录战利品。',
+
+    'caveSalary.statPool': '薪资池',
+    'caveSalary.statFees': '手续费',
+    'caveSalary.statFinalPool': '最终薪资池',
+    'caveSalary.feesHeading': '手续费',
+    'caveSalary.feesHint': '每一项都会从原始薪资池中扣除固定百分比，然后将该金额加回到领取人自己分配份额之上。',
+    'caveSalary.labelNameMember': '名称/成员',
+    'caveSalary.labelCustomName': '自定义名称',
+    'caveSalary.hintIfNotMember': '（如果不是成员）',
+    'caveSalary.addFee': '添加费用',
+    'caveSalary.breakdownHeading': '薪资明细',
+    'caveSalary.thIgn': 'IGN',
+    'caveSalary.thGrowthRate': '成长率',
+    'caveSalary.thAttendance': '出勤',
+    'caveSalary.thMultiplier': '倍率',
+    'caveSalary.subMultiplier': '依成长率等级',
+    'caveSalary.thBaseShare': '基础份额',
+    'caveSalary.subBaseShare': '出勤 ÷ Σ出勤',
+    'caveSalary.thBasePlusMult': '基础+倍率',
+    'caveSalary.subBasePlusMult': '基础份额 × 倍率',
+    'caveSalary.thNormShare': '标准化份额',
+    'caveSalary.subNormShare': '(基础+倍率) ÷ Σ(基础+倍率)',
+    'caveSalary.thInitialComp': '初始计算',
+    'caveSalary.subInitialComp': '标准化份额 × 最终池',
+    'caveSalary.thFinalSalary': '最终薪资',
+    'caveSalary.subFinalSalary': '初始计算 + 手续费',
+    'caveSalary.thSent': '已发送',
+    'caveSalary.emptyState': '本月尚未记录洞穴日期。',
+    'caveSalary.titleMultiplier': '根据成长率查找等级',
+    'caveSalary.titleBaseShare': '基础份额 = 出勤 ÷ 总出勤',
+    'caveSalary.titleBasePlusMult': '基础+倍率 = 基础份额 × 倍率',
+    'caveSalary.titleNormShare': '标准化份额 = (基础+倍率) ÷ Σ(基础+倍率)',
+    'caveSalary.titleInitialComp': '初始计算 = 标准化份额 × 最终薪资池',
+    'caveSalary.titleFinalSalary': '最终薪资 = 初始计算 + 手续费（如适用）',
+
+    'items.selectItem': '选择物品',
+    'items.thDateMember': '日期/成员',
+    'items.emptyState': '该物品尚无记录。',
+
+    'bosses.hint': '时间均为您的本地时间——请按照您自己时钟上显示的时间输入每个刷新时间。',
+    'bosses.addBoss': '+ 添加Boss',
+    'bosses.emptyState': '尚未追踪任何Boss——点击"添加Boss"开始。',
+    'bosses.historyHeading': 'Boss历史记录',
+    'bosses.thKilledAt': '击杀时间',
+    'bosses.thSource': '来源',
+    'bosses.thAttendancePostedBy': '出勤发布人',
+    'bosses.historyEmptyState': '尚未记录任何Boss击杀。',
+
+    'users.hint': '管理员：完全访问权限，包括此页面。编辑者：与管理员相同的日常访问权限，但不包括用户管理。查看者：仅可查看。',
+    'users.addUser': '+ 添加用户',
+    'users.thCreated': '创建时间',
+    'users.emptyState': '尚无用户。',
+
+    'activityLog.thTime': '时间',
+    'activityLog.thUser': '用户',
+    'activityLog.thAction': '操作',
+    'activityLog.thDescription': '描述',
+    'activityLog.emptyState': '尚无活动记录。',
+
+    'lootSession.backLink': '← 返回公会副本战利品',
+    'lootSession.attendanceHeading': '公会副本出勤',
+
+    'modal.setKillTime': '设置击杀时间',
+    'modal.killTimeHint': '纠正该Boss实际被击杀的时间——当Discord检测到的时间有误时很有用。',
+    'modal.killedAtLabel': '击杀时间',
+    'modal.killedAtHint': '（您的本地时间）',
+
+    'modal.addMemberTitle': '添加成员',
+    'modal.aliasLabel': '别名',
+    'modal.aliasHint': '（可选）',
+
+    'modal.assignLoot': '分配战利品',
+    'modal.assign': '分配',
+
+    'modal.dungeonRunLabel': '副本场次',
+    'modal.optionalHint': '（可选）',
+
+    'modal.bossNameLabel': 'Boss名称',
+
+    'modal.discordSyncTitle': '从Discord同步出勤',
+    'modal.discordSyncHint': '扫描所选月份的#cave-attendance频道，将每条消息的出勤名单与花名册（姓名或别名，模糊匹配——可处理拼写错误和简写）进行比对，并将出勤记录到对应的Boss记录中（如果不存在则自动创建）。每次处理后都会在频道中发送确认消息。',
+    'modal.month': '月份',
+    'modal.syncNow': '立即同步',
+
+    'modal.manageItemsTitle': '管理战利品物品',
+    'modal.manageItemsHint': '这些是记录战利品时建议使用的物品名称。您可以重命名或删除任意一项，也可以添加新的。',
+    'modal.newItemPlaceholder': '新物品名称…',
+
+    'modal.manageClassesTitle': '管理职业',
+    'modal.manageClassesHint': '在此添加职业也会自动更新到Discord的 /growth 命令中。',
+    'modal.newClassPlaceholder': '新职业名称…',
+
+    'modal.addUserTitle': '添加用户',
+    'modal.editUserTitle': '编辑',
+    'modal.leaveBlankPassword': '留空以保留当前密码',
+    'modal.passwordLabel': '密码',
+    'modal.passwordPlaceholder': '至少8个字符',
+    'modal.roleAdmin': '管理员',
+    'modal.roleEditor': '编辑者',
+    'modal.roleViewer': '查看者',
+
+    'login.subtitle': '所有人均可浏览——仅在需要进行更改时才需登录。',
+    'login.enter': '登录',
+    'login.error': '用户名或密码错误。',
+    'login.backLink': '← 返回浏览',
+  },
+
+  ko: {
+    'nav.members': '멤버',
+    'nav.queue': '인시그니아 대기열',
+    'nav.loot': '길드 던전 전리품',
+    'nav.caves': '동굴 출석',
+    'nav.items': '아이템 보고서',
+    'nav.bosses': '보스 타이머',
+    'nav.users': '사용자',
+    'nav.activityLog': '활동 로그',
+
+    'topbar.readonly': '보기 전용 (읽기 전용)',
+    'topbar.logout': '로그아웃',
+
+    'common.manageItems': '아이템 관리',
+    'common.manageClasses': '클래스 관리',
+    'common.logADate': '+ 날짜 기록',
+    'common.logADateTitle': '날짜 기록',
+    'common.createAddLoot': '생성 및 전리품 추가',
+    'common.save': '저장',
+    'common.add': '추가',
+    'common.date': '날짜',
+    'common.run': '런',
+    'common.records': '기록',
+    'common.totalQty': '총 수량',
+    'common.boss': '보스',
+    'common.name': '이름',
+    'common.class': '클래스',
+    'common.qty': '수량',
+    'common.backToCaveAttendance': '← 동굴 출석으로 돌아가기',
+    'common.attendanceReportBtn': '📊 출석 보고서',
+    'common.lootListBtn': '🧾 전리품 목록',
+    'common.salaryBtn': '💰 급여',
+    'common.totalAttendees': '총 출석 인원',
+    'common.percent': '퍼센트',
+    'common.role': '역할',
+    'common.username': '사용자 이름',
+    'common.copyPresentNames': '출석자 이름 복사',
+
+    'members.exportExcel': '엑셀로 내보내기',
+    'members.addMember': '+ 멤버 추가',
+    'members.statMembers': '멤버',
+    'members.statTopGrower': '최고 성장',
+    'members.searchPlaceholder': '멤버 검색…',
+    'members.allClasses': '모든 클래스',
+    'members.thLatestGrowth': '최근 성장치',
+    'members.thTrend': '추세',
+    'members.emptyState': '아직 멤버가 없습니다 — 위에서 첫 번째 길드원을 추가하세요.',
+    'members.byClassHeading': '클래스별 멤버',
+
+    'queue.heading': '레전더리 인시그니아 대기열',
+    'queue.note': '⚠ GR(성장률) 순위에 따라 변경될 수 있습니다.',
+    'queue.alreadyReceived': '✅ 이미 수령함',
+    'queue.alreadyReceivedHint': '각 인시그니아 부품을 이미 받은 사람 목록 — 동일한 부품으로 다시 대기열에 등록할 수 없습니다.',
+
+    'loot.searchPlaceholder': '날짜, 런, 아이템 또는 수령인으로 검색…',
+    'loot.emptyState': '아직 기록된 날짜가 없습니다 — "날짜 기록"을 클릭하여 전리품 기록을 시작하세요.',
+
+    'caves.syncFromDiscord': '🔗 디스코드에서 동기화',
+    'caves.searchPlaceholder': '날짜, 보스 또는 아이템으로 검색…',
+    'caves.thBossLogs': '보스 기록',
+    'caves.emptyState': '아직 기록된 날짜가 없습니다 — "날짜 기록"을 클릭하여 동굴 기록을 시작하세요.',
+
+    'caveDate.logABoss': '+ 보스 기록',
+    'caveDate.emptyState': '이 날짜에 대한 보스 기록이 없습니다 — "보스 기록"을 클릭하여 추가하세요.',
+
+    'caveReport.emptyState': '아직 기록된 동굴 날짜가 없습니다.',
+
+    'caveLootList.thAttendees': '참석자',
+    'caveLootList.thLoot': '전리품',
+    'caveLootList.thPrice': '가격',
+    'caveLootList.thTotalPrice': '총 가격',
+    'caveLootList.thBuyer': '구매자',
+    'caveLootList.thTotalDias': '총 다이아',
+    'caveLootList.emptyState': '이번 달에 기록된 전리품이 없습니다.',
+
+    'caveSalary.statPool': '급여 풀',
+    'caveSalary.statFees': '수수료',
+    'caveSalary.statFinalPool': '최종 급여 풀',
+    'caveSalary.feesHeading': '수수료',
+    'caveSalary.feesHint': '각 항목은 원래 급여 풀에서 고정 비율(%)을 먼저 차감한 뒤, 해당 금액을 수령인의 배분 몫 위에 다시 더합니다.',
+    'caveSalary.labelNameMember': '이름/멤버',
+    'caveSalary.labelCustomName': '사용자 지정 이름',
+    'caveSalary.hintIfNotMember': '(멤버가 아닌 경우)',
+    'caveSalary.addFee': '수수료 추가',
+    'caveSalary.breakdownHeading': '급여 내역',
+    'caveSalary.thIgn': 'IGN',
+    'caveSalary.thGrowthRate': '성장률',
+    'caveSalary.thAttendance': '출석',
+    'caveSalary.thMultiplier': '배율',
+    'caveSalary.subMultiplier': '성장률 등급 기준',
+    'caveSalary.thBaseShare': '기본 비율',
+    'caveSalary.subBaseShare': '출석 ÷ Σ출석',
+    'caveSalary.thBasePlusMult': '기본+배율',
+    'caveSalary.subBasePlusMult': '기본 비율 × 배율',
+    'caveSalary.thNormShare': '정규화 비율',
+    'caveSalary.subNormShare': '(기본+배율) ÷ Σ(기본+배율)',
+    'caveSalary.thInitialComp': '초기 계산',
+    'caveSalary.subInitialComp': '정규화 비율 × 최종 풀',
+    'caveSalary.thFinalSalary': '최종 급여',
+    'caveSalary.subFinalSalary': '초기 계산 + 수수료',
+    'caveSalary.thSent': '발송됨',
+    'caveSalary.emptyState': '이번 달에 기록된 동굴 날짜가 없습니다.',
+    'caveSalary.titleMultiplier': '성장률 기준 등급 조회',
+    'caveSalary.titleBaseShare': '기본 비율 = 출석 ÷ 총 출석',
+    'caveSalary.titleBasePlusMult': '기본+배율 = 기본 비율 × 배율',
+    'caveSalary.titleNormShare': '정규화 비율 = (기본+배율) ÷ Σ(기본+배율)',
+    'caveSalary.titleInitialComp': '초기 계산 = 정규화 비율 × 최종 급여 풀',
+    'caveSalary.titleFinalSalary': '최종 급여 = 초기 계산 + 수수료(해당하는 경우)',
+
+    'items.selectItem': '아이템 선택',
+    'items.thDateMember': '날짜/멤버',
+    'items.emptyState': '이 아이템에 대한 기록이 없습니다.',
+
+    'bosses.hint': '시간은 사용자의 현지 시간 기준입니다 — 각 스폰 시간을 본인 시계에 표시된 대로 입력하세요.',
+    'bosses.addBoss': '+ 보스 추가',
+    'bosses.emptyState': '아직 추적 중인 보스가 없습니다 — "보스 추가"를 클릭하여 시작하세요.',
+    'bosses.historyHeading': '보스 히스토리',
+    'bosses.thKilledAt': '처치 시간',
+    'bosses.thSource': '출처',
+    'bosses.thAttendancePostedBy': '출석 게시자',
+    'bosses.historyEmptyState': '아직 기록된 보스 처치가 없습니다.',
+
+    'users.hint': '관리자: 이 페이지를 포함한 전체 접근 권한. 편집자: 사용자 관리를 제외하고 관리자와 동일한 일상 접근 권한. 뷰어: 읽기 전용.',
+    'users.addUser': '+ 사용자 추가',
+    'users.thCreated': '생성일',
+    'users.emptyState': '아직 사용자가 없습니다.',
+
+    'activityLog.thTime': '시간',
+    'activityLog.thUser': '사용자',
+    'activityLog.thAction': '작업',
+    'activityLog.thDescription': '설명',
+    'activityLog.emptyState': '아직 기록된 활동이 없습니다.',
+
+    'lootSession.backLink': '← 길드 던전 전리품으로 돌아가기',
+    'lootSession.attendanceHeading': '길드 던전 출석',
+
+    'modal.setKillTime': '처치 시간 설정',
+    'modal.killTimeHint': '이 보스가 실제로 처치된 시간을 수정합니다 — 디스코드에서 감지된 시간이 잘못되었을 때 유용합니다.',
+    'modal.killedAtLabel': '처치 시간',
+    'modal.killedAtHint': '(사용자의 현지 시간)',
+
+    'modal.addMemberTitle': '멤버 추가',
+    'modal.aliasLabel': '별칭',
+    'modal.aliasHint': '(선택 사항)',
+
+    'modal.assignLoot': '전리품 배정',
+    'modal.assign': '배정',
+
+    'modal.dungeonRunLabel': '던전 런',
+    'modal.optionalHint': '(선택 사항)',
+
+    'modal.bossNameLabel': '보스 이름',
+
+    'modal.discordSyncTitle': '디스코드에서 출석 동기화',
+    'modal.discordSyncHint': '선택한 달의 #cave-attendance 채널을 스캔하여 각 메시지의 참석자 명단을 명부(이름 또는 별칭, 오타나 줄임말도 처리하는 퍼지 매칭)와 대조한 뒤, 해당 보스 기록에 출석을 기록합니다(없으면 새로 생성). 각 건에 대해 채널에 확인 메시지를 게시합니다.',
+    'modal.month': '월',
+    'modal.syncNow': '지금 동기화',
+
+    'modal.manageItemsTitle': '전리품 아이템 관리',
+    'modal.manageItemsHint': '전리품을 기록할 때 제안되는 아이템 이름 목록입니다. 이름을 변경하거나 삭제할 수 있으며 새로 추가할 수도 있습니다.',
+    'modal.newItemPlaceholder': '새 아이템 이름…',
+
+    'modal.manageClassesTitle': '클래스 관리',
+    'modal.manageClassesHint': '여기서 클래스를 추가하면 디스코드의 /growth 명령어에도 자동으로 반영됩니다.',
+    'modal.newClassPlaceholder': '새 클래스 이름…',
+
+    'modal.addUserTitle': '사용자 추가',
+    'modal.editUserTitle': '수정',
+    'modal.leaveBlankPassword': '현재 비밀번호를 유지하려면 비워두세요',
+    'modal.passwordLabel': '비밀번호',
+    'modal.passwordPlaceholder': '8자 이상',
+    'modal.roleAdmin': '관리자',
+    'modal.roleEditor': '편집자',
+    'modal.roleViewer': '뷰어',
+
+    'login.subtitle': '열람은 누구나 가능합니다 — 변경이 필요할 때만 로그인하세요.',
+    'login.enter': '입장',
+    'login.error': '사용자 이름 또는 비밀번호가 올바르지 않습니다.',
+    'login.backLink': '← 둘러보기로 돌아가기',
+  },
+
+  th: {
+    'nav.members': 'สมาชิก',
+    'nav.queue': 'คิวอินซิกเนีย',
+    'nav.loot': 'ของรางวัลดันเจี้ยนกิลด์',
+    'nav.caves': 'การเข้าร่วมถ้ำ',
+    'nav.items': 'รายงานไอเท็ม',
+    'nav.bosses': 'ตัวจับเวลาบอส',
+    'nav.users': 'ผู้ใช้',
+    'nav.activityLog': 'บันทึกกิจกรรม',
+
+    'topbar.readonly': 'กำลังดู (อ่านอย่างเดียว)',
+    'topbar.logout': 'ออกจากระบบ',
+
+    'common.manageItems': 'จัดการไอเท็ม',
+    'common.manageClasses': 'จัดการคลาส',
+    'common.logADate': '+ บันทึกวันที่',
+    'common.logADateTitle': 'บันทึกวันที่',
+    'common.createAddLoot': 'สร้างและเพิ่มของรางวัล',
+    'common.save': 'บันทึก',
+    'common.add': 'เพิ่ม',
+    'common.date': 'วันที่',
+    'common.run': 'รอบ',
+    'common.records': 'บันทึก',
+    'common.totalQty': 'จำนวนรวม',
+    'common.boss': 'บอส',
+    'common.name': 'ชื่อ',
+    'common.class': 'คลาส',
+    'common.qty': 'จำนวน',
+    'common.backToCaveAttendance': '← กลับไปที่การเข้าร่วมถ้ำ',
+    'common.attendanceReportBtn': '📊 รายงานการเข้าร่วม',
+    'common.lootListBtn': '🧾 รายการของรางวัล',
+    'common.salaryBtn': '💰 เงินเดือน',
+    'common.totalAttendees': 'จำนวนผู้เข้าร่วมทั้งหมด',
+    'common.percent': 'เปอร์เซ็นต์',
+    'common.role': 'บทบาท',
+    'common.username': 'ชื่อผู้ใช้',
+    'common.copyPresentNames': 'คัดลอกรายชื่อผู้เข้าร่วม',
+
+    'members.exportExcel': 'ส่งออกเป็น Excel',
+    'members.addMember': '+ เพิ่มสมาชิก',
+    'members.statMembers': 'สมาชิก',
+    'members.statTopGrower': 'เติบโตสูงสุด',
+    'members.searchPlaceholder': 'ค้นหาสมาชิก…',
+    'members.allClasses': 'ทุกคลาส',
+    'members.thLatestGrowth': 'การเติบโตล่าสุด',
+    'members.thTrend': 'แนวโน้ม',
+    'members.emptyState': 'ยังไม่มีสมาชิก — เพิ่มสมาชิกกิลด์คนแรกของคุณด้านบน',
+    'members.byClassHeading': 'สมาชิกตามคลาส',
+
+    'queue.heading': 'คิวอินซิกเนียระดับตำนาน',
+    'queue.note': '⚠ อาจเปลี่ยนแปลงได้ขึ้นอยู่กับอันดับ GR (อัตราการเติบโต)',
+    'queue.alreadyReceived': '✅ ได้รับแล้ว',
+    'queue.alreadyReceivedHint': 'ใครได้รับชิ้นส่วนอินซิกเนียแต่ละชิ้นไปแล้วบ้าง — จะไม่สามารถต่อคิวซ้ำสำหรับชิ้นส่วนเดิมได้',
+
+    'loot.searchPlaceholder': 'ค้นหาตามวันที่ รอบ ไอเท็ม หรือผู้รับ…',
+    'loot.emptyState': 'ยังไม่มีการบันทึกวันที่ — คลิก "บันทึกวันที่" เพื่อเริ่มบันทึกของรางวัล',
+
+    'caves.syncFromDiscord': '🔗 ซิงค์จาก Discord',
+    'caves.searchPlaceholder': 'ค้นหาตามวันที่ บอส หรือไอเท็ม…',
+    'caves.thBossLogs': 'บันทึกบอส',
+    'caves.emptyState': 'ยังไม่มีการบันทึกวันที่ — คลิก "บันทึกวันที่" เพื่อเริ่มบันทึกการลงถ้ำ',
+
+    'caveDate.logABoss': '+ บันทึกบอส',
+    'caveDate.emptyState': 'ยังไม่มีบันทึกบอสสำหรับวันที่นี้ — คลิก "บันทึกบอส" เพื่อเพิ่ม',
+
+    'caveReport.emptyState': 'ยังไม่มีการบันทึกวันที่ลงถ้ำ',
+
+    'caveLootList.thAttendees': 'ผู้เข้าร่วม',
+    'caveLootList.thLoot': 'ของรางวัล',
+    'caveLootList.thPrice': 'ราคา',
+    'caveLootList.thTotalPrice': 'ราคารวม',
+    'caveLootList.thBuyer': 'ผู้ซื้อ',
+    'caveLootList.thTotalDias': 'ไดอาทั้งหมด',
+    'caveLootList.emptyState': 'ยังไม่มีการบันทึกของรางวัลในเดือนนี้',
+
+    'caveSalary.statPool': 'กองเงินเดือน',
+    'caveSalary.statFees': 'ค่าธรรมเนียมบัญชี',
+    'caveSalary.statFinalPool': 'กองเงินเดือนสุดท้าย',
+    'caveSalary.feesHeading': 'ค่าธรรมเนียมบัญชี',
+    'caveSalary.feesHint': 'แต่ละรายการจะหักเปอร์เซ็นต์คงที่จากกองเงินเดือนดิบก่อน จากนั้นจำนวนนั้นจะถูกเพิ่มกลับเข้าไปในส่วนแบ่งของผู้รับเอง',
+    'caveSalary.labelNameMember': 'ชื่อ/สมาชิก',
+    'caveSalary.labelCustomName': 'ชื่อกำหนดเอง',
+    'caveSalary.hintIfNotMember': '(หากไม่ใช่สมาชิก)',
+    'caveSalary.addFee': 'เพิ่มค่าธรรมเนียม',
+    'caveSalary.breakdownHeading': 'รายละเอียดเงินเดือน',
+    'caveSalary.thIgn': 'IGN',
+    'caveSalary.thGrowthRate': 'อัตราการเติบโต',
+    'caveSalary.thAttendance': 'การเข้าร่วม',
+    'caveSalary.thMultiplier': 'ตัวคูณ',
+    'caveSalary.subMultiplier': 'ตามระดับอัตราการเติบโต',
+    'caveSalary.thBaseShare': 'ส่วนแบ่งพื้นฐาน',
+    'caveSalary.subBaseShare': 'การเข้าร่วม ÷ Σการเข้าร่วม',
+    'caveSalary.thBasePlusMult': 'พื้นฐาน+ตัวคูณ',
+    'caveSalary.subBasePlusMult': 'ส่วนแบ่งพื้นฐาน × ตัวคูณ',
+    'caveSalary.thNormShare': 'ส่วนแบ่งปรับมาตรฐาน',
+    'caveSalary.subNormShare': '(พื้นฐาน+ตัวคูณ) ÷ Σ(พื้นฐาน+ตัวคูณ)',
+    'caveSalary.thInitialComp': 'การคำนวณเบื้องต้น',
+    'caveSalary.subInitialComp': 'ส่วนแบ่งปรับมาตรฐาน × กองสุดท้าย',
+    'caveSalary.thFinalSalary': 'เงินเดือนสุดท้าย',
+    'caveSalary.subFinalSalary': 'การคำนวณเบื้องต้น + ค่าธรรมเนียม',
+    'caveSalary.thSent': 'ส่งแล้ว',
+    'caveSalary.emptyState': 'ยังไม่มีการบันทึกวันที่ลงถ้ำในเดือนนี้',
+    'caveSalary.titleMultiplier': 'การค้นหาระดับตามอัตราการเติบโต',
+    'caveSalary.titleBaseShare': 'ส่วนแบ่งพื้นฐาน = การเข้าร่วม ÷ การเข้าร่วมทั้งหมด',
+    'caveSalary.titleBasePlusMult': 'พื้นฐาน+ตัวคูณ = ส่วนแบ่งพื้นฐาน × ตัวคูณ',
+    'caveSalary.titleNormShare': 'ส่วนแบ่งปรับมาตรฐาน = (พื้นฐาน+ตัวคูณ) ÷ Σ(พื้นฐาน+ตัวคูณ)',
+    'caveSalary.titleInitialComp': 'การคำนวณเบื้องต้น = ส่วนแบ่งปรับมาตรฐาน × กองเงินเดือนสุดท้าย',
+    'caveSalary.titleFinalSalary': 'เงินเดือนสุดท้าย = การคำนวณเบื้องต้น + ค่าธรรมเนียมบัญชี (ถ้ามี)',
+
+    'items.selectItem': 'เลือกไอเท็ม',
+    'items.thDateMember': 'วันที่/สมาชิก',
+    'items.emptyState': 'ยังไม่มีบันทึกสำหรับไอเท็มนี้',
+
+    'bosses.hint': 'เวลาแสดงเป็นเวลาท้องถิ่นของคุณ — ป้อนเวลาการเกิดแต่ละครั้งตามที่ปรากฏบนนาฬิกาของคุณเอง',
+    'bosses.addBoss': '+ เพิ่มบอส',
+    'bosses.emptyState': 'ยังไม่มีการติดตามบอส — คลิก "เพิ่มบอส" เพื่อเริ่มต้น',
+    'bosses.historyHeading': 'ประวัติบอส',
+    'bosses.thKilledAt': 'เวลาที่สังหาร',
+    'bosses.thSource': 'แหล่งที่มา',
+    'bosses.thAttendancePostedBy': 'ผู้โพสต์การเข้าร่วม',
+    'bosses.historyEmptyState': 'ยังไม่มีการบันทึกการสังหารบอส',
+
+    'users.hint': 'ผู้ดูแลระบบ: เข้าถึงได้ทั้งหมด รวมถึงหน้านี้ด้วย ผู้แก้ไข: มีสิทธิ์เข้าถึงในชีวิตประจำวันเหมือนผู้ดูแลระบบ ยกเว้นการจัดการผู้ใช้ ผู้ชม: ดูได้อย่างเดียว',
+    'users.addUser': '+ เพิ่มผู้ใช้',
+    'users.thCreated': 'สร้างเมื่อ',
+    'users.emptyState': 'ยังไม่มีผู้ใช้',
+
+    'activityLog.thTime': 'เวลา',
+    'activityLog.thUser': 'ผู้ใช้',
+    'activityLog.thAction': 'การกระทำ',
+    'activityLog.thDescription': 'คำอธิบาย',
+    'activityLog.emptyState': 'ยังไม่มีการบันทึกกิจกรรม',
+
+    'lootSession.backLink': '← กลับไปที่ของรางวัลดันเจี้ยนกิลด์',
+    'lootSession.attendanceHeading': 'การเข้าร่วมดันเจี้ยนกิลด์',
+
+    'modal.setKillTime': 'ตั้งเวลาการสังหาร',
+    'modal.killTimeHint': 'แก้ไขเวลาที่บอสตัวนี้ถูกสังหารจริง — มีประโยชน์เมื่อเวลาที่ Discord ตรวจพบไม่ถูกต้อง',
+    'modal.killedAtLabel': 'เวลาที่สังหาร',
+    'modal.killedAtHint': '(เวลาท้องถิ่นของคุณ)',
+
+    'modal.addMemberTitle': 'เพิ่มสมาชิก',
+    'modal.aliasLabel': 'ชื่อเล่น',
+    'modal.aliasHint': '(ไม่บังคับ)',
+
+    'modal.assignLoot': 'มอบหมายของรางวัล',
+    'modal.assign': 'มอบหมาย',
+
+    'modal.dungeonRunLabel': 'รอบดันเจี้ยน',
+    'modal.optionalHint': '(ไม่บังคับ)',
+
+    'modal.bossNameLabel': 'ชื่อบอส',
+
+    'modal.discordSyncTitle': 'ซิงค์การเข้าร่วมจาก Discord',
+    'modal.discordSyncHint': 'สแกนช่อง #cave-attendance ของเดือนที่เลือก จับคู่รายชื่อผู้เข้าร่วมในแต่ละข้อความกับรายชื่อสมาชิก (ชื่อหรือชื่อเล่น แบบคลุมเครือ — รองรับการพิมพ์ผิดและชื่อย่อ) แล้วบันทึกการเข้าร่วมลงในบันทึกบอสที่ตรงกัน โดยจะสร้างใหม่หากยังไม่มี และโพสต์ข้อความยืนยันกลับไปในช่องสำหรับแต่ละรายการ',
+    'modal.month': 'เดือน',
+    'modal.syncNow': 'ซิงค์ตอนนี้',
+
+    'modal.manageItemsTitle': 'จัดการไอเท็มของรางวัล',
+    'modal.manageItemsHint': 'นี่คือรายชื่อไอเท็มที่แนะนำเมื่อบันทึกของรางวัล คุณสามารถเปลี่ยนชื่อ ลบ หรือเพิ่มรายการใหม่ได้',
+    'modal.newItemPlaceholder': 'ชื่อไอเท็มใหม่…',
+
+    'modal.manageClassesTitle': 'จัดการคลาส',
+    'modal.manageClassesHint': 'การเพิ่มคลาสที่นี่จะอัปเดตในคำสั่ง /growth ของ Discord โดยอัตโนมัติ',
+    'modal.newClassPlaceholder': 'ชื่อคลาสใหม่…',
+
+    'modal.addUserTitle': 'เพิ่มผู้ใช้',
+    'modal.editUserTitle': 'แก้ไข',
+    'modal.leaveBlankPassword': 'เว้นว่างไว้เพื่อคงรหัสผ่านเดิม',
+    'modal.passwordLabel': 'รหัสผ่าน',
+    'modal.passwordPlaceholder': 'อย่างน้อย 8 ตัวอักษร',
+    'modal.roleAdmin': 'ผู้ดูแลระบบ',
+    'modal.roleEditor': 'ผู้แก้ไข',
+    'modal.roleViewer': 'ผู้ชม',
+
+    'login.subtitle': 'ทุกคนสามารถเรียกดูได้ — เข้าสู่ระบบเฉพาะเมื่อต้องการทำการเปลี่ยนแปลง',
+    'login.enter': 'เข้าสู่ระบบ',
+    'login.error': 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง',
+    'login.backLink': '← กลับไปเรียกดู',
+  },
+};
+
+function getCurrentLang() {
+  return localStorage.getItem(I18N_STORAGE_KEY) || 'en';
+}
+
+function t(key) {
+  const lang = getCurrentLang();
+  const table = TRANSLATIONS[lang] || TRANSLATIONS.en;
+  return table[key] || TRANSLATIONS.en[key] || key;
+}
+
+function applyI18n(root) {
+  const scope = root || document;
+  scope.querySelectorAll('[data-i18n]').forEach((el) => {
+    el.textContent = t(el.getAttribute('data-i18n'));
+  });
+  scope.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
+    el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+  });
+  scope.querySelectorAll('[data-i18n-title]').forEach((el) => {
+    el.title = t(el.getAttribute('data-i18n-title'));
+  });
+}
+
+function setLang(lang) {
+  localStorage.setItem(I18N_STORAGE_KEY, lang);
+  applyI18n(document);
+  const picker = document.getElementById('langPicker');
+  if (picker) picker.value = lang;
+  // Re-run the current route so any already-rendered dynamic content (table
+  // rows, dropdowns rebuilt via innerHTML, modal labels set from JS) picks
+  // up the new language immediately instead of only on the next navigation.
+  if (typeof parseRoute === 'function') parseRoute();
+}
+
+(() => {
+  const picker = document.getElementById('langPicker');
+  if (picker) {
+    picker.value = getCurrentLang();
+    picker.addEventListener('change', () => setLang(picker.value));
+  }
+  applyI18n(document);
+})();

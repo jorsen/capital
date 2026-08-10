@@ -53,7 +53,7 @@ function renderItemReportMenu() {
 function renderItemReportTrigger() {
   const category = itemReportState.categories.find((c) => c.name === itemReportState.selectedItem);
   document.getElementById('itemReportTriggerIcon').innerHTML = category ? itemIconImg(category.iconUrl, category.name, 24) : '';
-  document.getElementById('itemReportTriggerLabel').textContent = itemReportState.selectedItem || 'Select item';
+  document.getElementById('itemReportTriggerLabel').textContent = itemReportState.selectedItem || t('items.selectItem');
 }
 
 // One group per date the selected item was given out, so the report can

@@ -390,10 +390,10 @@ function renderSessionContent() {
 
     <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
       <h3 style="margin-bottom:6px;">
-        Guild Dungeon Attendance
+        ${t('lootSession.attendanceHeading')}
         <span id="attendanceCount" style="color:var(--text-muted); font-weight:400; font-size:13px;">(${sortedMembers.length - session.absentees.length} / ${sortedMembers.length} present)</span>
       </h3>
-      <button type="button" class="btn small" id="copyPresentBtn">Copy Present Names</button>
+      <button type="button" class="btn small" id="copyPresentBtn">${t('common.copyPresentNames')}</button>
     </div>
     <p style="color:var(--text-muted); font-size:13px; margin:-4px 0 8px;">Everyone is assumed present — check anyone who was absent.</p>
     <div id="attendanceList" class="attendance-grid">
