@@ -88,12 +88,15 @@ function renderCaveView() {
 const addCaveModal = document.getElementById('addCaveModal');
 const addCaveForm = document.getElementById('addCaveForm');
 
-document.getElementById('addCaveBtn').addEventListener('click', () => {
+function openAddCaveModal() {
   addCaveForm.reset();
   addCaveForm.date.value = new Date().toISOString().slice(0, 10);
   addCaveForm.run.innerHTML = bossNameSelectOptionsHtml();
   addCaveModal.classList.remove('hidden');
-});
+}
+
+document.getElementById('addCaveBtn').addEventListener('click', openAddCaveModal);
+document.getElementById('addCaveBtnFromSession').addEventListener('click', openAddCaveModal);
 
 addCaveForm.addEventListener('submit', async (e) => {
   e.preventDefault();

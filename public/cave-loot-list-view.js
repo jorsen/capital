@@ -37,11 +37,14 @@ function renderCaveLootList() {
     .map((group) => {
       const rows = [];
       group.sessions.forEach((s) => {
+        if (!s.records.length) {
+          rows.push({ boss: s.run, attendees: s.attendees.length, item: null });
+          return;
+        }
         s.records.forEach((r) => {
-          rows.push({ sessionId: s.id, recordId: r.id, boss: s.run, item: r.item, quantity: r.quantity, price: r.soldPrice, buyer: r.buyer });
+          rows.push({ sessionId: s.id, recordId: r.id, boss: s.run, attendees: s.attendees.length, item: r.item, quantity: r.quantity, price: r.soldPrice, buyer: r.buyer });
         });
       });
-      if (!rows.length) rows.push({ boss: group.sessions.map((s) => s.run || '(No boss)').join(', '), item: null });
 
       const totalDias = rows.reduce((sum, r) => sum + (r.item ? r.quantity * r.price : 0), 0);
 
@@ -50,12 +53,13 @@ function renderCaveLootList() {
           const dateCell = i === 0 ? `<td rowspan="${rows.length}" style="font-weight:600;">${escapeHtml(formatCaveReportDate(group.date))}</td>` : '';
           const totalDiasCell = i === 0 ? `<td rowspan="${rows.length}" style="font-weight:600;">${caveLootListFormatMoney(totalDias)}</td>` : '';
           if (!r.item) {
-            return `<tr>${dateCell}<td>${escapeHtml(r.boss || '(No boss)')}</td><td colspan="5" style="color:var(--text-muted)">No loot logged</td>${totalDiasCell}</tr>`;
+            return `<tr>${dateCell}<td>${escapeHtml(r.boss || '(No boss)')}</td><td>${r.attendees}</td><td colspan="5" style="color:var(--text-muted)">No loot logged</td>${totalDiasCell}</tr>`;
           }
           return `
         <tr>
           ${dateCell}
           <td>${escapeHtml(r.boss || '(No boss)')}</td>
+          <td>${r.attendees}</td>
           <td>${itemLabel(r.item)}</td>
           <td><input type="number" class="cave-loot-list-qty admin-disable" data-session-id="${r.sessionId}" data-record-id="${r.recordId}" value="${r.quantity}" min="1" step="1" style="width:90px;"></td>
           <td><input type="number" class="cave-loot-list-price admin-disable" data-session-id="${r.sessionId}" data-record-id="${r.recordId}" value="${r.price}" min="0" step="0.01" style="width:110px;"></td>

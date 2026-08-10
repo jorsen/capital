@@ -35,6 +35,7 @@ async function loadCaveSessionData(id) {
     caveSessionState.session = session;
     caveSessionState.members = members;
     caveSessionState.bosses = bosses;
+    caveState.bosses = bosses; // keeps the shared "Log a Date" modal's boss dropdown populated even if the list page was never visited
     renderCaveSessionContent();
   } catch (err) {
     content.innerHTML = `<p class="empty-state">${escapeHtml(err.message)}</p>`;

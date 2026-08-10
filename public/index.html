@@ -216,7 +216,13 @@
     <div id="view-cave-session" class="view hidden">
       <div class="view-header space-between">
         <a href="#/caves" class="back-link" id="caveSessionBackLink">← Back to Cave Attendance</a>
-        <button id="manageItemsBtnCaveSession" class="btn small admin-only">Manage Items</button>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <a href="#/cave-report" class="btn small">📊 Attendance Report</a>
+          <a href="#/cave-loot-list" class="btn small">🧾 Loot List</a>
+          <a href="#/cave-salary" class="btn small">💰 Salary</a>
+          <button id="manageItemsBtnCaveSession" class="btn small admin-only">Manage Items</button>
+          <button id="addCaveBtnFromSession" class="btn primary admin-only">+ Log a Date</button>
+        </div>
       </div>
 
       <section class="panel">
@@ -257,6 +263,7 @@
               <tr>
                 <th>Date</th>
                 <th>Boss</th>
+                <th>Attendees</th>
                 <th>Loot</th>
                 <th>Qty</th>
                 <th>Price</th>
@@ -563,11 +570,11 @@
   <script src="queue-view.js?v=30"></script>
   <script src="loot-view.js?v=30"></script>
   <script src="loot-session-view.js?v=31"></script>
-  <script src="cave-view.js?v=4"></script>
+  <script src="cave-view.js?v=5"></script>
   <script src="cave-date-view.js?v=1"></script>
-  <script src="cave-session-view.js?v=6"></script>
+  <script src="cave-session-view.js?v=7"></script>
   <script src="cave-report-view.js?v=2"></script>
-  <script src="cave-loot-list-view.js?v=3"></script>
+  <script src="cave-loot-list-view.js?v=5"></script>
   <script src="cave-salary-view.js?v=5"></script>
   <script src="item-report-view.js?v=29"></script>
   <script src="boss-timer-view.js?v=33"></script>
