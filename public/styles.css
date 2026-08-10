@@ -619,7 +619,7 @@ select:focus, input:focus, textarea:focus {
   border: 1px solid var(--gridline);
 }
 .schedule-day {
-  min-height: 64px;
+  min-height: 84px;
   background: var(--bg);
   padding: 6px 6px 5px;
   display: flex;
@@ -630,7 +630,8 @@ select:focus, input:focus, textarea:focus {
 .schedule-day-number { font-size: 15px; font-weight: 700; color: var(--text-muted); }
 .schedule-day-filled .schedule-day-number { color: rgba(10,15,26,0.7); }
 .schedule-day-select {
-  font-size: 11px;
+  font-size: 20px;
+  font-weight: 600;
   padding: 2px 4px;
   height: auto;
   width: 100%;
@@ -644,7 +645,7 @@ select:focus, input:focus, textarea:focus {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 11px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--text-secondary);
   overflow: hidden;
@@ -663,8 +664,8 @@ select:focus, input:focus, textarea:focus {
 }
 
 @media (max-width: 720px) {
-  .schedule-day { min-height: 48px; padding: 4px; }
-  .schedule-day-select { font-size: 10px; }
+  .schedule-day { min-height: 64px; padding: 4px; }
+  .schedule-day-select, .schedule-day-badge { font-size: 13px; }
 }
 
 /* Read-only "viewer" role (see common.js isAdmin/loadSession): the real
