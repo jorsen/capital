@@ -34,6 +34,7 @@ function getCaveDateGroups() {
   let groups = Array.from(byDate.entries()).map(([date, sessions]) => ({
     date,
     sessions,
+    attendees: sessions.reduce((sum, s) => sum + s.attendees.length, 0),
     records: sessions.reduce((sum, s) => sum + s.records.length, 0),
     totalQty: sessions.reduce((sum, s) => sum + totalQty(s), 0),
   }));
@@ -62,6 +63,7 @@ function renderCaveView() {
     tr.innerHTML = `
       <td style="font-weight:600;">${escapeHtml(g.date)}</td>
       <td>${g.sessions.length}</td>
+      <td>${g.attendees}</td>
       <td>${g.records}</td>
       <td>${g.totalQty}</td>
       <td><button class="icon-btn admin-only" data-delete="${g.date}" title="Delete date">✕</button></td>
