@@ -3,7 +3,6 @@ const caveState = {
   members: [],
   bosses: [],
   search: '',
-  sortKey: 'date',
   sortDir: -1,
 };
 
@@ -22,50 +21,61 @@ function bossNameSelectOptionsHtml() {
   return `<option value="" selected>Select a boss…</option>${options}`;
 }
 
-// ---------- Sessions table ----------
+// ---------- Dates table ----------
 
-function getFilteredSortedCaves() {
+function getCaveDateGroups() {
   const q = caveState.search.toLowerCase();
-  let list = caveState.caves.filter((s) => {
-    if (!q) return true;
-    if (s.date.toLowerCase().includes(q)) return true;
-    if ((s.run || '').toLowerCase().includes(q)) return true;
-    return s.records.some((r) => r.item.toLowerCase().includes(q));
+  const byDate = new Map();
+  caveState.caves.forEach((s) => {
+    if (!byDate.has(s.date)) byDate.set(s.date, []);
+    byDate.get(s.date).push(s);
   });
-  list = list.slice().sort((a, b) => {
-    let av = (a[caveState.sortKey] || '').toString().toLowerCase();
-    let bv = (b[caveState.sortKey] || '').toString().toLowerCase();
-    if (av < bv) return -1 * caveState.sortDir;
-    if (av > bv) return 1 * caveState.sortDir;
-    return 0;
-  });
-  return list;
+
+  let groups = Array.from(byDate.entries()).map(([date, sessions]) => ({
+    date,
+    sessions,
+    records: sessions.reduce((sum, s) => sum + s.records.length, 0),
+    totalQty: sessions.reduce((sum, s) => sum + totalQty(s), 0),
+  }));
+
+  if (q) {
+    groups = groups.filter((g) => {
+      if (g.date.toLowerCase().includes(q)) return true;
+      return g.sessions.some(
+        (s) => (s.run || '').toLowerCase().includes(q) || s.records.some((r) => r.item.toLowerCase().includes(q))
+      );
+    });
+  }
+
+  groups.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0) * caveState.sortDir);
+  return groups;
 }
 
 function renderCaveView() {
-  const list = getFilteredSortedCaves();
+  const groups = getCaveDateGroups();
   const body = document.getElementById('caveSessionsBody');
   body.innerHTML = '';
   document.getElementById('caveEmptyState').classList.toggle('hidden', caveState.caves.length !== 0);
 
-  list.forEach((sess) => {
+  groups.forEach((g) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td style="font-weight:600;">${escapeHtml(sess.date)}</td>
-      <td>${sess.run ? `<span class="class-badge">${escapeHtml(sess.run)}</span>` : ''}</td>
-      <td class="col-right">${sess.records.length}</td>
-      <td class="col-right">${totalQty(sess)}</td>
-      <td class="col-right"><button class="icon-btn admin-only" data-delete="${sess.id}" title="Delete date">✕</button></td>
+      <td style="font-weight:600;">${escapeHtml(g.date)}</td>
+      <td class="col-right">${g.sessions.length}</td>
+      <td class="col-right">${g.records}</td>
+      <td class="col-right">${g.totalQty}</td>
+      <td class="col-right"><button class="icon-btn admin-only" data-delete="${g.date}" title="Delete date">✕</button></td>
     `;
     tr.addEventListener('click', (e) => {
       if (e.target.closest('[data-delete]')) return;
-      window.location.hash = `#/cave-session/${sess.id}`;
+      window.location.hash = `#/cave-date/${g.date}`;
     });
     tr.querySelector('[data-delete]').addEventListener('click', async (e) => {
       e.stopPropagation();
-      if (!confirm(`Delete ${sess.date}${sess.run ? ` (${sess.run})` : ''} and all its loot records?`)) return;
-      await api(`/api/caves/${sess.id}`, { method: 'DELETE' });
-      caveState.caves = caveState.caves.filter((s) => s.id !== sess.id);
+      const count = g.sessions.length;
+      if (!confirm(`Delete ${g.date} and all ${count} boss log${count === 1 ? '' : 's'} (and their loot records)?`)) return;
+      await Promise.all(g.sessions.map((s) => api(`/api/caves/${s.id}`, { method: 'DELETE' })));
+      caveState.caves = caveState.caves.filter((s) => s.date !== g.date);
       renderCaveView();
       toast('Date removed');
     });
@@ -97,7 +107,7 @@ addCaveForm.addEventListener('submit', async (e) => {
       }),
     });
     addCaveModal.classList.add('hidden');
-    window.location.hash = `#/cave-session/${session.id}`;
+    window.location.hash = `#/cave-date/${session.date}`;
   } catch (err) {
     toast(err.message);
   }
@@ -112,13 +122,7 @@ document.getElementById('caveSearchInput').addEventListener('input', (e) => {
 
 document.querySelectorAll('#view-caves th[data-sort]').forEach((th) => {
   th.addEventListener('click', () => {
-    const key = th.getAttribute('data-sort');
-    if (caveState.sortKey === key) {
-      caveState.sortDir *= -1;
-    } else {
-      caveState.sortKey = key;
-      caveState.sortDir = 1;
-    }
+    caveState.sortDir *= -1;
     renderCaveView();
   });
 });

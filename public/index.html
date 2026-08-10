@@ -173,7 +173,7 @@
             <thead>
               <tr>
                 <th data-sort="date">Date</th>
-                <th data-sort="run">Boss</th>
+                <th class="col-right">Boss Logs</th>
                 <th class="col-right">Records</th>
                 <th class="col-right">Total Qty</th>
                 <th></th>
@@ -186,10 +186,36 @@
       </section>
     </div>
 
+    <!-- ===================== CAVE DATE DETAIL VIEW ===================== -->
+    <div id="view-cave-date" class="view hidden">
+      <div class="view-header space-between">
+        <a href="#/caves" class="back-link">← Back to Cave Attendance</a>
+        <button id="addCaveBossBtn" class="btn primary admin-only">+ Log a Boss</button>
+      </div>
+
+      <section class="panel">
+        <h2 id="caveDateHeading">Date</h2>
+        <div class="table-scroll">
+          <table class="members-table">
+            <thead>
+              <tr>
+                <th>Boss</th>
+                <th class="col-right">Records</th>
+                <th class="col-right">Total Qty</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="caveDateBody"></tbody>
+          </table>
+        </div>
+        <p id="caveDateEmptyState" class="empty-state hidden">No boss logs for this date yet — click "Log a Boss" to add one.</p>
+      </section>
+    </div>
+
     <!-- ===================== CAVE SESSION DETAIL VIEW ===================== -->
     <div id="view-cave-session" class="view hidden">
       <div class="view-header space-between">
-        <a href="#/caves" class="back-link">← Back to Cave Attendance</a>
+        <a href="#/caves" class="back-link" id="caveSessionBackLink">← Back to Cave Attendance</a>
         <button id="manageItemsBtnCaveSession" class="btn small admin-only">Manage Items</button>
       </div>
 
@@ -480,6 +506,20 @@
     </div>
   </div>
 
+  <div id="addCaveBossModal" class="modal-overlay hidden">
+    <div class="modal">
+      <button class="modal-close" data-close="addCaveBossModal" aria-label="Close">×</button>
+      <h2>Log a Boss</h2>
+      <p id="addCaveBossDateLabel" style="color:var(--text-muted); font-size:13px; margin-top:-8px;"></p>
+      <form id="addCaveBossForm">
+        <label>Boss Name
+          <select name="run"></select>
+        </label>
+        <button type="submit" class="btn primary">Create & Add Loot</button>
+      </form>
+    </div>
+  </div>
+
   <div id="manageItemsModal" class="modal-overlay hidden">
     <div class="modal modal-wide">
       <button class="modal-close" data-close="manageItemsModal" aria-label="Close">×</button>
@@ -520,8 +560,9 @@
   <script src="queue-view.js?v=30"></script>
   <script src="loot-view.js?v=30"></script>
   <script src="loot-session-view.js?v=30"></script>
-  <script src="cave-view.js?v=3"></script>
-  <script src="cave-session-view.js?v=4"></script>
+  <script src="cave-view.js?v=4"></script>
+  <script src="cave-date-view.js?v=1"></script>
+  <script src="cave-session-view.js?v=5"></script>
   <script src="cave-report-view.js?v=1"></script>
   <script src="cave-loot-list-view.js?v=1"></script>
   <script src="cave-salary-view.js?v=4"></script>

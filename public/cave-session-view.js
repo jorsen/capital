@@ -70,6 +70,10 @@ function renderCaveSessionContent() {
     )
     .join('');
 
+  const backLink = document.getElementById('caveSessionBackLink');
+  backLink.href = `#/cave-date/${session.date}`;
+  backLink.textContent = `← Back to ${session.date}`;
+
   content.innerHTML = `
     <div class="member-header">
       <div>
@@ -82,7 +86,7 @@ function renderCaveSessionContent() {
       <label style="flex:1; min-width:140px;">Date<input type="date" name="date" value="${session.date}" required></label>
       <label style="flex:1; min-width:160px;">Boss Name<select name="run">${bossNameOptionsHtml(caveSessionState.bosses, session.run)}</select></label>
       <button type="submit" class="btn small admin-only">Save Changes</button>
-      <button type="button" class="btn small danger admin-only" id="deleteCaveSessionBtn">Delete Date</button>
+      <button type="button" class="btn small danger admin-only" id="deleteCaveSessionBtn">Delete Boss Log</button>
     </form>
 
     <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
@@ -152,9 +156,9 @@ function renderCaveSessionContent() {
   });
 
   content.querySelector('#deleteCaveSessionBtn').addEventListener('click', async () => {
-    if (!confirm(`Delete ${session.date} and all its loot records?`)) return;
+    if (!confirm(`Delete ${session.run || 'this boss log'} (${session.date}) and all its loot records?`)) return;
     await api(`/api/caves/${session.id}`, { method: 'DELETE' });
-    window.location.hash = '#/caves';
+    window.location.hash = `#/cave-date/${session.date}`;
   });
 
   content.querySelector('#copyCavePresentBtn').addEventListener('click', async () => {
