@@ -4,6 +4,11 @@ function caveLootListFormatMoney(amount) {
   return (amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function caveLootListItemIcon(itemName) {
+  const category = itemCategoriesState.list.find((c) => c.name.toLowerCase() === (itemName || '').toLowerCase());
+  return `<span style="margin-right:6px;">${itemIconImg(category ? category.iconUrl : null, itemName, 18)}</span>`;
+}
+
 async function loadCaveLootListData() {
   const monthInput = document.getElementById('caveLootListMonthInput');
   if (!caveLootListState.month) caveLootListState.month = currentMonthValue();
@@ -60,7 +65,7 @@ function renderCaveLootList() {
           ${dateCell}
           <td>${escapeHtml(r.boss || '(No boss)')}</td>
           <td>${r.attendees}</td>
-          <td>${escapeHtml(r.item)}</td>
+          <td>${caveLootListItemIcon(r.item)}${escapeHtml(r.item)}</td>
           <td><input type="number" class="cave-loot-list-qty admin-disable" data-session-id="${r.sessionId}" data-record-id="${r.recordId}" value="${r.quantity}" min="1" step="1" style="width:90px;"></td>
           <td><input type="number" class="cave-loot-list-price admin-disable" data-session-id="${r.sessionId}" data-record-id="${r.recordId}" value="${r.price}" min="0" step="0.01" style="width:110px;"></td>
           <td>${caveLootListFormatMoney(r.quantity * r.price)}</td>
