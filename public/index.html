@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=40">
+  <link rel="stylesheet" href="styles.css?v=42">
 </head>
 <body>
   <div class="app viz-root">
@@ -358,12 +358,13 @@
                 <th>IGN</th>
                 <th>Growth Rate</th>
                 <th>Attendance</th>
-                <th>Multiplier</th>
-                <th>Base Share</th>
-                <th>Base + Multiplier</th>
-                <th>Normalized Share</th>
-                <th>Initial Computation</th>
-                <th>Final Salary</th>
+                <th title="Tier lookup based on Growth Rate">Multiplier<br><span class="th-formula">by Growth Rate tier</span></th>
+                <th title="Base Share = Attendance ÷ Total Attendance">Base Share<br><span class="th-formula">Attendance ÷ Σ Attendance</span></th>
+                <th title="Base + Multiplier = Base Share × Multiplier">Base + Multiplier<br><span class="th-formula">Base Share × Multiplier</span></th>
+                <th title="Normalized Share = (Base + Multiplier) ÷ Σ(Base + Multiplier)">Normalized Share<br><span class="th-formula">(Base+Mult) ÷ Σ(Base+Mult)</span></th>
+                <th title="Initial Computation = Normalized Share × Final Salary Pool">Initial Computation<br><span class="th-formula">Norm. Share × Final Pool</span></th>
+                <th title="Final Salary = Initial Computation + Accounting Fee (if applicable)">Final Salary<br><span class="th-formula">Initial Comp. + Fee</span></th>
+                <th>Sent</th>
               </tr>
             </thead>
             <tbody id="caveSalaryBody"></tbody>
@@ -599,7 +600,7 @@
   <script src="cave-session-view.js?v=8"></script>
   <script src="cave-report-view.js?v=2"></script>
   <script src="cave-loot-list-view.js?v=6"></script>
-  <script src="cave-salary-view.js?v=7"></script>
+  <script src="cave-salary-view.js?v=8"></script>
   <script src="item-report-view.js?v=29"></script>
   <script src="boss-timer-view.js?v=33"></script>
   <script src="boss-history-view.js?v=32"></script>

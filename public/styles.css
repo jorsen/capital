@@ -367,6 +367,23 @@ select:focus, input:focus, textarea:focus {
   user-select: none;
   white-space: nowrap;
 }
+.th-formula {
+  display: block;
+  text-transform: none;
+  font-weight: 400;
+  font-style: italic;
+  letter-spacing: normal;
+  color: var(--text-muted);
+  opacity: 0.75;
+  font-size: 11px;
+  margin-top: 2px;
+  cursor: help;
+}
+
+.members-table tbody tr.row-sent { background: rgba(74,222,128,0.14); }
+.members-table tbody tr.row-sent:hover { background: rgba(74,222,128,0.22); }
+.members-table tbody tr.row-sent td { color: var(--good); }
+.members-table tbody tr.row-sent input[type="checkbox"] { accent-color: var(--good); }
 .members-table th:hover { color: var(--text-secondary); }
 .sort-icon {
   display: inline-block;

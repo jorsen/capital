@@ -1,4 +1,4 @@
-const caveSalaryState = { month: null, sessions: [], members: [], fees: [] };
+const caveSalaryState = { month: null, sessions: [], members: [], fees: [], paidMemberIds: [] };
 
 // Tier breakpoints matched against each member's latest growth rate —
 // highest qualifying tier wins. Below the lowest named breakpoint falls
@@ -31,11 +31,16 @@ async function loadCaveSalaryData() {
   const [sessions, members] = await Promise.all([api('/api/caves'), api('/api/members')]);
   caveSalaryState.sessions = sessions;
   caveSalaryState.members = members;
-  await loadCaveSalaryFees();
+  await loadCaveSalaryMonthData();
 }
 
-async function loadCaveSalaryFees() {
-  caveSalaryState.fees = await api(`/api/salary-fees?month=${encodeURIComponent(caveSalaryState.month)}`);
+async function loadCaveSalaryMonthData() {
+  const [fees, paidMemberIds] = await Promise.all([
+    api(`/api/salary-fees?month=${encodeURIComponent(caveSalaryState.month)}`),
+    api(`/api/salary-paid?month=${encodeURIComponent(caveSalaryState.month)}`),
+  ]);
+  caveSalaryState.fees = fees;
+  caveSalaryState.paidMemberIds = paidMemberIds;
   renderCaveSalary();
 }
 
@@ -130,10 +135,13 @@ function renderCaveSalary() {
   const empty = document.getElementById('caveSalaryEmptyState');
   empty.classList.toggle('hidden', sessionsForMonth().length !== 0);
 
+  const paidSet = new Set(caveSalaryState.paidMemberIds);
+
   body.innerHTML = rows
-    .map(
-      (r) => `
-    <tr>
+    .map((r) => {
+      const sent = paidSet.has(r.member.id);
+      return `
+    <tr class="${sent ? 'row-sent' : ''}">
       <td style="font-weight:600;">${escapeHtml(memberDisplayName(r.member))}</td>
       <td>${r.growthRate === null ? '–' : r.growthRate.toLocaleString()}</td>
       <td>${r.attendance}</td>
@@ -143,15 +151,37 @@ function renderCaveSalary() {
       <td>${(r.normalizedShare * 100).toFixed(2)}%</td>
       <td>${caveSalaryFormatMoney(r.initialComputation)}</td>
       <td style="font-weight:600;">${caveSalaryFormatMoney(r.finalSalary)}</td>
-    </tr>`
-    )
+      <td><input type="checkbox" class="cave-salary-sent-check admin-disable" data-member-id="${r.member.id}" ${sent ? 'checked' : ''}></td>
+    </tr>`;
+    })
     .join('');
+
+  body.querySelectorAll('.cave-salary-sent-check').forEach((cb) => {
+    cb.addEventListener('change', async () => {
+      const memberId = cb.getAttribute('data-member-id');
+      const row = cb.closest('tr');
+      try {
+        if (cb.checked) {
+          await api('/api/salary-paid', { method: 'POST', body: JSON.stringify({ month: caveSalaryState.month, memberId }) });
+          caveSalaryState.paidMemberIds.push(memberId);
+          row.classList.add('row-sent');
+        } else {
+          await api(`/api/salary-paid?month=${encodeURIComponent(caveSalaryState.month)}&memberId=${encodeURIComponent(memberId)}`, { method: 'DELETE' });
+          caveSalaryState.paidMemberIds = caveSalaryState.paidMemberIds.filter((id) => id !== memberId);
+          row.classList.remove('row-sent');
+        }
+      } catch (err) {
+        cb.checked = !cb.checked;
+        toast(err.message);
+      }
+    });
+  });
 }
 
 document.getElementById('caveSalaryMonthInput').addEventListener('change', async (e) => {
   caveSalaryState.month = e.target.value;
   try {
-    await loadCaveSalaryFees();
+    await loadCaveSalaryMonthData();
   } catch (err) {
     toast(err.message);
   }
