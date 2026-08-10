@@ -642,7 +642,9 @@
       <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;" data-i18n="modal.manageItemsHint">
         These are the item names suggested when logging loot. Rename or remove any, or add new ones.
       </p>
-      <ul id="itemCategoryList" style="list-style:none; padding:0; margin:14px 0; display:flex; flex-direction:column; gap:8px;"></ul>
+      <input type="search" id="itemCategorySearchInput" placeholder="Search items…" style="width:100%; margin-top:10px;" data-i18n-placeholder="modal.searchItemsPlaceholder">
+      <ul id="itemCategoryList" style="list-style:none; padding:0; margin:14px 0; display:flex; flex-direction:column; gap:8px; max-height:340px; overflow-y:auto;"></ul>
+      <p id="itemCategorySearchEmpty" class="empty-state hidden" data-i18n="modal.searchItemsEmpty">No items match your search.</p>
       <form id="addItemCategoryForm" style="display:flex; gap:8px;">
         <input type="text" name="name" placeholder="New item name…" required style="flex:1;" data-i18n-placeholder="modal.newItemPlaceholder">
         <button type="submit" class="btn primary small" data-i18n="common.add">Add</button>
@@ -693,7 +695,7 @@
   <div id="toast" class="toast hidden"></div>
 
   <script src="common.js?v=33"></script>
-  <script src="item-categories.js?v=31"></script>
+  <script src="item-categories.js?v=32"></script>
   <script src="members-view.js?v=32"></script>
   <script src="queue-view.js?v=30"></script>
   <script src="loot-view.js?v=30"></script>
@@ -711,7 +713,7 @@
   <script src="users-view.js?v=2"></script>
   <script src="activity-log-view.js?v=2"></script>
   <script src="auth.js?v=29"></script>
-  <script src="i18n.js?v=2"></script>
+  <script src="i18n.js?v=3"></script>
   <script src="router.js?v=33"></script>
 </body>
 </html>

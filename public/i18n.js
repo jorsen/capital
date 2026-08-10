@@ -168,6 +168,8 @@ const TRANSLATIONS = {
     'modal.manageItemsTitle': 'Manage Loot Items',
     'modal.manageItemsHint': 'These are the item names suggested when logging loot. Rename or remove any, or add new ones.',
     'modal.newItemPlaceholder': 'New item name…',
+    'modal.searchItemsPlaceholder': 'Search items…',
+    'modal.searchItemsEmpty': 'No items match your search.',
 
     'modal.manageClassesTitle': 'Manage Classes',
     'modal.manageClassesHint': "Adding a class here also updates it in Discord's /growth command automatically.",
@@ -351,6 +353,8 @@ const TRANSLATIONS = {
     'modal.manageItemsTitle': '管理战利品物品',
     'modal.manageItemsHint': '这些是记录战利品时建议使用的物品名称。您可以重命名或删除任意一项，也可以添加新的。',
     'modal.newItemPlaceholder': '新物品名称…',
+    'modal.searchItemsPlaceholder': '搜索物品…',
+    'modal.searchItemsEmpty': '没有符合搜索条件的物品。',
 
     'modal.manageClassesTitle': '管理职业',
     'modal.manageClassesHint': '在此添加职业也会自动更新到Discord的 /growth 命令中。',
@@ -534,6 +538,8 @@ const TRANSLATIONS = {
     'modal.manageItemsTitle': '전리품 아이템 관리',
     'modal.manageItemsHint': '전리품을 기록할 때 제안되는 아이템 이름 목록입니다. 이름을 변경하거나 삭제할 수 있으며 새로 추가할 수도 있습니다.',
     'modal.newItemPlaceholder': '새 아이템 이름…',
+    'modal.searchItemsPlaceholder': '아이템 검색…',
+    'modal.searchItemsEmpty': '검색과 일치하는 아이템이 없습니다.',
 
     'modal.manageClassesTitle': '클래스 관리',
     'modal.manageClassesHint': '여기서 클래스를 추가하면 디스코드의 /growth 명령어에도 자동으로 반영됩니다.',
@@ -717,6 +723,8 @@ const TRANSLATIONS = {
     'modal.manageItemsTitle': 'จัดการไอเท็มของรางวัล',
     'modal.manageItemsHint': 'นี่คือรายชื่อไอเท็มที่แนะนำเมื่อบันทึกของรางวัล คุณสามารถเปลี่ยนชื่อ ลบ หรือเพิ่มรายการใหม่ได้',
     'modal.newItemPlaceholder': 'ชื่อไอเท็มใหม่…',
+    'modal.searchItemsPlaceholder': 'ค้นหาไอเท็ม…',
+    'modal.searchItemsEmpty': 'ไม่พบไอเท็มที่ตรงกับการค้นหา',
 
     'modal.manageClassesTitle': 'จัดการคลาส',
     'modal.manageClassesHint': 'การเพิ่มคลาสที่นี่จะอัปเดตในคำสั่ง /growth ของ Discord โดยอัตโนมัติ',

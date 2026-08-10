@@ -1,4 +1,4 @@
-const itemCategoriesState = { list: [] };
+const itemCategoriesState = { list: [], search: '' };
 
 async function loadItemCategories() {
   itemCategoriesState.list = await api('/api/item-categories');
@@ -12,13 +12,19 @@ function refreshItemDatalist() {
 }
 
 function openManageItemsModal() {
+  itemCategoriesState.search = '';
+  document.getElementById('itemCategorySearchInput').value = '';
   renderItemCategoryList();
   document.getElementById('manageItemsModal').classList.remove('hidden');
 }
 
 function renderItemCategoryList() {
   const list = document.getElementById('itemCategoryList');
-  const sorted = itemCategoriesState.list.slice().sort((a, b) => a.name.localeCompare(b.name));
+  const query = itemCategoriesState.search.trim().toLowerCase();
+  const filtered = query ? itemCategoriesState.list.filter((c) => c.name.toLowerCase().includes(query)) : itemCategoriesState.list;
+  const sorted = filtered.slice().sort((a, b) => a.name.localeCompare(b.name));
+
+  document.getElementById('itemCategorySearchEmpty').classList.toggle('hidden', sorted.length !== 0 || itemCategoriesState.list.length === 0);
 
   list.innerHTML = sorted
     .map(
@@ -85,6 +91,11 @@ document.getElementById('addItemCategoryForm').addEventListener('submit', async 
   } catch (err) {
     toast(err.message);
   }
+});
+
+document.getElementById('itemCategorySearchInput').addEventListener('input', (e) => {
+  itemCategoriesState.search = e.target.value;
+  renderItemCategoryList();
 });
 
 document.getElementById('manageItemsBtnLoot').addEventListener('click', openManageItemsModal);
