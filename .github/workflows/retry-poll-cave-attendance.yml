@@ -1,0 +1,25 @@
+name: Retry failed cave-attendance polls
+
+# Re-runs "Poll Discord cave attendance" immediately when it fails (e.g.
+# GitHub hosted-runner acquisition errors), instead of waiting for the next
+# 5-minute cron tick. Capped at run_attempt < 3 so a persistent GitHub
+# outage can't loop retries forever.
+on:
+  workflow_run:
+    workflows: ["Poll Discord cave attendance"]
+    types: [completed]
+
+permissions:
+  actions: write
+
+jobs:
+  retry:
+    if: github.event.workflow_run.conclusion == 'failure' && github.event.workflow_run.run_attempt < 3
+    runs-on: ubuntu-latest
+    steps:
+      - name: Re-run failed jobs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api -X POST \
+            "repos/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}/rerun-failed-jobs"
