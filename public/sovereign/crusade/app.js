@@ -419,6 +419,8 @@ function computeCrusadeGuildSalaryDetail() {
     byGuild.get(key).push({
       name: p.name,
       team: p.partyNumber,
+      goldBid: p.goldBid,
+      attended: p.attended,
       salary: total,
       itemShares: itemSharesByParticipantId.map((m) => m.get(p.id) || 0),
       isFee: false,
@@ -441,7 +443,16 @@ function computeCrusadeGuildSalaryDetail() {
       match.salary += feeAmount;
       match.hasFee = true;
     } else {
-      entries.push({ name: fee.name, team: null, salary: feeAmount, itemShares: items.map(() => 0), isFee: true, hasFee: false });
+      entries.push({
+        name: fee.name,
+        team: null,
+        goldBid: null,
+        attended: null,
+        salary: feeAmount,
+        itemShares: items.map(() => 0),
+        isFee: true,
+        hasFee: false,
+      });
     }
   });
 
@@ -470,13 +481,15 @@ function renderCrusadeGuildSalary() {
         <tr>
           <td style="font-weight:600; white-space:nowrap;">${escapeHtml(e.name)}${e.isFee ? ' <span style="color:var(--text-muted); font-weight:400;">(fee)</span>' : e.hasFee ? ' <span style="color:var(--text-muted); font-weight:400;">(+ management fee)</span>' : ''}</td>
           <td>${e.team ? `Team ${e.team}` : '–'}</td>
+          <td>${e.goldBid === null ? '–' : crusadeFormatGold(e.goldBid)}</td>
+          <td>${e.attended === null ? '–' : e.attended ? '✓' : '✗'}</td>
           <td>${crusadeFormatDiamonds(e.salary)}</td>
           ${itemCells}
         </tr>`;
         })
         .join('');
       const totalRow = items.length
-        ? `<tr class="crusade-table-total-row"><td>Total</td><td></td><td>${crusadeFormatDiamonds(g.total)}</td>${items
+        ? `<tr class="crusade-table-total-row"><td>Total</td><td></td><td></td><td></td><td>${crusadeFormatDiamonds(g.total)}</td>${items
             .map((it, i) => `<td>${crusadeFormatItemQty(g.itemTotals[i])}</td>`)
             .join('')}</tr>`
         : '';
@@ -486,7 +499,7 @@ function renderCrusadeGuildSalary() {
           <h3>${g.name === 'Unassigned' ? 'Unassigned' : escapeHtml(g.name)} — ${crusadeFormatDiamonds(g.total)} (${g.memberCount} member${g.memberCount === 1 ? '' : 's'})</h3>
         </div>
         <table class="members-table">
-          <thead><tr><th>IGN</th><th>Team</th><th>Salary</th>${items.map((it) => `<th>${escapeHtml(it.name)}</th>`).join('')}</tr></thead>
+          <thead><tr><th>IGN</th><th>Team</th><th>Max Bid</th><th>Present</th><th>Salary</th>${items.map((it) => `<th>${escapeHtml(it.name)}</th>`).join('')}</tr></thead>
           <tbody>${rows}${totalRow}</tbody>
         </table>
       </div>`;
