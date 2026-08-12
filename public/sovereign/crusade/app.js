@@ -239,6 +239,7 @@ async function loadCrusadeDetail(id) {
   } else {
     document.title = `Sovereign — ${crusade.name}`;
     renderTeamList();
+    renderCrusadeGuildSalary();
   }
 }
 
@@ -248,7 +249,10 @@ async function loadCrusadeDetail(id) {
 // sync, without needing to re-render pages that aren't currently visible.
 function refreshAfterRosterChange() {
   if (sovereignState.mode === 'team') renderTeamDetail(sovereignState.activeTeam);
-  else renderTeamList();
+  else {
+    renderTeamList();
+    renderCrusadeGuildSalary();
+  }
 }
 
 function nextTeamNumber() {
@@ -372,6 +376,48 @@ function renderTeamList() {
       </tr>`;
     })
     .join('');
+}
+
+// Crusade-wide (every team combined) — each guild's total diamond salary,
+// including any management fee credited to that guild. Unlike the per-team
+// guild summary, a fee is only ever added once here, not once per team.
+function computeCrusadeGuildSalary() {
+  const byGuild = new Map();
+  computeCrusadeDistribution().forEach(({ participant: p, total }) => {
+    const key = p.guildName || 'Unassigned';
+    if (!byGuild.has(key)) byGuild.set(key, { total: 0, count: 0 });
+    const g = byGuild.get(key);
+    g.total += total;
+    g.count += 1;
+  });
+  sovereignState.fees.forEach((fee) => {
+    if (!fee.guildName) return;
+    if (!byGuild.has(fee.guildName)) byGuild.set(fee.guildName, { total: 0, count: 0 });
+    byGuild.get(fee.guildName).total += crusadeFeeAmount(fee);
+  });
+  return Array.from(byGuild.entries())
+    .map(([name, g]) => ({ name, count: g.count, total: g.total }))
+    .sort((a, b) => b.total - a.total);
+}
+
+function renderCrusadeGuildSalary() {
+  const salaries = computeCrusadeGuildSalary();
+  const grandTotal = salaries.reduce((sum, g) => sum + g.total, 0);
+  const grandCount = salaries.reduce((sum, g) => sum + g.count, 0);
+
+  const rows = salaries
+    .map(
+      (g) => `
+    <tr>
+      <td style="font-weight:600;">${g.name === 'Unassigned' ? 'Unassigned' : crusadeGuildBadge(g.name)}</td>
+      <td>${g.count}</td>
+      <td>${crusadeFormatDiamonds(g.total)}</td>
+    </tr>`
+    )
+    .join('');
+
+  document.getElementById('crusadeGuildSalaryBody').innerHTML =
+    rows + `<tr class="crusade-table-total-row"><td>Total</td><td>${grandCount}</td><td>${crusadeFormatDiamonds(grandTotal)}</td></tr>`;
 }
 
 // The team's own page shows *all* of its records in one place: roster

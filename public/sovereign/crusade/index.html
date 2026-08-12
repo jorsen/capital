@@ -93,6 +93,25 @@
           </table>
         </div>
       </section>
+
+      <section class="panel">
+        <div class="view-header space-between" style="margin-bottom:6px;">
+          <h2 style="margin:0;">Guild Salary</h2>
+        </div>
+        <p style="color:var(--text-muted); font-size:13px; margin:0 0 10px;">Total diamonds owed to each guild across the whole crusade — attendance, gold bid, and any management fee credited to that guild.</p>
+        <div class="table-scroll">
+          <table class="members-table">
+            <thead>
+              <tr>
+                <th>Guild</th>
+                <th>Members</th>
+                <th>Total Salary</th>
+              </tr>
+            </thead>
+            <tbody id="crusadeGuildSalaryBody"></tbody>
+          </table>
+        </div>
+      </section>
     </div>
 
     <!-- ===================== TEAM DETAIL PANEL (all of that team's records) ===================== -->
@@ -305,6 +324,6 @@
   <div id="toast" class="toast hidden"></div>
 
   <script src="/common.js?v=35"></script>
-  <script src="/sovereign/crusade/app.js?v=19"></script>
+  <script src="/sovereign/crusade/app.js?v=20"></script>
 </body>
 </html>
