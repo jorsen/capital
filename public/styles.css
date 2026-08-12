@@ -722,11 +722,15 @@ select:focus, input:focus, textarea:focus {
 .crusade-member-list-table tbody tr:hover { background: none; box-shadow: none; }
 
 /* Parties within a team's page sit side by side instead of stacked, so a
-   4-party team reads as columns rather than one long vertical scroll. */
+   4-party team reads as columns rather than one long vertical scroll —
+   capped at 2 columns (never wider) and collapsing to 1 on narrow screens. */
 .crusade-party-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
+}
+@media (max-width: 960px) {
+  .crusade-party-grid { grid-template-columns: 1fr; }
 }
 .crusade-party-card {
   background: var(--surface-2);
