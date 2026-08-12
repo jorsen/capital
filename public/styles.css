@@ -684,15 +684,6 @@ select:focus, input:focus, textarea:focus {
 }
 .sovereign-subtitle { margin: 2px 0 0; font-size: 12px; color: var(--text-muted); }
 
-.crusade-summary-strip {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 20px;
-}
-.crusade-summary-strip .stat-tile { flex: 1 1 130px; min-width: 0; }
-.crusade-summary-strip .stat-value { font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
 .crusade-header-form {
   display: flex;
   flex-wrap: wrap;

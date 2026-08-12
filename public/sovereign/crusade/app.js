@@ -6,8 +6,6 @@
 // mode tracks which crusade-scoped page is active: 'overview' | 'team'.
 const sovereignState = { crusades: [], guilds: [], crusadeId: null, crusade: null, participants: [], memberList: [], activeTeam: null, mode: null };
 
-const CRUSADE_RESULT_LABELS = { pending: 'Pending', win: 'Win', lose: 'Lose', draw: 'Draw' };
-
 function crusadeFormatDiamonds(amount) {
   return `${(amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 💎`;
 }
@@ -229,37 +227,21 @@ async function loadCrusadeDetail(id) {
     renderTeamDetail(sovereignState.activeTeam); // sets its own title
   } else {
     document.title = `Sovereign — ${crusade.name}`;
-    populateCrusadeSummaryStrip();
     renderTeamList();
   }
 }
 
 // Called after any roster change (add/edit/delete participant, or toggling
-// attended/paid) so every place that reflects the roster — the summary
-// strip's participant count, the team list's per-team totals, and the
-// currently open team's full records — stays in sync, without needing to
-// re-render pages that aren't currently visible.
+// attended/paid) so every place that reflects the roster — the team list's
+// per-team totals and the currently open team's full records — stays in
+// sync, without needing to re-render pages that aren't currently visible.
 function refreshAfterRosterChange() {
   if (sovereignState.mode === 'team') renderTeamDetail(sovereignState.activeTeam);
-  else {
-    populateCrusadeSummaryStrip();
-    renderTeamList();
-  }
+  else renderTeamList();
 }
 
 function nextTeamNumber() {
   return sovereignState.participants.reduce((max, p) => Math.max(max, p.partyNumber), 0) + 1;
-}
-
-function populateCrusadeSummaryStrip() {
-  const c = sovereignState.crusade;
-  document.getElementById('crusadeSummaryName').textContent = c.name || '—';
-  document.getElementById('crusadeSummaryDate').textContent = c.eventDate ? formatLongDate(String(c.eventDate).slice(0, 10)) : '—';
-  document.getElementById('crusadeSummaryType').textContent = c.warType || '—';
-  document.getElementById('crusadeSummaryStance').textContent = c.stance || '—';
-  document.getElementById('crusadeSummaryResult').textContent = CRUSADE_RESULT_LABELS[c.result] || c.result || 'Pending';
-  document.getElementById('crusadeSummaryParticipants').textContent = sovereignState.participants.length;
-  document.getElementById('crusadeSummaryReward').textContent = crusadeFormatDiamonds(c.diamondReward);
 }
 
 function populateCrusadeHeaderForm() {
@@ -308,7 +290,6 @@ document.getElementById('crusadeHeaderForm').addEventListener('submit', async (e
       renderTeamDetail(sovereignState.activeTeam); // diamond math depends on reward/attendance %, so recompute
     } else {
       document.title = `Sovereign — ${updated.name}`;
-      populateCrusadeSummaryStrip();
       renderTeamList();
     }
     toast('Crusade details saved');
