@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/styles.css?v=60">
+  <link rel="stylesheet" href="/styles.css?v=61">
 </head>
 <body>
   <div class="app viz-root">
@@ -21,6 +21,13 @@
             <p class="sovereign-subtitle">Crusade Roster &amp; Diamond Distribution</p>
           </div>
         </div>
+        <button id="navToggle" class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+        <nav class="page-nav" id="pageNav">
+          <a href="#" data-panel="list" class="nav-link">Crusades</a>
+          <a href="#members" data-panel="members" class="nav-link">Member List</a>
+        </nav>
       </div>
       <div class="topbar-right">
         <span id="whoamiBadge" class="hidden" style="color:var(--text-muted); font-size:13px;"></span>
@@ -147,6 +154,22 @@
         <div id="crusadeGuildSummary" class="crusade-guild-summary"></div>
       </section>
     </div>
+
+    <!-- ===================== MEMBER LIST PANEL ===================== -->
+    <div id="sovereignMembersPanel" class="hidden">
+      <div class="view-header space-between">
+        <p style="color:var(--text-muted); font-size:13px; margin:0; flex:1;">Everyone ever saved into a crusade party roster, grouped by guild — saving a participant here keeps this up to date automatically.</p>
+      </div>
+      <section class="panel">
+        <div class="table-scroll">
+          <table class="members-table crusade-member-list-table">
+            <thead><tr id="sovereignMemberListHead"></tr></thead>
+            <tbody id="sovereignMemberListBody"></tbody>
+          </table>
+        </div>
+        <p id="sovereignMemberListEmptyState" class="empty-state hidden">No members saved yet — add a participant to a crusade roster to populate this list.</p>
+      </section>
+    </div>
   </div>
 
   <!-- ===================== MODALS ===================== -->
@@ -226,6 +249,6 @@
   <div id="toast" class="toast hidden"></div>
 
   <script src="/common.js?v=35"></script>
-  <script src="/sovereign/crusade/app.js?v=2"></script>
+  <script src="/sovereign/crusade/app.js?v=3"></script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 // that crusade's roster + distribution. common.js still supplies
 // api()/toast()/escapeHtml()/session handling, which is why it's loaded here.
 
-const sovereignState = { crusades: [], guilds: [], crusadeId: null, crusade: null, participants: [] };
+const sovereignState = { crusades: [], guilds: [], crusadeId: null, crusade: null, participants: [], memberList: [] };
 
 const CRUSADE_RESULT_LABELS = { pending: 'Pending', win: 'Win', lose: 'Lose', draw: 'Draw' };
 
@@ -26,29 +26,31 @@ function crusadeGuildBadge(guildName) {
   return `<span class="crusade-guild-badge" style="color:${color}; border-color:${color};">${escapeHtml(guildName)}</span>`;
 }
 
-// ---------- Routing between the two panels ----------
+// ---------- Routing between the three panels ----------
+// '' -> crusade list, '#members' -> master member list, '#crusade/<id>' -> detail.
 
 function route() {
-  const id = window.location.hash.slice(1);
-  if (id) {
+  const hash = window.location.hash.slice(1);
+  if (hash === 'members') {
+    showPanel('members');
+    loadMemberList().catch((err) => toast(err.message));
+  } else if (hash.startsWith('crusade/')) {
+    const id = hash.slice('crusade/'.length);
     sovereignState.crusadeId = id;
-    showDetailPanel();
+    showPanel('detail');
     loadCrusadeDetail(id).catch((err) => toast(err.message));
   } else {
-    showListPanel();
+    showPanel('list');
     loadCrusadeList().catch((err) => toast(err.message));
   }
 }
 
-function showListPanel() {
-  document.getElementById('sovereignListPanel').classList.remove('hidden');
-  document.getElementById('sovereignDetailPanel').classList.add('hidden');
-  document.title = 'Sovereign — Crusade';
-}
-
-function showDetailPanel() {
-  document.getElementById('sovereignListPanel').classList.add('hidden');
-  document.getElementById('sovereignDetailPanel').classList.remove('hidden');
+function showPanel(name) {
+  document.getElementById('sovereignListPanel').classList.toggle('hidden', name !== 'list');
+  document.getElementById('sovereignDetailPanel').classList.toggle('hidden', name !== 'detail');
+  document.getElementById('sovereignMembersPanel').classList.toggle('hidden', name !== 'members');
+  document.querySelectorAll('#pageNav .nav-link').forEach((a) => a.classList.toggle('active', a.getAttribute('data-panel') === name));
+  if (name !== 'detail') document.title = 'Sovereign — Crusade';
 }
 
 document.getElementById('sovereignBackLink').addEventListener('click', (e) => {
@@ -87,7 +89,7 @@ function renderCrusadeList() {
     .map(
       (c) => `
     <tr>
-      <td><a href="#${c.id}" style="font-weight:600;">${escapeHtml(c.name)}</a></td>
+      <td><a href="#crusade/${c.id}" style="font-weight:600;">${escapeHtml(c.name)}</a></td>
       <td>${c.eventDate ? escapeHtml(String(c.eventDate).slice(0, 10)) : '–'}</td>
       <td>${c.warType ? escapeHtml(c.warType) : '–'}</td>
       <td>${c.stance ? escapeHtml(c.stance) : '–'}</td>
@@ -135,7 +137,7 @@ document.getElementById('addCrusadeForm').addEventListener('submit', async (e) =
       }),
     });
     document.getElementById('addCrusadeModal').classList.add('hidden');
-    window.location.hash = crusade.id;
+    window.location.hash = `crusade/${crusade.id}`;
   } catch (err) {
     toast(err.message);
   }
@@ -493,4 +495,80 @@ function renderCrusadeGuildSummary(rows) {
     .join('');
 
   el.innerHTML = `${items}<div class="crusade-guild-summary-row crusade-guild-summary-total"><span style="flex:1;">Total</span><span>${crusadeFormatDiamonds(grandTotal)}</span><span></span></div>`;
+}
+
+// ---------- Member list (master roster, grouped by guild column) ----------
+
+async function loadMemberList() {
+  const [members, guilds] = await Promise.all([api('/api/sovereign-members'), api('/api/crusade-guilds')]);
+  sovereignState.memberList = members;
+  sovereignState.guilds = guilds;
+  renderMemberList();
+}
+
+function renderMemberList() {
+  const members = sovereignState.memberList;
+  document.getElementById('sovereignMemberListEmptyState').classList.toggle('hidden', members.length !== 0);
+
+  const groups = new Map();
+  members.forEach((m) => {
+    const key = m.guildName || 'Unassigned';
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(m);
+  });
+  groups.forEach((list) => list.sort((a, b) => a.name.localeCompare(b.name)));
+
+  // Column order: guilds in the order they were created (Manage Guilds),
+  // then any guild name that only shows up via saved members but was since
+  // removed from the guild list, then "Unassigned" last.
+  const knownOrder = sovereignState.guilds.map((g) => g.name);
+  const guildKeys = Array.from(groups.keys()).filter((k) => k !== 'Unassigned');
+  guildKeys.sort((a, b) => {
+    const ai = knownOrder.indexOf(a);
+    const bi = knownOrder.indexOf(b);
+    if (ai === -1 && bi === -1) return a.localeCompare(b);
+    if (ai === -1) return 1;
+    if (bi === -1) return -1;
+    return ai - bi;
+  });
+  if (groups.has('Unassigned')) guildKeys.push('Unassigned');
+
+  const head = document.getElementById('sovereignMemberListHead');
+  head.innerHTML = guildKeys
+    .map((g) => {
+      const color = g === 'Unassigned' ? null : crusadeGuildColor(g);
+      return `<th style="${color ? `color:${color};` : ''}">${escapeHtml(g)} <span style="color:var(--text-muted); font-weight:400;">(${groups.get(g).length})</span></th>`;
+    })
+    .join('');
+
+  const maxRows = guildKeys.reduce((max, g) => Math.max(max, groups.get(g).length), 0);
+  const rowsHtml = [];
+  for (let i = 0; i < maxRows; i++) {
+    const cells = guildKeys
+      .map((g) => {
+        const m = groups.get(g)[i];
+        if (!m) return '<td></td>';
+        return `<td>${escapeHtml(m.name)} <button type="button" class="icon-btn admin-only" data-delete-member="${m.id}" title="Remove from member list">✕</button></td>`;
+      })
+      .join('');
+    rowsHtml.push(`<tr>${cells}</tr>`);
+  }
+
+  const body = document.getElementById('sovereignMemberListBody');
+  body.innerHTML = rowsHtml.join('');
+  body.querySelectorAll('[data-delete-member]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-delete-member');
+      const member = sovereignState.memberList.find((m) => m.id === id);
+      if (!confirm(`Remove "${member?.name}" from the member list?`)) return;
+      try {
+        await api(`/api/sovereign-members/${id}`, { method: 'DELETE' });
+        sovereignState.memberList = sovereignState.memberList.filter((m) => m.id !== id);
+        renderMemberList();
+        toast('Member removed');
+      } catch (err) {
+        toast(err.message);
+      }
+    });
+  });
 }
