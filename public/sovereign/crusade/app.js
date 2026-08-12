@@ -482,7 +482,7 @@ function renderCrusadeGuildSalary() {
         .map((e) => {
           const itemCells = items.map((it, i) => `<td>${crusadeFormatItemQty(e.itemShares[i])}</td>`).join('');
           const feeLabel = e.isFee
-            ? '<div style="font-weight:400; font-size:11px; color:var(--text-muted); white-space:nowrap;">(fee)</div>'
+            ? '<div style="font-weight:400; font-size:11px; color:var(--text-muted); white-space:nowrap;">(management fee)</div>'
             : e.hasFee
               ? '<div style="font-weight:400; font-size:11px; color:var(--text-muted); white-space:nowrap;">(+ management fee)</div>'
               : '';
