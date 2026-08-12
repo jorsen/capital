@@ -19,6 +19,11 @@ function crusadeGuildColor(guildName) {
   return guild ? guild.color : null;
 }
 
+// Kept in sync with CRUSADE_PARTY_MAX_MEMBERS server-side (lib/app.js) — this
+// copy only drives the UI hint (disabling a full party's "+" button); the
+// server is what actually enforces the cap.
+const CRUSADE_PARTY_MAX_MEMBERS = 5;
+
 function crusadeGuildBadge(guildName) {
   if (!guildName) return '–';
   const color = crusadeGuildColor(guildName) || 'var(--text-muted)';
@@ -244,6 +249,19 @@ function nextTeamNumber() {
   return sovereignState.participants.reduce((max, p) => Math.max(max, p.partyNumber), 0) + 1;
 }
 
+// First party slot (starting at 1) within the given team that isn't already
+// at the 5-member cap — used to default the Party field when adding someone
+// new, so admins don't have to hunt for room manually.
+function nextAvailablePartySlot(teamNumber) {
+  const counts = new Map();
+  sovereignState.participants
+    .filter((p) => p.partyNumber === teamNumber)
+    .forEach((p) => counts.set(p.partySlot, (counts.get(p.partySlot) || 0) + 1));
+  let slot = 1;
+  while ((counts.get(slot) || 0) >= CRUSADE_PARTY_MAX_MEMBERS) slot++;
+  return slot;
+}
+
 function populateCrusadeHeaderForm() {
   const form = document.getElementById('crusadeHeaderForm');
   const c = sovereignState.crusade;
@@ -358,26 +376,50 @@ function renderTeamDetail(n) {
   const teamRows = computeCrusadeDistribution().filter(({ participant: p }) => p.partyNumber === n);
   document.getElementById('crusadeTeamRosterEmptyState').classList.toggle('hidden', teamRows.length !== 0);
 
+  // Split into parties of up to 5 — Party 1 always shows even if empty, so
+  // there's always somewhere to start.
+  const byParty = new Map();
+  teamRows.forEach((row) => {
+    const slot = row.participant.partySlot;
+    if (!byParty.has(slot)) byParty.set(slot, []);
+    byParty.get(slot).push(row);
+  });
+  const partySlots = Array.from(new Set([1, ...byParty.keys()])).sort((a, b) => a - b);
+
   const body = document.getElementById('crusadeTeamRosterBody');
-  body.innerHTML = teamRows
-    .map(
-      ({ participant: p, attendanceAmount, bidShare, total }) => `
-    <tr>
-      <td style="font-weight:600;">${escapeHtml(p.name)}</td>
-      <td>${crusadeGuildBadge(p.guildName)}</td>
-      <td>${p.position ? escapeHtml(p.position) : '–'}</td>
-      <td>${crusadeFormatGold(p.goldBid)}</td>
-      <td><input type="checkbox" class="crusade-attended-check admin-disable" data-participant-id="${p.id}" ${p.attended ? 'checked' : ''}></td>
-      <td>${crusadeFormatDiamonds(attendanceAmount)}</td>
-      <td>${crusadeFormatDiamonds(bidShare)}</td>
-      <td style="font-weight:600;">${crusadeFormatDiamonds(total)}</td>
-      <td class="admin-only"><input type="checkbox" class="crusade-paid-check admin-disable" data-participant-id="${p.id}" ${p.paid ? 'checked' : ''}></td>
-      <td class="admin-only" style="white-space:nowrap;">
-        <button type="button" class="icon-btn" data-edit-participant="${p.id}" title="Edit">✎</button>
-        <button type="button" class="icon-btn" data-delete-participant="${p.id}" title="Remove">✕</button>
-      </td>
-    </tr>`
-    )
+  body.innerHTML = partySlots
+    .map((slot) => {
+      const rowsInParty = byParty.get(slot) || [];
+      const full = rowsInParty.length >= CRUSADE_PARTY_MAX_MEMBERS;
+      const headerRow = `
+      <tr class="crusade-party-header-row">
+        <td colspan="10">
+          <span>Party ${slot} — ${rowsInParty.length}/${CRUSADE_PARTY_MAX_MEMBERS}</span>
+          <button type="button" class="icon-btn admin-only" data-add-to-party-slot="${slot}" title="Add to Party ${slot}" ${full ? 'disabled' : ''}>+</button>
+        </td>
+      </tr>`;
+      const memberRows = rowsInParty
+        .map(
+          ({ participant: p, attendanceAmount, bidShare, total }) => `
+      <tr>
+        <td style="font-weight:600;">${escapeHtml(p.name)}</td>
+        <td>${crusadeGuildBadge(p.guildName)}</td>
+        <td>${p.position ? escapeHtml(p.position) : '–'}</td>
+        <td>${crusadeFormatGold(p.goldBid)}</td>
+        <td><input type="checkbox" class="crusade-attended-check admin-disable" data-participant-id="${p.id}" ${p.attended ? 'checked' : ''}></td>
+        <td>${crusadeFormatDiamonds(attendanceAmount)}</td>
+        <td>${crusadeFormatDiamonds(bidShare)}</td>
+        <td style="font-weight:600;">${crusadeFormatDiamonds(total)}</td>
+        <td class="admin-only"><input type="checkbox" class="crusade-paid-check admin-disable" data-participant-id="${p.id}" ${p.paid ? 'checked' : ''}></td>
+        <td class="admin-only" style="white-space:nowrap;">
+          <button type="button" class="icon-btn" data-edit-participant="${p.id}" title="Edit">✎</button>
+          <button type="button" class="icon-btn" data-delete-participant="${p.id}" title="Remove">✕</button>
+        </td>
+      </tr>`
+        )
+        .join('');
+      return headerRow + memberRows;
+    })
     .join('');
 
   body.querySelectorAll('.crusade-attended-check').forEach((cb) => {
@@ -391,6 +433,9 @@ function renderTeamDetail(n) {
   });
   body.querySelectorAll('[data-delete-participant]').forEach((btn) => {
     btn.addEventListener('click', () => deleteCrusadeParticipant(btn.getAttribute('data-delete-participant')));
+  });
+  body.querySelectorAll('[data-add-to-party-slot]').forEach((btn) => {
+    btn.addEventListener('click', () => openCrusadeParticipantModal(null, n, Number(btn.getAttribute('data-add-to-party-slot'))));
   });
 
   renderCrusadeGuildSummary(teamRows, 'crusadeTeamGuildSummary');
@@ -425,7 +470,7 @@ async function deleteCrusadeParticipant(id) {
   }
 }
 
-function openCrusadeParticipantModal(participantId, presetPartyNumber) {
+function openCrusadeParticipantModal(participantId, presetPartyNumber, presetPartySlot) {
   const form = document.getElementById('crusadeParticipantForm');
   form.reset();
   const participant = participantId ? sovereignState.participants.find((p) => p.id === participantId) : null;
@@ -434,7 +479,9 @@ function openCrusadeParticipantModal(participantId, presetPartyNumber) {
   form.elements.name.value = participant ? participant.name : '';
   form.elements.guildName.value = participant ? participant.guildName || '' : '';
   form.elements.position.value = participant ? participant.position || '' : '';
-  form.elements.partyNumber.value = participant ? participant.partyNumber : presetPartyNumber || nextTeamNumber();
+  const teamNumber = participant ? participant.partyNumber : presetPartyNumber || nextTeamNumber();
+  form.elements.partyNumber.value = teamNumber;
+  form.elements.partySlot.value = participant ? participant.partySlot : presetPartySlot || nextAvailablePartySlot(teamNumber);
   form.elements.goldBid.value = participant ? participant.goldBid : '';
   form.elements.attended.checked = participant ? participant.attended : true;
   document.getElementById('crusadeParticipantModal').classList.remove('hidden');
@@ -442,6 +489,14 @@ function openCrusadeParticipantModal(participantId, presetPartyNumber) {
 
 document.getElementById('addCrusadeParticipantBtn').addEventListener('click', () => openCrusadeParticipantModal(null));
 document.getElementById('addTeamParticipantBtn').addEventListener('click', () => openCrusadeParticipantModal(null, sovereignState.activeTeam));
+
+// While adding a brand-new participant (not editing one), changing the Team
+// field refreshes the Party default to the first slot with room on that team.
+document.querySelector('#crusadeParticipantForm [name="partyNumber"]').addEventListener('input', (e) => {
+  const form = document.getElementById('crusadeParticipantForm');
+  if (form.elements.participantId.value) return;
+  form.elements.partySlot.value = nextAvailablePartySlot(Number(e.target.value) || 1);
+});
 
 // Jumps straight to the next team past whatever's already visible in the
 // list (the 1-3 baseline, or higher if teams already exist beyond that) —
@@ -460,6 +515,7 @@ document.getElementById('crusadeParticipantForm').addEventListener('submit', asy
     guildName: form.elements.guildName.value || null,
     position: form.elements.position.value || null,
     partyNumber: Number(form.elements.partyNumber.value) || 1,
+    partySlot: Number(form.elements.partySlot.value) || 1,
     goldBid: Number(form.elements.goldBid.value) || 0,
     attended: form.elements.attended.checked,
   };
