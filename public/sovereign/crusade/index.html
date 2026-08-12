@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/styles.css?v=62">
+  <link rel="stylesheet" href="/styles.css?v=63">
 </head>
 <body>
   <div class="app viz-root">
@@ -129,10 +129,22 @@
 
       <section class="panel">
         <div class="view-header space-between" style="margin-bottom:6px;">
-          <h2 style="margin:0;">Team Roster</h2>
+          <h2 style="margin:0;">Teams</h2>
           <button id="addCrusadeParticipantBtn" type="button" class="btn small primary admin-only">+ Add Participant</button>
         </div>
-        <div id="crusadePartyGrid" class="crusade-party-grid"></div>
+        <p style="color:var(--text-muted); font-size:13px; margin:0 0 10px;">Click a team to see its roster.</p>
+        <div class="table-scroll">
+          <table class="members-table">
+            <thead>
+              <tr>
+                <th>Team</th>
+                <th>Participants</th>
+                <th>Diamonds</th>
+              </tr>
+            </thead>
+            <tbody id="crusadeTeamListBody"></tbody>
+          </table>
+        </div>
         <p id="crusadeRosterEmptyState" class="empty-state hidden">No participants added yet.</p>
       </section>
 
@@ -158,6 +170,36 @@
         </div>
         <p id="crusadeDistributionEmptyState" class="empty-state hidden">Add participants to the roster to see the distribution.</p>
         <div id="crusadeGuildSummary" class="crusade-guild-summary"></div>
+      </section>
+    </div>
+
+    <!-- ===================== TEAM DETAIL PANEL ===================== -->
+    <div id="sovereignTeamPanel" class="hidden">
+      <div class="view-header space-between">
+        <a href="#" id="sovereignTeamBackLink" class="back-link">← Back to Crusade</a>
+      </div>
+
+      <section class="panel">
+        <div class="view-header space-between" style="margin-bottom:6px;">
+          <h2 id="crusadeTeamHeading" style="margin:0;">Team</h2>
+          <button id="addTeamParticipantBtn" type="button" class="btn small primary admin-only">+ Add Participant</button>
+        </div>
+        <div class="table-scroll">
+          <table class="members-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Guild</th>
+                <th>Position</th>
+                <th>Gold</th>
+                <th>Enter</th>
+                <th class="admin-only"></th>
+              </tr>
+            </thead>
+            <tbody id="crusadeTeamRosterBody"></tbody>
+          </table>
+        </div>
+        <p id="crusadeTeamRosterEmptyState" class="empty-state hidden">No participants in this team yet.</p>
       </section>
     </div>
 
@@ -255,6 +297,6 @@
   <div id="toast" class="toast hidden"></div>
 
   <script src="/common.js?v=35"></script>
-  <script src="/sovereign/crusade/app.js?v=4"></script>
+  <script src="/sovereign/crusade/app.js?v=5"></script>
 </body>
 </html>

@@ -702,27 +702,6 @@ select:focus, input:focus, textarea:focus {
 .crusade-header-form .crusade-notes-field { flex-basis: 100%; }
 .crusade-header-form > button { flex: none; align-self: flex-end; }
 
-.crusade-party-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 16px;
-}
-.crusade-party-card {
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 12px;
-}
-.crusade-party-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-.crusade-party-card-header h3 { margin: 0; font-size: 13px; color: var(--text-secondary); }
-.crusade-party-card .members-table { font-size: 12px; }
-.crusade-party-card .members-table th, .crusade-party-card .members-table td { padding: 6px 8px; }
-
 .crusade-guild-badge {
   display: inline-block;
   padding: 2px 8px;

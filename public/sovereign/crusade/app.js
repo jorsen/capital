@@ -3,7 +3,7 @@
 // that crusade's roster + distribution. common.js still supplies
 // api()/toast()/escapeHtml()/session handling, which is why it's loaded here.
 
-const sovereignState = { crusades: [], guilds: [], crusadeId: null, crusade: null, participants: [], memberList: [] };
+const sovereignState = { crusades: [], guilds: [], crusadeId: null, crusade: null, participants: [], memberList: [], activeTeam: null };
 
 const CRUSADE_RESULT_LABELS = { pending: 'Pending', win: 'Win', lose: 'Lose', draw: 'Draw' };
 
@@ -26,19 +26,28 @@ function crusadeGuildBadge(guildName) {
   return `<span class="crusade-guild-badge" style="color:${color}; border-color:${color};">${escapeHtml(guildName)}</span>`;
 }
 
-// ---------- Routing between the three panels ----------
-// '' -> crusade list, '#members' -> master member list, '#crusade/<id>' -> detail.
+// ---------- Routing between the four panels ----------
+// '' -> crusade list, '#members' -> master member list,
+// '#crusade/<id>' -> crusade detail (team list), '#crusade/<id>/team/<n>' -> one team's roster.
 
 function route() {
   const hash = window.location.hash.slice(1);
+  const teamMatch = hash.match(/^crusade\/([^/]+)\/team\/(\d+)$/);
+  const crusadeMatch = hash.match(/^crusade\/([^/]+)$/);
+
   if (hash === 'members') {
     showPanel('members');
     loadMemberList().catch((err) => toast(err.message));
-  } else if (hash.startsWith('crusade/')) {
-    const id = hash.slice('crusade/'.length);
-    sovereignState.crusadeId = id;
+  } else if (teamMatch) {
+    sovereignState.crusadeId = teamMatch[1];
+    sovereignState.activeTeam = Number(teamMatch[2]);
+    showPanel('team');
+    loadCrusadeDetail(teamMatch[1]).catch((err) => toast(err.message));
+  } else if (crusadeMatch) {
+    sovereignState.crusadeId = crusadeMatch[1];
+    sovereignState.activeTeam = null;
     showPanel('detail');
-    loadCrusadeDetail(id).catch((err) => toast(err.message));
+    loadCrusadeDetail(crusadeMatch[1]).catch((err) => toast(err.message));
   } else {
     showPanel('list');
     loadCrusadeList().catch((err) => toast(err.message));
@@ -48,14 +57,21 @@ function route() {
 function showPanel(name) {
   document.getElementById('sovereignListPanel').classList.toggle('hidden', name !== 'list');
   document.getElementById('sovereignDetailPanel').classList.toggle('hidden', name !== 'detail');
+  document.getElementById('sovereignTeamPanel').classList.toggle('hidden', name !== 'team');
   document.getElementById('sovereignMembersPanel').classList.toggle('hidden', name !== 'members');
   document.querySelectorAll('#pageNav .nav-link').forEach((a) => a.classList.toggle('active', a.getAttribute('data-panel') === name));
-  if (name !== 'detail') document.title = 'Sovereign — Crusade';
+  // 'detail' and 'team' set their own title once their data loads.
+  if (name === 'list' || name === 'members') document.title = 'Sovereign — Crusade';
 }
 
 document.getElementById('sovereignBackLink').addEventListener('click', (e) => {
   e.preventDefault();
   window.location.hash = '';
+});
+
+document.getElementById('sovereignTeamBackLink').addEventListener('click', (e) => {
+  e.preventDefault();
+  window.location.hash = `crusade/${sovereignState.crusadeId}`;
 });
 
 window.addEventListener('hashchange', route);
@@ -198,16 +214,33 @@ async function loadCrusadeDetail(id) {
   sovereignState.crusade = crusade;
   sovereignState.participants = crusade.participants;
   sovereignState.guilds = guilds;
-  document.title = `Sovereign — ${crusade.name}`;
   renderCrusadeDetail();
+  if (sovereignState.activeTeam !== null) renderTeamDetail(sovereignState.activeTeam);
+  else document.title = `Sovereign — ${crusade.name}`;
 }
 
 function renderCrusadeDetail() {
   populateCrusadeSummaryStrip();
   populateCrusadeHeaderForm();
   populateCrusadeGuildSelect();
-  renderCrusadePartyGrid();
+  renderTeamList();
   renderCrusadeDistribution();
+}
+
+// Called after any roster change (add/edit/delete participant, or toggling
+// attended/paid) so every place that reflects the roster — the summary
+// strip's participant count, the team list's per-team totals, the
+// distribution table, and the currently open team's roster if any — stays
+// in sync without the caller having to know which views are visible.
+function refreshAfterRosterChange() {
+  populateCrusadeSummaryStrip();
+  renderTeamList();
+  renderCrusadeDistribution();
+  if (sovereignState.activeTeam !== null) renderTeamDetail(sovereignState.activeTeam);
+}
+
+function nextTeamNumber() {
+  return sovereignState.participants.reduce((max, p) => Math.max(max, p.partyNumber), 0) + 1;
 }
 
 function populateCrusadeSummaryStrip() {
@@ -284,64 +317,67 @@ document.getElementById('deleteCrusadeBtn').addEventListener('click', async () =
   }
 });
 
-// ---------- Party roster grid ----------
+// ---------- Team list (crusade-level) and single-team roster ----------
 
-function renderCrusadePartyGrid() {
-  const grid = document.getElementById('crusadePartyGrid');
-  const participants = sovereignState.participants;
-  document.getElementById('crusadeRosterEmptyState').classList.toggle('hidden', participants.length !== 0);
+function renderTeamList() {
+  const body = document.getElementById('crusadeTeamListBody');
+  document.getElementById('crusadeRosterEmptyState').classList.toggle('hidden', sovereignState.participants.length !== 0);
 
-  const parties = new Map();
-  participants.forEach((p) => {
-    if (!parties.has(p.partyNumber)) parties.set(p.partyNumber, []);
-    parties.get(p.partyNumber).push(p);
+  const byTeam = new Map();
+  computeCrusadeDistribution().forEach(({ participant: p, total }) => {
+    if (!byTeam.has(p.partyNumber)) byTeam.set(p.partyNumber, { count: 0, diamonds: 0 });
+    const t = byTeam.get(p.partyNumber);
+    t.count += 1;
+    t.diamonds += total;
   });
-  const partyNumbers = Array.from(parties.keys()).sort((a, b) => a - b);
 
-  grid.innerHTML = partyNumbers
+  const teamNumbers = Array.from(byTeam.keys()).sort((a, b) => a - b);
+  body.innerHTML = teamNumbers
     .map((n) => {
-      const rows = parties
-        .get(n)
-        .map(
-          (p) => `
-        <tr>
-          <td style="font-weight:600;">${escapeHtml(p.name)}</td>
-          <td>${crusadeGuildBadge(p.guildName)}</td>
-          <td>${p.position ? escapeHtml(p.position) : '–'}</td>
-          <td>${crusadeFormatGold(p.goldBid)}</td>
-          <td><input type="checkbox" class="crusade-attended-check admin-disable" data-participant-id="${p.id}" ${p.attended ? 'checked' : ''}></td>
-          <td class="admin-only" style="white-space:nowrap;">
-            <button type="button" class="icon-btn" data-edit-participant="${p.id}" title="Edit">✎</button>
-            <button type="button" class="icon-btn" data-delete-participant="${p.id}" title="Remove">✕</button>
-          </td>
-        </tr>`
-        )
-        .join('');
+      const t = byTeam.get(n);
       return `
-      <div class="crusade-party-card">
-        <div class="crusade-party-card-header">
-          <h3>Team ${n}</h3>
-          <button type="button" class="icon-btn admin-only" data-add-to-party="${n}" title="Add to this team">+</button>
-        </div>
-        <table class="members-table">
-          <thead><tr><th>Name</th><th>Guild</th><th>Position</th><th>Gold</th><th>Enter</th><th class="admin-only"></th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>`;
+      <tr>
+        <td><a href="#crusade/${sovereignState.crusadeId}/team/${n}" style="font-weight:600;">Team ${n}</a></td>
+        <td>${t.count}</td>
+        <td>${crusadeFormatDiamonds(t.diamonds)}</td>
+      </tr>`;
     })
     .join('');
+}
 
-  grid.querySelectorAll('.crusade-attended-check').forEach((cb) => {
+function renderTeamDetail(n) {
+  document.getElementById('crusadeTeamHeading').textContent = `Team ${n}`;
+  document.title = `Sovereign — ${sovereignState.crusade.name} — Team ${n}`;
+
+  const teamParticipants = sovereignState.participants.filter((p) => p.partyNumber === n);
+  document.getElementById('crusadeTeamRosterEmptyState').classList.toggle('hidden', teamParticipants.length !== 0);
+
+  const body = document.getElementById('crusadeTeamRosterBody');
+  body.innerHTML = teamParticipants
+    .map(
+      (p) => `
+    <tr>
+      <td style="font-weight:600;">${escapeHtml(p.name)}</td>
+      <td>${crusadeGuildBadge(p.guildName)}</td>
+      <td>${p.position ? escapeHtml(p.position) : '–'}</td>
+      <td>${crusadeFormatGold(p.goldBid)}</td>
+      <td><input type="checkbox" class="crusade-attended-check admin-disable" data-participant-id="${p.id}" ${p.attended ? 'checked' : ''}></td>
+      <td class="admin-only" style="white-space:nowrap;">
+        <button type="button" class="icon-btn" data-edit-participant="${p.id}" title="Edit">✎</button>
+        <button type="button" class="icon-btn" data-delete-participant="${p.id}" title="Remove">✕</button>
+      </td>
+    </tr>`
+    )
+    .join('');
+
+  body.querySelectorAll('.crusade-attended-check').forEach((cb) => {
     cb.addEventListener('change', () => toggleCrusadeParticipantFlag(cb, 'attended'));
   });
-  grid.querySelectorAll('[data-edit-participant]').forEach((btn) => {
+  body.querySelectorAll('[data-edit-participant]').forEach((btn) => {
     btn.addEventListener('click', () => openCrusadeParticipantModal(btn.getAttribute('data-edit-participant')));
   });
-  grid.querySelectorAll('[data-delete-participant]').forEach((btn) => {
+  body.querySelectorAll('[data-delete-participant]').forEach((btn) => {
     btn.addEventListener('click', () => deleteCrusadeParticipant(btn.getAttribute('data-delete-participant')));
-  });
-  grid.querySelectorAll('[data-add-to-party]').forEach((btn) => {
-    btn.addEventListener('click', () => openCrusadeParticipantModal(null, Number(btn.getAttribute('data-add-to-party'))));
   });
 }
 
@@ -354,7 +390,7 @@ async function toggleCrusadeParticipantFlag(checkbox, field) {
     });
     const idx = sovereignState.participants.findIndex((p) => p.id === id);
     if (idx !== -1) sovereignState.participants[idx] = updated;
-    renderCrusadeDistribution();
+    refreshAfterRosterChange();
   } catch (err) {
     checkbox.checked = !checkbox.checked;
     toast(err.message);
@@ -367,9 +403,7 @@ async function deleteCrusadeParticipant(id) {
   try {
     await api(`/api/crusades/${sovereignState.crusadeId}/participants/${id}`, { method: 'DELETE' });
     sovereignState.participants = sovereignState.participants.filter((p) => p.id !== id);
-    renderCrusadePartyGrid();
-    renderCrusadeDistribution();
-    populateCrusadeSummaryStrip();
+    refreshAfterRosterChange();
     toast('Participant removed');
   } catch (err) {
     toast(err.message);
@@ -385,13 +419,14 @@ function openCrusadeParticipantModal(participantId, presetPartyNumber) {
   form.elements.name.value = participant ? participant.name : '';
   form.elements.guildName.value = participant ? participant.guildName || '' : '';
   form.elements.position.value = participant ? participant.position || '' : '';
-  form.elements.partyNumber.value = participant ? participant.partyNumber : presetPartyNumber || 1;
+  form.elements.partyNumber.value = participant ? participant.partyNumber : presetPartyNumber || nextTeamNumber();
   form.elements.goldBid.value = participant ? participant.goldBid : '';
   form.elements.attended.checked = participant ? participant.attended : true;
   document.getElementById('crusadeParticipantModal').classList.remove('hidden');
 }
 
 document.getElementById('addCrusadeParticipantBtn').addEventListener('click', () => openCrusadeParticipantModal(null));
+document.getElementById('addTeamParticipantBtn').addEventListener('click', () => openCrusadeParticipantModal(null, sovereignState.activeTeam));
 
 document.getElementById('crusadeParticipantForm').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -415,9 +450,7 @@ document.getElementById('crusadeParticipantForm').addEventListener('submit', asy
       sovereignState.participants.push(created);
     }
     document.getElementById('crusadeParticipantModal').classList.add('hidden');
-    renderCrusadePartyGrid();
-    renderCrusadeDistribution();
-    populateCrusadeSummaryStrip();
+    refreshAfterRosterChange();
     toast('Roster saved');
   } catch (err) {
     toast(err.message);
