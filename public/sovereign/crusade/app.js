@@ -407,12 +407,24 @@ function computeCrusadeGuildSalaryDetail() {
   computeCrusadeDistribution().forEach(({ participant: p, total }) => {
     const key = p.guildName || 'Unassigned';
     if (!byGuild.has(key)) byGuild.set(key, []);
-    byGuild.get(key).push({ name: p.name, team: p.partyNumber, salary: total, isFee: false });
+    byGuild.get(key).push({ name: p.name, team: p.partyNumber, salary: total, isFee: false, hasFee: false });
   });
+  // If a fee's IGN matches an existing participant in the same guild
+  // (case-insensitive), fold the fee into that one row instead of listing
+  // them twice — just flag it so the row can note "+ management fee".
+  // Only falls back to its own separate row when there's no such match.
   sovereignState.fees.forEach((fee) => {
     if (!fee.guildName) return;
     if (!byGuild.has(fee.guildName)) byGuild.set(fee.guildName, []);
-    byGuild.get(fee.guildName).push({ name: fee.name, team: null, salary: crusadeFeeAmount(fee), isFee: true });
+    const entries = byGuild.get(fee.guildName);
+    const feeAmount = crusadeFeeAmount(fee);
+    const match = entries.find((e) => !e.isFee && e.name.trim().toLowerCase() === fee.name.trim().toLowerCase());
+    if (match) {
+      match.salary += feeAmount;
+      match.hasFee = true;
+    } else {
+      entries.push({ name: fee.name, team: null, salary: feeAmount, isFee: true, hasFee: false });
+    }
   });
 
   return Array.from(byGuild.entries())
@@ -435,7 +447,7 @@ function renderCrusadeGuildSalary() {
         .map(
           (e) => `
         <tr>
-          <td style="font-weight:600; white-space:nowrap;">${escapeHtml(e.name)}${e.isFee ? ' <span style="color:var(--text-muted); font-weight:400;">(fee)</span>' : ''}</td>
+          <td style="font-weight:600; white-space:nowrap;">${escapeHtml(e.name)}${e.isFee ? ' <span style="color:var(--text-muted); font-weight:400;">(fee)</span>' : e.hasFee ? ' <span style="color:var(--text-muted); font-weight:400;">(+ management fee)</span>' : ''}</td>
           <td>${e.team ? `Team ${e.team}` : '–'}</td>
           <td>${crusadeFormatDiamonds(e.salary)}</td>
         </tr>`
