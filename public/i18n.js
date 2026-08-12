@@ -13,7 +13,6 @@ const TRANSLATIONS = {
     'nav.bosses': 'Boss Timers',
     'nav.users': 'Users',
     'nav.activityLog': 'Activity Log',
-    'nav.crusade': 'Crusade',
 
     'topbar.readonly': 'Viewing (read-only)',
     'topbar.logout': 'Logout',

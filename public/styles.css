@@ -670,6 +670,20 @@ select:focus, input:focus, textarea:focus {
 
 /* ---------- Sovereign / Crusade ---------- */
 
+.sovereign-header .brand { align-items: center; }
+.sovereign-header .brand h1 {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: 0.02em;
+  background: linear-gradient(135deg, #fff 10%, var(--gold) 110%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.sovereign-subtitle { margin: 2px 0 0; font-size: 12px; color: var(--text-muted); }
+
 .crusade-header-form {
   display: flex;
   flex-wrap: wrap;

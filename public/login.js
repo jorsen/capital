@@ -1,3 +1,9 @@
+(() => {
+  const redirect = new URLSearchParams(window.location.search).get('redirect');
+  const backLink = document.getElementById('loginBackLink');
+  if (backLink && redirect && redirect.startsWith('/') && !redirect.startsWith('//')) backLink.href = redirect;
+})();
+
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const errorEl = document.getElementById('loginError');
@@ -12,7 +18,10 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
       body: JSON.stringify({ username, password }),
     });
     if (res.ok) {
-      window.location.href = '/';
+      // Only follow same-site relative paths (e.g. /sovereign) — never an
+      // absolute/protocol-relative URL, which would make this an open redirect.
+      const redirect = new URLSearchParams(window.location.search).get('redirect');
+      window.location.href = redirect && redirect.startsWith('/') && !redirect.startsWith('//') ? redirect : '/';
       return;
     }
     const body = await res.json().catch(() => ({}));

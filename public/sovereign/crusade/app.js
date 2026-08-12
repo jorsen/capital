@@ -1,26 +1,206 @@
-const sovereignCrusadeState = { crusadeId: null, crusade: null, participants: [], guilds: [] };
+// Standalone Sovereign / Crusade page — no shared app shell, no hash router
+// from router.js. Bare /sovereign shows the crusade list; #<crusadeId> shows
+// that crusade's roster + distribution. common.js still supplies
+// api()/toast()/escapeHtml()/session handling, which is why it's loaded here.
 
-function crusadeDetailGuildColor(guildName) {
-  const guild = sovereignCrusadeState.guilds.find((g) => g.name === guildName);
+const sovereignState = { crusades: [], guilds: [], crusadeId: null, crusade: null, participants: [] };
+
+const CRUSADE_RESULT_LABELS = { pending: 'Pending', win: 'Win', lose: 'Lose', draw: 'Draw' };
+
+function crusadeFormatDiamonds(amount) {
+  return `${(amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 💎`;
+}
+
+function crusadeFormatGold(amount) {
+  return (amount || 0).toLocaleString();
+}
+
+function crusadeGuildColor(guildName) {
+  const guild = sovereignState.guilds.find((g) => g.name === guildName);
   return guild ? guild.color : null;
 }
 
 function crusadeGuildBadge(guildName) {
   if (!guildName) return '–';
-  const color = crusadeDetailGuildColor(guildName) || 'var(--text-muted)';
+  const color = crusadeGuildColor(guildName) || 'var(--text-muted)';
   return `<span class="crusade-guild-badge" style="color:${color}; border-color:${color};">${escapeHtml(guildName)}</span>`;
 }
 
-async function loadSovereignCrusadeData(id) {
-  if (!id) {
-    window.location.hash = '#/sovereign-crusades';
-    return;
+// ---------- Routing between the two panels ----------
+
+function route() {
+  const id = window.location.hash.slice(1);
+  if (id) {
+    sovereignState.crusadeId = id;
+    showDetailPanel();
+    loadCrusadeDetail(id).catch((err) => toast(err.message));
+  } else {
+    showListPanel();
+    loadCrusadeList().catch((err) => toast(err.message));
   }
-  sovereignCrusadeState.crusadeId = id;
+}
+
+function showListPanel() {
+  document.getElementById('sovereignListPanel').classList.remove('hidden');
+  document.getElementById('sovereignDetailPanel').classList.add('hidden');
+  document.title = 'Sovereign — Crusade';
+}
+
+function showDetailPanel() {
+  document.getElementById('sovereignListPanel').classList.add('hidden');
+  document.getElementById('sovereignDetailPanel').classList.remove('hidden');
+}
+
+document.getElementById('sovereignBackLink').addEventListener('click', (e) => {
+  e.preventDefault();
+  window.location.hash = '';
+});
+
+window.addEventListener('hashchange', route);
+sessionReady.then(() => {
+  document.getElementById('sovereignLoginLink').classList.toggle('hidden', !!appSession.username);
+  document.getElementById('sovereignLogoutBtn').classList.toggle('hidden', !appSession.username);
+  route();
+});
+
+document.getElementById('sovereignLogoutBtn').addEventListener('click', async () => {
+  await fetch('/api/logout', { method: 'POST' });
+  window.location.reload();
+});
+
+// ---------- Crusade list ----------
+
+async function loadCrusadeList() {
+  const [crusades, guilds] = await Promise.all([api('/api/crusades'), api('/api/crusade-guilds')]);
+  sovereignState.crusades = crusades;
+  sovereignState.guilds = guilds;
+  renderCrusadeList();
+}
+
+function renderCrusadeList() {
+  const body = document.getElementById('sovereignCrusadesBody');
+  const empty = document.getElementById('sovereignCrusadesEmptyState');
+  const crusades = sovereignState.crusades;
+  empty.classList.toggle('hidden', crusades.length !== 0);
+
+  body.innerHTML = crusades
+    .map(
+      (c) => `
+    <tr>
+      <td><a href="#${c.id}" style="font-weight:600;">${escapeHtml(c.name)}</a></td>
+      <td>${c.eventDate ? escapeHtml(String(c.eventDate).slice(0, 10)) : '–'}</td>
+      <td>${c.warType ? escapeHtml(c.warType) : '–'}</td>
+      <td>${c.stance ? escapeHtml(c.stance) : '–'}</td>
+      <td>${escapeHtml(CRUSADE_RESULT_LABELS[c.result] || c.result || 'Pending')}</td>
+      <td>${c.participantCount}</td>
+      <td>${crusadeFormatDiamonds(c.diamondReward)}</td>
+      <td class="admin-only"><button type="button" class="icon-btn" data-delete-crusade="${c.id}" title="Delete crusade">✕</button></td>
+    </tr>`
+    )
+    .join('');
+
+  body.querySelectorAll('[data-delete-crusade]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-delete-crusade');
+      const crusade = sovereignState.crusades.find((c) => c.id === id);
+      if (!confirm(`Delete crusade "${crusade?.name}"? This also removes its entire roster.`)) return;
+      try {
+        await api(`/api/crusades/${id}`, { method: 'DELETE' });
+        sovereignState.crusades = sovereignState.crusades.filter((c) => c.id !== id);
+        renderCrusadeList();
+        toast('Crusade deleted');
+      } catch (err) {
+        toast(err.message);
+      }
+    });
+  });
+}
+
+document.getElementById('addCrusadeBtn').addEventListener('click', () => {
+  document.getElementById('addCrusadeForm').reset();
+  document.getElementById('addCrusadeModal').classList.remove('hidden');
+});
+
+document.getElementById('addCrusadeForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  try {
+    const crusade = await api('/api/crusades', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: fd.get('name'),
+        eventDate: fd.get('eventDate') || null,
+        warType: fd.get('warType') || null,
+        diamondReward: fd.get('diamondReward') ? Number(fd.get('diamondReward')) : 0,
+      }),
+    });
+    document.getElementById('addCrusadeModal').classList.add('hidden');
+    window.location.hash = crusade.id;
+  } catch (err) {
+    toast(err.message);
+  }
+});
+
+// ---------- Manage Guilds modal ----------
+
+function renderCrusadeGuildList() {
+  const list = document.getElementById('crusadeGuildList');
+  list.innerHTML = sovereignState.guilds
+    .map(
+      (g) => `
+      <li style="display:flex; gap:8px; align-items:center;" data-guild-id="${g.id}">
+        <span class="schedule-dot" style="background:${g.color}"></span>
+        <span style="flex:1;">${escapeHtml(g.name)}</span>
+        <button type="button" class="icon-btn" data-delete-guild="${g.id}" title="Delete guild">✕</button>
+      </li>`
+    )
+    .join('');
+
+  list.querySelectorAll('[data-delete-guild]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-delete-guild');
+      const guild = sovereignState.guilds.find((g) => g.id === id);
+      if (!confirm(`Remove guild "${guild.name}"? Participants already assigned to it keep showing it.`)) return;
+      try {
+        await api(`/api/crusade-guilds/${id}`, { method: 'DELETE' });
+        sovereignState.guilds = sovereignState.guilds.filter((g) => g.id !== id);
+        renderCrusadeGuildList();
+        toast('Guild removed');
+      } catch (err) {
+        toast(err.message);
+      }
+    });
+  });
+}
+
+document.getElementById('manageCrusadeGuildsBtn').addEventListener('click', () => {
+  renderCrusadeGuildList();
+  document.getElementById('manageCrusadeGuildsModal').classList.remove('hidden');
+});
+
+document.getElementById('addCrusadeGuildForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  try {
+    const guild = await api('/api/crusade-guilds', { method: 'POST', body: JSON.stringify({ name: fd.get('name'), color: fd.get('color') }) });
+    sovereignState.guilds.push(guild);
+    renderCrusadeGuildList();
+    e.target.reset();
+    e.target.querySelector('input[name="color"]').value = '#3b82f6';
+    toast(`${guild.name} added`);
+  } catch (err) {
+    toast(err.message);
+  }
+});
+
+// ---------- Crusade detail ----------
+
+async function loadCrusadeDetail(id) {
   const [crusade, guilds] = await Promise.all([api(`/api/crusades/${id}`), api('/api/crusade-guilds')]);
-  sovereignCrusadeState.crusade = crusade;
-  sovereignCrusadeState.participants = crusade.participants;
-  sovereignCrusadeState.guilds = guilds;
+  sovereignState.crusade = crusade;
+  sovereignState.participants = crusade.participants;
+  sovereignState.guilds = guilds;
+  document.title = `Sovereign — ${crusade.name}`;
   renderCrusadeDetail();
 }
 
@@ -33,7 +213,7 @@ function renderCrusadeDetail() {
 
 function populateCrusadeHeaderForm() {
   const form = document.getElementById('crusadeHeaderForm');
-  const c = sovereignCrusadeState.crusade;
+  const c = sovereignState.crusade;
   form.elements.name.value = c.name || '';
   form.elements.eventDate.value = c.eventDate ? String(c.eventDate).slice(0, 10) : '';
   form.elements.warType.value = c.warType || '';
@@ -49,7 +229,7 @@ function populateCrusadeHeaderForm() {
 function populateCrusadeGuildSelect() {
   const select = document.getElementById('crusadeParticipantGuildSelect');
   const current = select.value;
-  select.innerHTML = '<option value="">—</option>' + sovereignCrusadeState.guilds.map((g) => `<option value="${escapeHtml(g.name)}">${escapeHtml(g.name)}</option>`).join('');
+  select.innerHTML = '<option value="">—</option>' + sovereignState.guilds.map((g) => `<option value="${escapeHtml(g.name)}">${escapeHtml(g.name)}</option>`).join('');
   select.value = current;
 }
 
@@ -57,7 +237,7 @@ document.getElementById('crusadeHeaderForm').addEventListener('submit', async (e
   e.preventDefault();
   const form = e.target;
   try {
-    const updated = await api(`/api/crusades/${sovereignCrusadeState.crusadeId}`, {
+    const updated = await api(`/api/crusades/${sovereignState.crusadeId}`, {
       method: 'PUT',
       body: JSON.stringify({
         name: form.elements.name.value,
@@ -72,8 +252,8 @@ document.getElementById('crusadeHeaderForm').addEventListener('submit', async (e
         notes: form.elements.notes.value || null,
       }),
     });
-    sovereignCrusadeState.crusade = { ...sovereignCrusadeState.crusade, ...updated };
-    document.title = `Crusade — ${updated.name} — Capital Records`;
+    sovereignState.crusade = { ...sovereignState.crusade, ...updated };
+    document.title = `Sovereign — ${updated.name}`;
     renderCrusadeDistribution();
     toast('Crusade details saved');
   } catch (err) {
@@ -82,12 +262,12 @@ document.getElementById('crusadeHeaderForm').addEventListener('submit', async (e
 });
 
 document.getElementById('deleteCrusadeBtn').addEventListener('click', async () => {
-  const c = sovereignCrusadeState.crusade;
+  const c = sovereignState.crusade;
   if (!confirm(`Delete crusade "${c.name}"? This also removes its entire roster.`)) return;
   try {
-    await api(`/api/crusades/${sovereignCrusadeState.crusadeId}`, { method: 'DELETE' });
+    await api(`/api/crusades/${sovereignState.crusadeId}`, { method: 'DELETE' });
     toast('Crusade deleted');
-    window.location.hash = '#/sovereign-crusades';
+    window.location.hash = '';
   } catch (err) {
     toast(err.message);
   }
@@ -97,7 +277,7 @@ document.getElementById('deleteCrusadeBtn').addEventListener('click', async () =
 
 function renderCrusadePartyGrid() {
   const grid = document.getElementById('crusadePartyGrid');
-  const participants = sovereignCrusadeState.participants;
+  const participants = sovereignState.participants;
   document.getElementById('crusadeRosterEmptyState').classList.toggle('hidden', participants.length !== 0);
 
   const parties = new Map();
@@ -133,13 +313,12 @@ function renderCrusadePartyGrid() {
           <button type="button" class="icon-btn admin-only" data-add-to-party="${n}" title="Add to this party">+</button>
         </div>
         <table class="members-table">
-          <thead><tr><th data-i18n="common.name">Name</th><th data-i18n="crusade.thGuild">Guild</th><th data-i18n="crusade.fieldPosition">Position</th><th data-i18n="crusade.fieldGoldBid">Gold</th><th data-i18n="crusade.fieldAttended">Enter</th><th class="admin-only"></th></tr></thead>
+          <thead><tr><th>Name</th><th>Guild</th><th>Position</th><th>Gold</th><th>Enter</th><th class="admin-only"></th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
       </div>`;
     })
     .join('');
-  applyI18n(grid);
 
   grid.querySelectorAll('.crusade-attended-check').forEach((cb) => {
     cb.addEventListener('change', () => toggleCrusadeParticipantFlag(cb, 'attended'));
@@ -158,12 +337,12 @@ function renderCrusadePartyGrid() {
 async function toggleCrusadeParticipantFlag(checkbox, field) {
   const id = checkbox.getAttribute('data-participant-id');
   try {
-    const updated = await api(`/api/crusades/${sovereignCrusadeState.crusadeId}/participants/${id}`, {
+    const updated = await api(`/api/crusades/${sovereignState.crusadeId}/participants/${id}`, {
       method: 'PUT',
       body: JSON.stringify({ [field]: checkbox.checked }),
     });
-    const idx = sovereignCrusadeState.participants.findIndex((p) => p.id === id);
-    if (idx !== -1) sovereignCrusadeState.participants[idx] = updated;
+    const idx = sovereignState.participants.findIndex((p) => p.id === id);
+    if (idx !== -1) sovereignState.participants[idx] = updated;
     renderCrusadeDistribution();
   } catch (err) {
     checkbox.checked = !checkbox.checked;
@@ -172,11 +351,11 @@ async function toggleCrusadeParticipantFlag(checkbox, field) {
 }
 
 async function deleteCrusadeParticipant(id) {
-  const participant = sovereignCrusadeState.participants.find((p) => p.id === id);
+  const participant = sovereignState.participants.find((p) => p.id === id);
   if (!confirm(`Remove "${participant?.name}" from the roster?`)) return;
   try {
-    await api(`/api/crusades/${sovereignCrusadeState.crusadeId}/participants/${id}`, { method: 'DELETE' });
-    sovereignCrusadeState.participants = sovereignCrusadeState.participants.filter((p) => p.id !== id);
+    await api(`/api/crusades/${sovereignState.crusadeId}/participants/${id}`, { method: 'DELETE' });
+    sovereignState.participants = sovereignState.participants.filter((p) => p.id !== id);
     renderCrusadePartyGrid();
     renderCrusadeDistribution();
     toast('Participant removed');
@@ -188,7 +367,7 @@ async function deleteCrusadeParticipant(id) {
 function openCrusadeParticipantModal(participantId, presetPartyNumber) {
   const form = document.getElementById('crusadeParticipantForm');
   form.reset();
-  const participant = participantId ? sovereignCrusadeState.participants.find((p) => p.id === participantId) : null;
+  const participant = participantId ? sovereignState.participants.find((p) => p.id === participantId) : null;
   document.getElementById('crusadeParticipantModalTitle').textContent = participant ? 'Edit Participant' : 'Add Participant';
   form.elements.participantId.value = participant ? participant.id : '';
   form.elements.name.value = participant ? participant.name : '';
@@ -216,12 +395,12 @@ document.getElementById('crusadeParticipantForm').addEventListener('submit', asy
   };
   try {
     if (participantId) {
-      const updated = await api(`/api/crusades/${sovereignCrusadeState.crusadeId}/participants/${participantId}`, { method: 'PUT', body: JSON.stringify(payload) });
-      const idx = sovereignCrusadeState.participants.findIndex((p) => p.id === participantId);
-      if (idx !== -1) sovereignCrusadeState.participants[idx] = updated;
+      const updated = await api(`/api/crusades/${sovereignState.crusadeId}/participants/${participantId}`, { method: 'PUT', body: JSON.stringify(payload) });
+      const idx = sovereignState.participants.findIndex((p) => p.id === participantId);
+      if (idx !== -1) sovereignState.participants[idx] = updated;
     } else {
-      const created = await api(`/api/crusades/${sovereignCrusadeState.crusadeId}/participants`, { method: 'POST', body: JSON.stringify(payload) });
-      sovereignCrusadeState.participants.push(created);
+      const created = await api(`/api/crusades/${sovereignState.crusadeId}/participants`, { method: 'POST', body: JSON.stringify(payload) });
+      sovereignState.participants.push(created);
     }
     document.getElementById('crusadeParticipantModal').classList.add('hidden');
     renderCrusadePartyGrid();
@@ -239,8 +418,8 @@ document.getElementById('crusadeParticipantForm').addEventListener('submit', asy
 // an equal split when every bidder bids the same amount (the common case),
 // and scales fairly when bids differ.
 function computeCrusadeDistribution() {
-  const c = sovereignCrusadeState.crusade;
-  const participants = sovereignCrusadeState.participants;
+  const c = sovereignState.crusade;
+  const participants = sovereignState.participants;
   const diamondReward = c ? c.diamondReward || 0 : 0;
   const attendancePct = c ? c.attendancePct ?? 50 : 50;
   const attendancePool = diamondReward * (attendancePct / 100);
@@ -250,17 +429,15 @@ function computeCrusadeDistribution() {
   const attendanceShare = attendees.length ? attendancePool / attendees.length : 0;
   const totalBid = participants.reduce((sum, p) => sum + (p.goldBid > 0 ? p.goldBid : 0), 0);
 
-  const rows = participants.map((p) => {
+  return participants.map((p) => {
     const attendanceAmount = p.attended ? attendanceShare : 0;
     const bidShare = p.goldBid > 0 && totalBid > 0 ? bidPool * (p.goldBid / totalBid) : 0;
     return { participant: p, attendanceAmount, bidShare, total: attendanceAmount + bidShare };
   });
-
-  return { rows, attendancePool, bidPool, totalBid, attendeesCount: attendees.length };
 }
 
 function renderCrusadeDistribution() {
-  const { rows } = computeCrusadeDistribution();
+  const rows = computeCrusadeDistribution();
   const body = document.getElementById('crusadeDistributionBody');
   document.getElementById('crusadeDistributionEmptyState').classList.toggle('hidden', rows.length !== 0);
 
@@ -305,7 +482,7 @@ function renderCrusadeGuildSummary(rows) {
   const items = Array.from(byGuild.entries())
     .sort((a, b) => b[1].total - a[1].total)
     .map(([name, g]) => {
-      const color = crusadeDetailGuildColor(name) || 'var(--text-muted)';
+      const color = crusadeGuildColor(name) || 'var(--text-muted)';
       return `<div class="crusade-guild-summary-row">
         <span class="schedule-dot" style="background:${color}"></span>
         <span style="flex:1;">${escapeHtml(name)}</span>

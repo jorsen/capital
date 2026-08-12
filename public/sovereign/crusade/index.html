@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sovereign — Crusade</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css?v=60">
+</head>
+<body>
+  <div class="app viz-root">
+    <header class="topbar sovereign-header">
+      <div class="topbar-left">
+        <div class="brand">
+          <img class="brand-mark" src="/favicon.svg" alt="">
+          <div>
+            <h1>Sovereign</h1>
+            <p class="sovereign-subtitle">Crusade Roster &amp; Diamond Distribution</p>
+          </div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <a href="/" class="btn small ghost">← Capital Records</a>
+        <span id="whoamiBadge" class="hidden" style="color:var(--text-muted); font-size:13px;"></span>
+        <a id="sovereignLoginLink" href="/login?redirect=/sovereign" class="btn small">Login</a>
+        <button id="sovereignLogoutBtn" class="btn small hidden">Logout</button>
+      </div>
+    </header>
+
+    <!-- ===================== CRUSADE LIST PANEL ===================== -->
+    <div id="sovereignListPanel">
+      <div class="view-header space-between">
+        <p style="color:var(--text-muted); font-size:13px; margin:0; flex:1;">Plan a crusade's party roster and auto-split its diamond reward between attendance and gold bids.</p>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button id="manageCrusadeGuildsBtn" type="button" class="btn small admin-only">Manage Guilds</button>
+          <button id="addCrusadeBtn" type="button" class="btn primary admin-only">+ New Crusade</button>
+        </div>
+      </div>
+
+      <section class="panel">
+        <div class="table-scroll">
+          <table class="members-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Stance</th>
+                <th>Result</th>
+                <th>Participants</th>
+                <th>Diamond Reward</th>
+                <th class="admin-only"></th>
+              </tr>
+            </thead>
+            <tbody id="sovereignCrusadesBody"></tbody>
+          </table>
+        </div>
+        <p id="sovereignCrusadesEmptyState" class="empty-state hidden">No crusades logged yet — click "New Crusade" to start.</p>
+      </section>
+    </div>
+
+    <!-- ===================== CRUSADE DETAIL PANEL ===================== -->
+    <div id="sovereignDetailPanel" class="hidden">
+      <div class="view-header space-between">
+        <a href="#" id="sovereignBackLink" class="back-link">← Back to Crusades</a>
+        <button id="deleteCrusadeBtn" type="button" class="btn small danger admin-only">Delete Crusade</button>
+      </div>
+
+      <section class="panel">
+        <h2>Crusade Details</h2>
+        <form id="crusadeHeaderForm" class="crusade-header-form">
+          <label><span>Name</span>
+            <input class="admin-disable" required name="name" type="text" maxlength="60" placeholder="e.g. Army1 / Team 1">
+          </label>
+          <label><span>Date</span>
+            <input class="admin-disable" name="eventDate" type="date">
+          </label>
+          <label><span>War Type</span>
+            <input class="admin-disable" name="warType" type="text" maxlength="20" placeholder="e.g. 20vs20">
+          </label>
+          <label><span>Stance</span>
+            <select class="admin-disable" name="stance">
+              <option value="">—</option>
+              <option value="Attack">Attack</option>
+              <option value="Defense">Defense</option>
+            </select>
+          </label>
+          <label><span>Area</span>
+            <input class="admin-disable" name="area" type="text" maxlength="60" placeholder="e.g. Kamastok">
+          </label>
+          <label><span>Leader</span>
+            <input class="admin-disable" name="leader" type="text" maxlength="40">
+          </label>
+          <label><span>Result</span>
+            <select class="admin-disable" name="result">
+              <option value="pending">Pending</option>
+              <option value="win">Win</option>
+              <option value="lose">Lose</option>
+              <option value="draw">Draw</option>
+            </select>
+          </label>
+          <label><span>Diamond Reward</span>
+            <input class="admin-disable" name="diamondReward" type="number" min="0" step="0.01">
+          </label>
+          <label><span>Attendance Share %</span>
+            <input class="admin-disable" name="attendancePct" type="number" min="0" max="100" step="1">
+          </label>
+          <label class="crusade-notes-field"><span>Notes</span>
+            <textarea class="admin-disable" name="notes" rows="2" placeholder="e.g. Morions / Loot Chest / Guild Coins split still being discussed"></textarea>
+          </label>
+          <button type="submit" class="btn primary small admin-only">Save</button>
+        </form>
+      </section>
+
+      <section class="panel">
+        <div class="view-header space-between" style="margin-bottom:6px;">
+          <h2 style="margin:0;">Party Roster</h2>
+          <button id="addCrusadeParticipantBtn" type="button" class="btn small primary admin-only">+ Add Participant</button>
+        </div>
+        <div id="crusadePartyGrid" class="crusade-party-grid"></div>
+        <p id="crusadeRosterEmptyState" class="empty-state hidden">No participants added yet.</p>
+      </section>
+
+      <section class="panel">
+        <h2>Final Diamond Distribution</h2>
+        <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;">
+          Half the reward splits evenly across everyone marked "Attended"; the other half splits across gold bidders in proportion to their bid.
+        </p>
+        <div class="table-scroll">
+          <table class="members-table">
+            <thead>
+              <tr>
+                <th>Member</th>
+                <th>Guild</th>
+                <th>Attendance</th>
+                <th>Bid Share</th>
+                <th>Total Diamonds</th>
+                <th class="admin-only">Paid</th>
+              </tr>
+            </thead>
+            <tbody id="crusadeDistributionBody"></tbody>
+          </table>
+        </div>
+        <p id="crusadeDistributionEmptyState" class="empty-state hidden">Add participants to the roster to see the distribution.</p>
+        <div id="crusadeGuildSummary" class="crusade-guild-summary"></div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ===================== MODALS ===================== -->
+
+  <div id="manageCrusadeGuildsModal" class="modal-overlay hidden">
+    <div class="modal">
+      <button class="modal-close" data-close="manageCrusadeGuildsModal" aria-label="Close">×</button>
+      <h2>Manage Guilds</h2>
+      <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;">These are the guilds offered when adding a participant to a crusade roster. Remove any, or add new ones with a color to keep them recognizable across crusades.</p>
+      <ul id="crusadeGuildList" style="list-style:none; padding:0; margin:14px 0; display:flex; flex-direction:column; gap:8px;"></ul>
+      <form id="addCrusadeGuildForm" style="display:flex; gap:8px; align-items:center;">
+        <input type="color" name="color" value="#3b82f6" title="Guild color" style="width:36px; height:36px; padding:2px; flex:none;">
+        <input type="text" name="name" placeholder="New guild name…" required style="flex:1;">
+        <button type="submit" class="btn primary small">Add</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="addCrusadeModal" class="modal-overlay hidden">
+    <div class="modal">
+      <button class="modal-close" data-close="addCrusadeModal" aria-label="Close">×</button>
+      <h2>New Crusade</h2>
+      <form id="addCrusadeForm">
+        <label><span>Name</span>
+          <input required name="name" type="text" maxlength="60" placeholder="e.g. Army1 / Team 1">
+        </label>
+        <label><span>Date</span>
+          <input name="eventDate" type="date">
+        </label>
+        <label><span>War Type</span>
+          <input name="warType" type="text" maxlength="20" placeholder="e.g. 20vs20">
+        </label>
+        <label><span>Diamond Reward</span>
+          <input name="diamondReward" type="number" min="0" step="0.01" placeholder="e.g. 8976">
+        </label>
+        <button type="submit" class="btn primary">Add</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="crusadeParticipantModal" class="modal-overlay hidden">
+    <div class="modal">
+      <button class="modal-close" data-close="crusadeParticipantModal" aria-label="Close">×</button>
+      <h2 id="crusadeParticipantModalTitle">Add Participant</h2>
+      <form id="crusadeParticipantForm">
+        <input type="hidden" name="participantId">
+        <label><span>Name</span>
+          <input required name="name" type="text" maxlength="40">
+        </label>
+        <label><span>Guild</span>
+          <select name="guildName" id="crusadeParticipantGuildSelect">
+            <option value="">—</option>
+          </select>
+        </label>
+        <label><span>Position</span>
+          <input name="position" type="text" maxlength="30" list="crusadePositionSuggestions" placeholder="e.g. Sniper, Cleric, Knight">
+          <datalist id="crusadePositionSuggestions">
+            <option value="Assassin"><option value="Impaler"><option value="Cleric"><option value="Knight">
+            <option value="Sniper"><option value="Mage"><option value="Priest">
+          </datalist>
+        </label>
+        <label><span>Party</span>
+          <input name="partyNumber" type="number" min="1" max="20" value="1">
+        </label>
+        <label><span>Gold Bid</span>
+          <input name="goldBid" type="number" min="0" step="1" placeholder="e.g. 30000000">
+        </label>
+        <label style="display:flex; align-items:center; gap:8px; flex-direction:row;">
+          <input name="attended" type="checkbox" checked style="width:auto;">
+          <span>Attended / Entered</span>
+        </label>
+        <button type="submit" class="btn primary">Save</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="/common.js?v=35"></script>
+  <script src="app.js?v=1"></script>
+</body>
+</html>
