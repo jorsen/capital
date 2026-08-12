@@ -223,12 +223,13 @@ async function loadCrusadeDetail(id) {
   sovereignState.guilds = guilds;
   populateCrusadeGuildSelect(); // shared by the add/edit-participant modal regardless of which page opened it
 
+  populateCrusadeHeaderForm(); // now lives on the team page, but the crusade fields it edits are shared
+
   if (sovereignState.mode === 'team') {
     renderTeamDetail(sovereignState.activeTeam); // sets its own title
   } else {
     document.title = `Sovereign — ${crusade.name}`;
     populateCrusadeSummaryStrip();
-    populateCrusadeHeaderForm();
     renderTeamList();
   }
 }
@@ -303,9 +304,13 @@ document.getElementById('crusadeHeaderForm').addEventListener('submit', async (e
       }),
     });
     sovereignState.crusade = { ...sovereignState.crusade, ...updated };
-    document.title = `Sovereign — ${updated.name}`;
-    populateCrusadeSummaryStrip();
-    renderTeamList();
+    if (sovereignState.mode === 'team') {
+      renderTeamDetail(sovereignState.activeTeam); // diamond math depends on reward/attendance %, so recompute
+    } else {
+      document.title = `Sovereign — ${updated.name}`;
+      populateCrusadeSummaryStrip();
+      renderTeamList();
+    }
     toast('Crusade details saved');
   } catch (err) {
     toast(err.message);

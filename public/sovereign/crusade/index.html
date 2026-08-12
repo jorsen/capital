@@ -103,6 +103,44 @@
           </table>
         </div>
       </section>
+    </div>
+
+    <!-- ===================== TEAM DETAIL PANEL (all of that team's records) ===================== -->
+    <div id="sovereignTeamPanel" class="hidden">
+      <div class="view-header space-between">
+        <a href="#" id="sovereignTeamBackLink" class="back-link">← Back to Crusade</a>
+      </div>
+
+      <section class="panel">
+        <div class="view-header space-between" style="margin-bottom:6px;">
+          <h2 id="crusadeTeamHeading" style="margin:0;">Team</h2>
+          <button id="addTeamParticipantBtn" type="button" class="btn small primary admin-only">+ Add Participant</button>
+        </div>
+        <p style="color:var(--text-muted); font-size:13px; margin-top:-4px;">
+          Half the crusade's reward splits evenly across everyone marked "Attended"; the other half splits across gold bidders in proportion to their bid.
+        </p>
+        <div class="table-scroll">
+          <table class="members-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Guild</th>
+                <th>Position</th>
+                <th>Gold Bid</th>
+                <th>Enter</th>
+                <th>Attendance</th>
+                <th>Bid Share</th>
+                <th>Total Diamonds</th>
+                <th class="admin-only">Paid</th>
+                <th class="admin-only"></th>
+              </tr>
+            </thead>
+            <tbody id="crusadeTeamRosterBody"></tbody>
+          </table>
+        </div>
+        <p id="crusadeTeamRosterEmptyState" class="empty-state hidden">No participants in this team yet.</p>
+        <div id="crusadeTeamGuildSummary" class="crusade-guild-summary"></div>
+      </section>
 
       <section class="panel">
         <h2>Crusade Details</h2>
@@ -148,44 +186,6 @@
           </label>
           <button type="submit" class="btn primary small admin-only">Save</button>
         </form>
-      </section>
-    </div>
-
-    <!-- ===================== TEAM DETAIL PANEL (all of that team's records) ===================== -->
-    <div id="sovereignTeamPanel" class="hidden">
-      <div class="view-header space-between">
-        <a href="#" id="sovereignTeamBackLink" class="back-link">← Back to Crusade</a>
-      </div>
-
-      <section class="panel">
-        <div class="view-header space-between" style="margin-bottom:6px;">
-          <h2 id="crusadeTeamHeading" style="margin:0;">Team</h2>
-          <button id="addTeamParticipantBtn" type="button" class="btn small primary admin-only">+ Add Participant</button>
-        </div>
-        <p style="color:var(--text-muted); font-size:13px; margin-top:-4px;">
-          Half the crusade's reward splits evenly across everyone marked "Attended"; the other half splits across gold bidders in proportion to their bid.
-        </p>
-        <div class="table-scroll">
-          <table class="members-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Guild</th>
-                <th>Position</th>
-                <th>Gold Bid</th>
-                <th>Enter</th>
-                <th>Attendance</th>
-                <th>Bid Share</th>
-                <th>Total Diamonds</th>
-                <th class="admin-only">Paid</th>
-                <th class="admin-only"></th>
-              </tr>
-            </thead>
-            <tbody id="crusadeTeamRosterBody"></tbody>
-          </table>
-        </div>
-        <p id="crusadeTeamRosterEmptyState" class="empty-state hidden">No participants in this team yet.</p>
-        <div id="crusadeTeamGuildSummary" class="crusade-guild-summary"></div>
       </section>
     </div>
 
@@ -283,6 +283,6 @@
   <div id="toast" class="toast hidden"></div>
 
   <script src="/common.js?v=35"></script>
-  <script src="/sovereign/crusade/app.js?v=9"></script>
+  <script src="/sovereign/crusade/app.js?v=10"></script>
 </body>
 </html>
