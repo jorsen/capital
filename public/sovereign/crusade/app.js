@@ -14,6 +14,10 @@ function crusadeFormatGold(amount) {
   return (amount || 0).toLocaleString();
 }
 
+function crusadeFormatItemQty(amount) {
+  return `${(amount || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })} pcs`;
+}
+
 function crusadeGuildColor(guildName) {
   const guild = sovereignState.guilds.find((g) => g.name === guildName);
   return guild ? guild.color : null;
@@ -274,6 +278,8 @@ function populateCrusadeHeaderForm() {
   form.elements.result.value = c.result || 'pending';
   form.elements.diamondReward.value = c.diamondReward || 0;
   form.elements.attendancePct.value = c.attendancePct ?? 50;
+  form.elements.itemName.value = c.itemName || '';
+  form.elements.itemQuantity.value = c.itemQuantity || 0;
   form.elements.notes.value = c.notes || '';
 }
 
@@ -300,6 +306,8 @@ document.getElementById('crusadeHeaderForm').addEventListener('submit', async (e
         result: form.elements.result.value,
         diamondReward: Number(form.elements.diamondReward.value) || 0,
         attendancePct: Number(form.elements.attendancePct.value),
+        itemName: form.elements.itemName.value || null,
+        itemQuantity: Number(form.elements.itemQuantity.value) || 0,
         notes: form.elements.notes.value || null,
       }),
     });
@@ -453,6 +461,17 @@ function renderTeamDetail(n) {
   });
 
   renderCrusadeGuildSummary(teamRows, 'crusadeTeamGuildSummary');
+
+  const itemHeading = document.getElementById('crusadeTeamItemHeading');
+  const hasItem = !!(sovereignState.crusade.itemName && sovereignState.crusade.itemQuantity);
+  itemHeading.classList.toggle('hidden', !hasItem);
+  if (hasItem) {
+    itemHeading.textContent = `${sovereignState.crusade.itemName} — ${crusadeFormatItemQty(sovereignState.crusade.itemQuantity)} total, by guild (attendees only)`;
+    const teamItemRows = computeCrusadeItemShares().filter(({ participant: p }) => p.partyNumber === n);
+    renderCrusadeGuildSummary(teamItemRows, 'crusadeTeamItemSummary', crusadeFormatItemQty);
+  } else {
+    document.getElementById('crusadeTeamItemSummary').innerHTML = '';
+  }
 }
 
 async function toggleCrusadeParticipantFlag(checkbox, field) {
@@ -567,7 +586,20 @@ function computeCrusadeDistribution() {
   });
 }
 
-function renderCrusadeGuildSummary(rows, containerId) {
+// A single named item (e.g. Morion) with a total quantity, split evenly
+// across attendees only — no bid portion, unlike diamonds. Non-attendees get
+// none, same "attended is a must" rule as the diamond attendance share.
+function computeCrusadeItemShares() {
+  const c = sovereignState.crusade;
+  const participants = sovereignState.participants;
+  const quantity = c ? c.itemQuantity || 0 : 0;
+  const attendees = participants.filter((p) => p.attended);
+  const share = attendees.length ? quantity / attendees.length : 0;
+  return participants.map((p) => ({ participant: p, total: p.attended ? share : 0 }));
+}
+
+function renderCrusadeGuildSummary(rows, containerId, formatFn) {
+  const format = formatFn || crusadeFormatDiamonds;
   const el = document.getElementById(containerId);
   const byGuild = new Map();
   rows.forEach(({ participant: p, total }) => {
@@ -591,13 +623,13 @@ function renderCrusadeGuildSummary(rows, containerId) {
       return `<div class="crusade-guild-summary-row">
         <span class="schedule-dot" style="background:${color}"></span>
         <span style="flex:1;">${escapeHtml(name)}</span>
-        <span>${crusadeFormatDiamonds(g.total)}</span>
+        <span>${format(g.total)}</span>
         <span style="color:var(--text-muted);">${g.count} member${g.count === 1 ? '' : 's'}</span>
       </div>`;
     })
     .join('');
 
-  el.innerHTML = `${items}<div class="crusade-guild-summary-row crusade-guild-summary-total"><span style="flex:1;">Total</span><span>${crusadeFormatDiamonds(grandTotal)}</span><span></span></div>`;
+  el.innerHTML = `${items}<div class="crusade-guild-summary-row crusade-guild-summary-total"><span style="flex:1;">Total</span><span>${format(grandTotal)}</span><span></span></div>`;
 }
 
 // ---------- Member list (master roster, grouped by guild column) ----------
