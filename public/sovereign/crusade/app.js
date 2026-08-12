@@ -7,7 +7,7 @@
 const sovereignState = { crusades: [], guilds: [], crusadeId: null, crusade: null, participants: [], items: [], fees: [], memberList: [], activeTeam: null, mode: null };
 
 function crusadeFormatDiamonds(amount) {
-  return `${(amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 💎`;
+  return `${Math.round(amount || 0).toLocaleString()} 💎`;
 }
 
 function crusadeFormatGold(amount) {
@@ -15,7 +15,7 @@ function crusadeFormatGold(amount) {
 }
 
 function crusadeFormatItemQty(amount) {
-  return `${(amount || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })} pcs`;
+  return `${Math.round(amount || 0).toLocaleString()} pcs`;
 }
 
 function crusadeGuildColor(guildName) {
@@ -477,9 +477,14 @@ function renderCrusadeGuildSalary() {
       const rows = g.entries
         .map((e) => {
           const itemCells = items.map((it, i) => `<td>${crusadeFormatItemQty(e.itemShares[i])}</td>`).join('');
+          const feeLabel = e.isFee
+            ? '<div style="font-weight:400; font-size:11px; color:var(--text-muted); white-space:nowrap;">(fee)</div>'
+            : e.hasFee
+              ? '<div style="font-weight:400; font-size:11px; color:var(--text-muted); white-space:nowrap;">(+ management fee)</div>'
+              : '';
           return `
         <tr>
-          <td style="font-weight:600; white-space:nowrap;">${escapeHtml(e.name)}${e.isFee ? ' <span style="color:var(--text-muted); font-weight:400;">(fee)</span>' : e.hasFee ? ' <span style="color:var(--text-muted); font-weight:400;">(+ management fee)</span>' : ''}</td>
+          <td style="font-weight:600;"><div style="white-space:nowrap;">${escapeHtml(e.name)}</div>${feeLabel}</td>
           <td>${e.team ? `Team ${e.team}` : '–'}</td>
           <td>${e.goldBid === null ? '–' : crusadeFormatGold(e.goldBid)}</td>
           <td>${e.attended === null ? '–' : e.attended ? '✓' : '✗'}</td>
@@ -498,10 +503,12 @@ function renderCrusadeGuildSalary() {
         <div class="crusade-party-card-header">
           <h3>${g.name === 'Unassigned' ? 'Unassigned' : escapeHtml(g.name)} — ${crusadeFormatDiamonds(g.total)} (${g.memberCount} member${g.memberCount === 1 ? '' : 's'})</h3>
         </div>
-        <table class="members-table">
-          <thead><tr><th>IGN</th><th>Team</th><th>Max Bid</th><th>Present</th><th>Salary</th>${items.map((it) => `<th>${escapeHtml(it.name)}</th>`).join('')}</tr></thead>
-          <tbody>${rows}${totalRow}</tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="members-table">
+            <thead><tr><th>IGN</th><th>Team</th><th>Max Bid</th><th>Present</th><th>Salary</th>${items.map((it) => `<th>${escapeHtml(it.name)}</th>`).join('')}</tr></thead>
+            <tbody>${rows}${totalRow}</tbody>
+          </table>
+        </div>
       </div>`;
     })
     .join('');

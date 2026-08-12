@@ -737,6 +737,10 @@ select:focus, input:focus, textarea:focus {
   .crusade-party-grid { grid-template-columns: 1fr; }
 }
 .crusade-party-card {
+  /* Grid items default to a content-based min-width, so a wide table inside
+     would otherwise stretch the card (and its column) past the track
+     instead of letting .table-scroll's overflow-x:auto do its job. */
+  min-width: 0;
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: 10px;
