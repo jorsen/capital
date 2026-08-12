@@ -116,8 +116,9 @@
         <p id="crusadeGuildSalaryMeta" style="color:var(--text-muted); font-size:13px; margin-top:-8px;"></p>
         <p style="color:var(--text-muted); font-size:13px;">Every participant's diamond salary across the whole crusade, grouped by guild — plus any management fee credited to that guild.</p>
         <p class="crusade-formula-hint">
-          <strong>How the split works:</strong> the diamond reward is divided into an attendance portion and a bid portion (default 50/50, adjustable per crusade in Attendance Share %). The attendance portion is shared evenly across everyone marked Present; the bid portion is shared among bidders in proportion to their bid.
-          Example only — if the split is 50/50: Present but didn't bid = 50% (attendance share only); bid but wasn't Present = the other 50% (bid share only); both Present and bid = the full 100%.
+          💎 <strong>How the loot gets split:</strong> show up and you split half the pot evenly with every other attendee. Bid gold and you split the other half, sized to your bid. Do both, and you take home both halves.
+          Only one? You just earn that half — <em>example only</em>, if the split is 50/50: Present but didn't bid = 50%, bid but wasn't Present = the other 50% (the real split is set per crusade in Attendance Share %).
+          🚫 <strong>Lost the crusade?</strong> No loot at all — everyone's share drops to 0, no matter what's in the reward box.
         </p>
         <div id="crusadeGuildSalaryDetail" class="crusade-party-grid"></div>
       </section>
@@ -135,7 +136,7 @@
           <button id="addTeamParticipantBtn" type="button" class="btn small primary admin-only">+ Add Participant</button>
         </div>
         <p style="color:var(--text-muted); font-size:13px; margin-top:-4px;">
-          Half the crusade's reward splits evenly across everyone marked "Attended"; the other half splits across gold bidders in proportion to their bid.
+          Half the crusade's reward splits evenly across everyone marked "Attended"; the other half splits across gold bidders in proportion to their bid. If the crusade's Result is Lose, no rewards go out at all.
         </p>
         <div id="crusadeTeamRosterBody" class="crusade-party-grid"></div>
         <p id="crusadeTeamRosterEmptyState" class="empty-state hidden">No participants in this team yet.</p>
@@ -333,6 +334,6 @@
   <div id="toast" class="toast hidden"></div>
 
   <script src="/common.js?v=35"></script>
-  <script src="/sovereign/crusade/app.js?v=26"></script>
+  <script src="/sovereign/crusade/app.js?v=27"></script>
 </body>
 </html>

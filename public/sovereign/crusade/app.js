@@ -705,11 +705,19 @@ document.getElementById('crusadeParticipantForm').addEventListener('submit', asy
 
 // ---------- Diamond distribution ----------
 
+// A lost crusade pays out nothing at all — diamonds, items, and management
+// fees all drop to 0 regardless of what's entered, rather than splitting a
+// reward that was never actually earned.
+function crusadeWasLost() {
+  return !!(sovereignState.crusade && sovereignState.crusade.result === 'lose');
+}
+
 // Management fees take a percentage of the *total* diamond reward off the
 // top (e.g. a guild leader's cut) before anything else is computed — so the
 // pool that actually gets split by attendance/bid is the reward minus every
 // fee's amount.
 function totalCrusadeFeeAmount() {
+  if (crusadeWasLost()) return 0;
   const diamondReward = sovereignState.crusade ? sovereignState.crusade.diamondReward || 0 : 0;
   return sovereignState.fees.reduce((sum, f) => sum + diamondReward * (f.percent / 100), 0);
 }
@@ -719,8 +727,12 @@ function totalCrusadeFeeAmount() {
 // collapses to an equal split when every bidder bids the same amount (the
 // common case), and scales fairly when bids differ.
 function computeCrusadeDistribution() {
-  const c = sovereignState.crusade;
   const participants = sovereignState.participants;
+  if (crusadeWasLost()) {
+    return participants.map((p) => ({ participant: p, attendanceAmount: 0, bidShare: 0, total: 0 }));
+  }
+
+  const c = sovereignState.crusade;
   const diamondReward = c ? c.diamondReward || 0 : 0;
   const attendancePct = c ? c.attendancePct ?? 50 : 50;
   const netReward = Math.max(0, diamondReward - totalCrusadeFeeAmount());
@@ -743,6 +755,8 @@ function computeCrusadeDistribution() {
 // none, same "attended is a must" rule as the diamond attendance share.
 function computeCrusadeItemShares(item) {
   const participants = sovereignState.participants;
+  if (crusadeWasLost()) return participants.map((p) => ({ participant: p, total: 0 }));
+
   const quantity = item ? item.quantity || 0 : 0;
   const attendees = participants.filter((p) => p.attended);
   const share = attendees.length ? quantity / attendees.length : 0;
@@ -862,6 +876,7 @@ document.getElementById('addCrusadeItemForm').addEventListener('submit', async (
 });
 
 function crusadeFeeAmount(fee) {
+  if (crusadeWasLost()) return 0;
   const diamondReward = sovereignState.crusade ? sovereignState.crusade.diamondReward || 0 : 0;
   return diamondReward * (fee.percent / 100);
 }
