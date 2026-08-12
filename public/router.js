@@ -14,8 +14,10 @@ const VIEW_TITLES = {
   bosses: 'Boss Timers — Capital Records',
   users: 'Users — Capital Records',
   'activity-log': 'Activity Log — Capital Records',
+  'sovereign-crusades': 'Crusade — Capital Records',
+  'sovereign-crusade': 'Crusade Detail — Capital Records',
 };
-const VALID_VIEWS = ['members', 'queue', 'loot', 'loot-session', 'caves', 'cave-date', 'cave-session', 'cave-report', 'cave-loot-list', 'cave-salary', 'cave-schedule', 'items', 'bosses', 'users', 'activity-log'];
+const VALID_VIEWS = ['members', 'queue', 'loot', 'loot-session', 'caves', 'cave-date', 'cave-session', 'cave-report', 'cave-loot-list', 'cave-salary', 'cave-schedule', 'items', 'bosses', 'users', 'activity-log', 'sovereign-crusades', 'sovereign-crusade'];
 const ADMIN_ONLY_VIEWS = ['users', 'activity-log'];
 
 function showView(name) {
@@ -58,6 +60,8 @@ function parseRoute() {
   }
   if (activeView === 'users') loadUsersData().catch((err) => toast(err.message));
   if (activeView === 'activity-log') loadActivityLogData().catch((err) => toast(err.message));
+  if (activeView === 'sovereign-crusades') loadSovereignCrusadesData().catch((err) => toast(err.message));
+  if (activeView === 'sovereign-crusade') loadSovereignCrusadeData(param).catch((err) => toast(err.message));
 }
 
 window.addEventListener('hashchange', parseRoute);
