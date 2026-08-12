@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/styles.css?v=70">
+  <link rel="stylesheet" href="/styles.css?v=71">
 </head>
 <body>
   <div class="app viz-root">
@@ -113,7 +113,12 @@
 
       <section class="panel">
         <h2>Guild Salary</h2>
-        <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;">Every participant's diamond salary across the whole crusade, grouped by guild — plus any management fee credited to that guild.</p>
+        <p id="crusadeGuildSalaryMeta" style="color:var(--text-muted); font-size:13px; margin-top:-8px;"></p>
+        <p style="color:var(--text-muted); font-size:13px;">Every participant's diamond salary across the whole crusade, grouped by guild — plus any management fee credited to that guild.</p>
+        <p class="crusade-formula-hint">
+          <strong>How the split works:</strong> the diamond reward is divided into an attendance portion and a bid portion (default 50/50, adjustable per crusade in Attendance Share %). The attendance portion is shared evenly across everyone marked Present; the bid portion is shared among bidders in proportion to their bid.
+          Example only — if the split is 50/50: Present but didn't bid = 50% (attendance share only); bid but wasn't Present = the other 50% (bid share only); both Present and bid = the full 100%.
+        </p>
         <div id="crusadeGuildSalaryDetail" class="crusade-party-grid"></div>
       </section>
     </div>
@@ -328,6 +333,6 @@
   <div id="toast" class="toast hidden"></div>
 
   <script src="/common.js?v=35"></script>
-  <script src="/sovereign/crusade/app.js?v=25"></script>
+  <script src="/sovereign/crusade/app.js?v=26"></script>
 </body>
 </html>

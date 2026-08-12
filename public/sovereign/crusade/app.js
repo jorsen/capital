@@ -468,6 +468,10 @@ function computeCrusadeGuildSalaryDetail() {
 }
 
 function renderCrusadeGuildSalary() {
+  const c = sovereignState.crusade;
+  const dateText = c && c.eventDate ? formatLongDate(String(c.eventDate).slice(0, 10)) : 'No date set';
+  document.getElementById('crusadeGuildSalaryMeta').textContent = `${c ? c.name : ''} — ${dateText}`;
+
   const guilds = computeCrusadeGuildSalaryDetail();
   const items = sovereignState.items;
   const el = document.getElementById('crusadeGuildSalaryDetail');
