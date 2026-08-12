@@ -482,21 +482,13 @@ function openCrusadeParticipantModal(participantId, presetPartyNumber, presetPar
   const teamNumber = participant ? participant.partyNumber : presetPartyNumber || nextTeamNumber();
   form.elements.partyNumber.value = teamNumber;
   form.elements.partySlot.value = participant ? participant.partySlot : presetPartySlot || nextAvailablePartySlot(teamNumber);
-  form.elements.goldBid.value = participant ? participant.goldBid : '';
+  form.elements.goldBid.value = participant ? participant.goldBid : 30000000;
   form.elements.attended.checked = participant ? participant.attended : true;
   document.getElementById('crusadeParticipantModal').classList.remove('hidden');
 }
 
 document.getElementById('addCrusadeParticipantBtn').addEventListener('click', () => openCrusadeParticipantModal(null));
 document.getElementById('addTeamParticipantBtn').addEventListener('click', () => openCrusadeParticipantModal(null, sovereignState.activeTeam));
-
-// While adding a brand-new participant (not editing one), changing the Team
-// field refreshes the Party default to the first slot with room on that team.
-document.querySelector('#crusadeParticipantForm [name="partyNumber"]').addEventListener('input', (e) => {
-  const form = document.getElementById('crusadeParticipantForm');
-  if (form.elements.participantId.value) return;
-  form.elements.partySlot.value = nextAvailablePartySlot(Number(e.target.value) || 1);
-});
 
 // Jumps straight to the next team past whatever's already visible in the
 // list (the 1-3 baseline, or higher if teams already exist beyond that) —
