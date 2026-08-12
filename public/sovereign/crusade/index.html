@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/styles.css?v=61">
+  <link rel="stylesheet" href="/styles.css?v=62">
 </head>
 <body>
   <div class="app viz-root">
@@ -39,7 +39,7 @@
     <!-- ===================== CRUSADE LIST PANEL ===================== -->
     <div id="sovereignListPanel">
       <div class="view-header space-between">
-        <p style="color:var(--text-muted); font-size:13px; margin:0; flex:1;">Plan a crusade's party roster and auto-split its diamond reward between attendance and gold bids.</p>
+        <p style="color:var(--text-muted); font-size:13px; margin:0; flex:1;">Plan a crusade's team roster and auto-split its diamond reward between attendance and gold bids.</p>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
           <button id="manageCrusadeGuildsBtn" type="button" class="btn small admin-only">Manage Guilds</button>
           <button id="addCrusadeBtn" type="button" class="btn primary admin-only">+ New Crusade</button>
@@ -51,13 +51,9 @@
           <table class="members-table">
             <thead>
               <tr>
-                <th>Name</th>
                 <th>Date</th>
-                <th>Type</th>
-                <th>Stance</th>
-                <th>Result</th>
-                <th>Participants</th>
-                <th>Diamond Reward</th>
+                <th>Total Participants</th>
+                <th>Total Diamonds Reward</th>
                 <th class="admin-only"></th>
               </tr>
             </thead>
@@ -73,6 +69,16 @@
       <div class="view-header space-between">
         <a href="#" id="sovereignBackLink" class="back-link">← Back to Crusades</a>
         <button id="deleteCrusadeBtn" type="button" class="btn small danger admin-only">Delete Crusade</button>
+      </div>
+
+      <div class="crusade-summary-strip">
+        <div class="stat-tile"><span class="stat-label">Name</span><span class="stat-value" id="crusadeSummaryName">—</span></div>
+        <div class="stat-tile"><span class="stat-label">Date</span><span class="stat-value" id="crusadeSummaryDate">—</span></div>
+        <div class="stat-tile"><span class="stat-label">Type</span><span class="stat-value" id="crusadeSummaryType">—</span></div>
+        <div class="stat-tile"><span class="stat-label">Stance</span><span class="stat-value" id="crusadeSummaryStance">—</span></div>
+        <div class="stat-tile"><span class="stat-label">Result</span><span class="stat-value" id="crusadeSummaryResult">—</span></div>
+        <div class="stat-tile"><span class="stat-label">Participants</span><span class="stat-value" id="crusadeSummaryParticipants">—</span></div>
+        <div class="stat-tile gold"><span class="stat-label">Diamonds Reward</span><span class="stat-value" id="crusadeSummaryReward">—</span></div>
       </div>
 
       <section class="panel">
@@ -123,7 +129,7 @@
 
       <section class="panel">
         <div class="view-header space-between" style="margin-bottom:6px;">
-          <h2 style="margin:0;">Party Roster</h2>
+          <h2 style="margin:0;">Team Roster</h2>
           <button id="addCrusadeParticipantBtn" type="button" class="btn small primary admin-only">+ Add Participant</button>
         </div>
         <div id="crusadePartyGrid" class="crusade-party-grid"></div>
@@ -158,7 +164,7 @@
     <!-- ===================== MEMBER LIST PANEL ===================== -->
     <div id="sovereignMembersPanel" class="hidden">
       <div class="view-header space-between">
-        <p style="color:var(--text-muted); font-size:13px; margin:0; flex:1;">Everyone ever saved into a crusade party roster, grouped by guild — saving a participant here keeps this up to date automatically.</p>
+        <p style="color:var(--text-muted); font-size:13px; margin:0; flex:1;">Everyone ever saved into a crusade team roster, grouped by guild — saving a participant here keeps this up to date automatically.</p>
       </div>
       <section class="panel">
         <div class="table-scroll">
@@ -231,7 +237,7 @@
             <option value="Sniper"><option value="Mage"><option value="Priest">
           </datalist>
         </label>
-        <label><span>Party</span>
+        <label><span>Team</span>
           <input name="partyNumber" type="number" min="1" max="20" value="1">
         </label>
         <label><span>Gold Bid</span>
@@ -249,6 +255,6 @@
   <div id="toast" class="toast hidden"></div>
 
   <script src="/common.js?v=35"></script>
-  <script src="/sovereign/crusade/app.js?v=3"></script>
+  <script src="/sovereign/crusade/app.js?v=4"></script>
 </body>
 </html>

@@ -89,11 +89,7 @@ function renderCrusadeList() {
     .map(
       (c) => `
     <tr>
-      <td><a href="#crusade/${c.id}" style="font-weight:600;">${escapeHtml(c.name)}</a></td>
-      <td>${c.eventDate ? escapeHtml(String(c.eventDate).slice(0, 10)) : '–'}</td>
-      <td>${c.warType ? escapeHtml(c.warType) : '–'}</td>
-      <td>${c.stance ? escapeHtml(c.stance) : '–'}</td>
-      <td>${escapeHtml(CRUSADE_RESULT_LABELS[c.result] || c.result || 'Pending')}</td>
+      <td><a href="#crusade/${c.id}" style="font-weight:600;">${c.eventDate ? escapeHtml(formatLongDate(String(c.eventDate).slice(0, 10))) : 'No date set'}</a></td>
       <td>${c.participantCount}</td>
       <td>${crusadeFormatDiamonds(c.diamondReward)}</td>
       <td class="admin-only"><button type="button" class="icon-btn" data-delete-crusade="${c.id}" title="Delete crusade">✕</button></td>
@@ -207,10 +203,22 @@ async function loadCrusadeDetail(id) {
 }
 
 function renderCrusadeDetail() {
+  populateCrusadeSummaryStrip();
   populateCrusadeHeaderForm();
   populateCrusadeGuildSelect();
   renderCrusadePartyGrid();
   renderCrusadeDistribution();
+}
+
+function populateCrusadeSummaryStrip() {
+  const c = sovereignState.crusade;
+  document.getElementById('crusadeSummaryName').textContent = c.name || '—';
+  document.getElementById('crusadeSummaryDate').textContent = c.eventDate ? formatLongDate(String(c.eventDate).slice(0, 10)) : '—';
+  document.getElementById('crusadeSummaryType').textContent = c.warType || '—';
+  document.getElementById('crusadeSummaryStance').textContent = c.stance || '—';
+  document.getElementById('crusadeSummaryResult').textContent = CRUSADE_RESULT_LABELS[c.result] || c.result || 'Pending';
+  document.getElementById('crusadeSummaryParticipants').textContent = sovereignState.participants.length;
+  document.getElementById('crusadeSummaryReward').textContent = crusadeFormatDiamonds(c.diamondReward);
 }
 
 function populateCrusadeHeaderForm() {
@@ -256,6 +264,7 @@ document.getElementById('crusadeHeaderForm').addEventListener('submit', async (e
     });
     sovereignState.crusade = { ...sovereignState.crusade, ...updated };
     document.title = `Sovereign — ${updated.name}`;
+    populateCrusadeSummaryStrip();
     renderCrusadeDistribution();
     toast('Crusade details saved');
   } catch (err) {
@@ -311,8 +320,8 @@ function renderCrusadePartyGrid() {
       return `
       <div class="crusade-party-card">
         <div class="crusade-party-card-header">
-          <h3>Party ${n}</h3>
-          <button type="button" class="icon-btn admin-only" data-add-to-party="${n}" title="Add to this party">+</button>
+          <h3>Team ${n}</h3>
+          <button type="button" class="icon-btn admin-only" data-add-to-party="${n}" title="Add to this team">+</button>
         </div>
         <table class="members-table">
           <thead><tr><th>Name</th><th>Guild</th><th>Position</th><th>Gold</th><th>Enter</th><th class="admin-only"></th></tr></thead>
@@ -360,6 +369,7 @@ async function deleteCrusadeParticipant(id) {
     sovereignState.participants = sovereignState.participants.filter((p) => p.id !== id);
     renderCrusadePartyGrid();
     renderCrusadeDistribution();
+    populateCrusadeSummaryStrip();
     toast('Participant removed');
   } catch (err) {
     toast(err.message);
@@ -407,6 +417,7 @@ document.getElementById('crusadeParticipantForm').addEventListener('submit', asy
     document.getElementById('crusadeParticipantModal').classList.add('hidden');
     renderCrusadePartyGrid();
     renderCrusadeDistribution();
+    populateCrusadeSummaryStrip();
     toast('Roster saved');
   } catch (err) {
     toast(err.message);
