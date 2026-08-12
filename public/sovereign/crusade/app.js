@@ -284,10 +284,13 @@ function populateCrusadeHeaderForm() {
 }
 
 function populateCrusadeGuildSelect() {
-  const select = document.getElementById('crusadeParticipantGuildSelect');
-  const current = select.value;
-  select.innerHTML = '<option value="">—</option>' + sovereignState.guilds.map((g) => `<option value="${escapeHtml(g.name)}">${escapeHtml(g.name)}</option>`).join('');
-  select.value = current;
+  const options = '<option value="">—</option>' + sovereignState.guilds.map((g) => `<option value="${escapeHtml(g.name)}">${escapeHtml(g.name)}</option>`).join('');
+  ['crusadeParticipantGuildSelect', 'crusadeFeeGuildSelect'].forEach((id) => {
+    const select = document.getElementById(id);
+    const current = select.value;
+    select.innerHTML = options;
+    select.value = current;
+  });
 }
 
 document.getElementById('crusadeHeaderForm').addEventListener('submit', async (e) => {
@@ -458,7 +461,12 @@ function renderTeamDetail(n) {
     btn.addEventListener('click', () => openCrusadeParticipantModal(null, n, Number(btn.getAttribute('data-add-to-party-slot'))));
   });
 
-  renderCrusadeGuildSummary(teamRows, 'crusadeTeamGuildSummary');
+  const feeCreditsByGuild = new Map();
+  sovereignState.fees.forEach((fee) => {
+    if (!fee.guildName) return;
+    feeCreditsByGuild.set(fee.guildName, (feeCreditsByGuild.get(fee.guildName) || 0) + crusadeFeeAmount(fee));
+  });
+  renderCrusadeGuildSummary(teamRows, 'crusadeTeamGuildSummary', undefined, feeCreditsByGuild);
   renderTeamItemTable(n);
   renderCrusadeItemList();
   renderCrusadeFeeList();
@@ -709,17 +717,22 @@ document.getElementById('addCrusadeItemForm').addEventListener('submit', async (
   }
 });
 
+function crusadeFeeAmount(fee) {
+  const diamondReward = sovereignState.crusade ? sovereignState.crusade.diamondReward || 0 : 0;
+  return diamondReward * (fee.percent / 100);
+}
+
 function renderCrusadeFeeList() {
   const list = document.getElementById('crusadeFeeList');
   document.getElementById('crusadeFeeListEmptyState').classList.toggle('hidden', sovereignState.fees.length !== 0);
 
-  const diamondReward = sovereignState.crusade ? sovereignState.crusade.diamondReward || 0 : 0;
   list.innerHTML = sovereignState.fees
     .map(
       (fee) => `
     <li style="display:flex; gap:8px; align-items:center;" data-fee-id="${fee.id}">
       <span style="flex:1;">${escapeHtml(fee.name)}</span>
-      <span style="color:var(--text-muted);">${fee.percent}% → ${crusadeFormatDiamonds(diamondReward * (fee.percent / 100))}</span>
+      ${crusadeGuildBadge(fee.guildName)}
+      <span style="color:var(--text-muted);">${fee.percent}% → ${crusadeFormatDiamonds(crusadeFeeAmount(fee))}</span>
       <button type="button" class="icon-btn admin-only" data-delete-fee="${fee.id}" title="Remove fee">✕</button>
     </li>`
     )
@@ -748,7 +761,11 @@ document.getElementById('addCrusadeFeeForm').addEventListener('submit', async (e
   try {
     const fee = await api(`/api/crusades/${sovereignState.crusadeId}/fees`, {
       method: 'POST',
-      body: JSON.stringify({ name: form.elements.name.value, percent: Number(form.elements.percent.value) || 0 }),
+      body: JSON.stringify({
+        name: form.elements.name.value,
+        guildName: form.elements.guildName.value || null,
+        percent: Number(form.elements.percent.value) || 0,
+      }),
     });
     sovereignState.fees.push(fee);
     renderTeamDetail(sovereignState.activeTeam); // new fee changes the shared pool, so recompute (also re-renders this list)
@@ -759,7 +776,10 @@ document.getElementById('addCrusadeFeeForm').addEventListener('submit', async (e
   }
 });
 
-function renderCrusadeGuildSummary(rows, containerId, formatFn) {
+// extraByGuild optionally adds a flat amount to a guild's total without
+// counting as a member — used to fold management fees into the guild that
+// the fee's IGN belongs to, even though the fee isn't itself a participant.
+function renderCrusadeGuildSummary(rows, containerId, formatFn, extraByGuild) {
   const format = formatFn || crusadeFormatDiamonds;
   const el = document.getElementById(containerId);
   const byGuild = new Map();
@@ -771,12 +791,21 @@ function renderCrusadeGuildSummary(rows, containerId, formatFn) {
     g.count += 1;
   });
 
+  let extraTotal = 0;
+  if (extraByGuild) {
+    extraByGuild.forEach((amount, guildName) => {
+      if (!byGuild.has(guildName)) byGuild.set(guildName, { total: 0, count: 0 });
+      byGuild.get(guildName).total += amount;
+      extraTotal += amount;
+    });
+  }
+
   if (!byGuild.size) {
     el.innerHTML = '';
     return;
   }
 
-  const grandTotal = rows.reduce((sum, r) => sum + r.total, 0);
+  const grandTotal = rows.reduce((sum, r) => sum + r.total, 0) + extraTotal;
   const items = Array.from(byGuild.entries())
     .sort((a, b) => b[1].total - a[1].total)
     .map(([name, g]) => {

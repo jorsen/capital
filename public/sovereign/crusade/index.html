@@ -151,6 +151,11 @@
           <label style="flex:1; min-width:140px;"><span>IGN</span>
             <input type="text" name="name" maxlength="40" placeholder="e.g. GuildLeaderIGN" required>
           </label>
+          <label style="flex:1; min-width:120px;"><span>Guild</span>
+            <select name="guildName" id="crusadeFeeGuildSelect">
+              <option value="">—</option>
+            </select>
+          </label>
           <label style="flex:1; min-width:120px;"><span>Percent %</span>
             <input type="number" name="percent" min="0" max="100" step="0.1" placeholder="e.g. 5" required>
           </label>
@@ -300,6 +305,6 @@
   <div id="toast" class="toast hidden"></div>
 
   <script src="/common.js?v=35"></script>
-  <script src="/sovereign/crusade/app.js?v=18"></script>
+  <script src="/sovereign/crusade/app.js?v=19"></script>
 </body>
 </html>
