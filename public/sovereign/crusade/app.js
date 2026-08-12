@@ -42,6 +42,7 @@ function crusadeGuildBadge(guildName) {
 function route() {
   const hash = window.location.hash.slice(1);
   const teamMatch = hash.match(/^crusade\/([^/]+)\/team\/(\d+)$/);
+  const guildSalaryMatch = hash.match(/^crusade\/([^/]+)\/guild-salary$/);
   const crusadeMatch = hash.match(/^crusade\/([^/]+)$/);
 
   if (hash === 'members') {
@@ -54,6 +55,10 @@ function route() {
     sovereignState.crusadeId = teamMatch[1];
     sovereignState.activeTeam = Number(teamMatch[2]);
     sovereignState.mode = 'team';
+  } else if (guildSalaryMatch) {
+    sovereignState.crusadeId = guildSalaryMatch[1];
+    sovereignState.activeTeam = null;
+    sovereignState.mode = 'guildSalary';
   } else if (crusadeMatch) {
     sovereignState.crusadeId = crusadeMatch[1];
     sovereignState.activeTeam = null;
@@ -64,23 +69,34 @@ function route() {
     loadCrusadeList().catch((err) => toast(err.message));
     return;
   }
-  showPanel(sovereignState.mode === 'overview' ? 'detail' : 'team');
+  showPanel(sovereignState.mode === 'overview' ? 'detail' : sovereignState.mode === 'guildSalary' ? 'guildSalary' : 'team');
   loadCrusadeDetail(sovereignState.crusadeId).catch((err) => toast(err.message));
 }
 
 function showPanel(name) {
   document.getElementById('sovereignListPanel').classList.toggle('hidden', name !== 'list');
   document.getElementById('sovereignDetailPanel').classList.toggle('hidden', name !== 'detail');
+  document.getElementById('sovereignGuildSalaryPanel').classList.toggle('hidden', name !== 'guildSalary');
   document.getElementById('sovereignTeamPanel').classList.toggle('hidden', name !== 'team');
   document.getElementById('sovereignMembersPanel').classList.toggle('hidden', name !== 'members');
   document.querySelectorAll('#pageNav .nav-link').forEach((a) => a.classList.toggle('active', a.getAttribute('data-panel') === name));
-  // 'detail' and 'team' set their own title once their data loads.
+  // 'detail', 'guildSalary' and 'team' set their own title once their data loads.
   if (name === 'list' || name === 'members') document.title = 'Sovereign — Crusade';
 }
 
 document.getElementById('sovereignBackLink').addEventListener('click', (e) => {
   e.preventDefault();
   window.location.hash = '';
+});
+
+document.getElementById('viewGuildSalaryLink').addEventListener('click', (e) => {
+  e.preventDefault();
+  window.location.hash = `crusade/${sovereignState.crusadeId}/guild-salary`;
+});
+
+document.getElementById('sovereignGuildSalaryBackLink').addEventListener('click', (e) => {
+  e.preventDefault();
+  window.location.hash = `crusade/${sovereignState.crusadeId}`;
 });
 
 document.getElementById('sovereignTeamBackLink').addEventListener('click', (e) => {
@@ -236,10 +252,12 @@ async function loadCrusadeDetail(id) {
 
   if (sovereignState.mode === 'team') {
     renderTeamDetail(sovereignState.activeTeam); // sets its own title
+  } else if (sovereignState.mode === 'guildSalary') {
+    document.title = `Sovereign — ${crusade.name} — Guild Salary`;
+    renderCrusadeGuildSalary();
   } else {
     document.title = `Sovereign — ${crusade.name}`;
     renderTeamList();
-    renderCrusadeGuildSalary();
   }
 }
 
@@ -249,10 +267,8 @@ async function loadCrusadeDetail(id) {
 // sync, without needing to re-render pages that aren't currently visible.
 function refreshAfterRosterChange() {
   if (sovereignState.mode === 'team') renderTeamDetail(sovereignState.activeTeam);
-  else {
-    renderTeamList();
-    renderCrusadeGuildSalary();
-  }
+  else if (sovereignState.mode === 'guildSalary') renderCrusadeGuildSalary();
+  else renderTeamList();
 }
 
 function nextTeamNumber() {
@@ -381,43 +397,62 @@ function renderTeamList() {
 // Crusade-wide (every team combined) — each guild's total diamond salary,
 // including any management fee credited to that guild. Unlike the per-team
 // guild summary, a fee is only ever added once here, not once per team.
-function computeCrusadeGuildSalary() {
+// Crusade-wide (every team combined), categorized by guild: each guild's
+// entry list is every participant's own IGN + their individual salary, plus
+// a line for any management fee credited to that guild (fees aren't tied to
+// a specific team, so they show once per guild here, not once per team like
+// the per-team guild summary).
+function computeCrusadeGuildSalaryDetail() {
   const byGuild = new Map();
   computeCrusadeDistribution().forEach(({ participant: p, total }) => {
     const key = p.guildName || 'Unassigned';
-    if (!byGuild.has(key)) byGuild.set(key, { total: 0, count: 0 });
-    const g = byGuild.get(key);
-    g.total += total;
-    g.count += 1;
+    if (!byGuild.has(key)) byGuild.set(key, []);
+    byGuild.get(key).push({ name: p.name, team: p.partyNumber, salary: total, isFee: false });
   });
   sovereignState.fees.forEach((fee) => {
     if (!fee.guildName) return;
-    if (!byGuild.has(fee.guildName)) byGuild.set(fee.guildName, { total: 0, count: 0 });
-    byGuild.get(fee.guildName).total += crusadeFeeAmount(fee);
+    if (!byGuild.has(fee.guildName)) byGuild.set(fee.guildName, []);
+    byGuild.get(fee.guildName).push({ name: fee.name, team: null, salary: crusadeFeeAmount(fee), isFee: true });
   });
+
   return Array.from(byGuild.entries())
-    .map(([name, g]) => ({ name, count: g.count, total: g.total }))
+    .map(([name, entries]) => ({
+      name,
+      entries: entries.sort((a, b) => b.salary - a.salary),
+      memberCount: entries.filter((e) => !e.isFee).length,
+      total: entries.reduce((sum, e) => sum + e.salary, 0),
+    }))
     .sort((a, b) => b.total - a.total);
 }
 
 function renderCrusadeGuildSalary() {
-  const salaries = computeCrusadeGuildSalary();
-  const grandTotal = salaries.reduce((sum, g) => sum + g.total, 0);
-  const grandCount = salaries.reduce((sum, g) => sum + g.count, 0);
+  const guilds = computeCrusadeGuildSalaryDetail();
+  const el = document.getElementById('crusadeGuildSalaryDetail');
 
-  const rows = salaries
-    .map(
-      (g) => `
-    <tr>
-      <td style="font-weight:600;">${g.name === 'Unassigned' ? 'Unassigned' : crusadeGuildBadge(g.name)}</td>
-      <td>${g.count}</td>
-      <td>${crusadeFormatDiamonds(g.total)}</td>
-    </tr>`
-    )
+  el.innerHTML = guilds
+    .map((g) => {
+      const rows = g.entries
+        .map(
+          (e) => `
+        <tr>
+          <td style="font-weight:600; white-space:nowrap;">${escapeHtml(e.name)}${e.isFee ? ' <span style="color:var(--text-muted); font-weight:400;">(fee)</span>' : ''}</td>
+          <td>${e.team ? `Team ${e.team}` : '–'}</td>
+          <td>${crusadeFormatDiamonds(e.salary)}</td>
+        </tr>`
+        )
+        .join('');
+      return `
+      <div class="crusade-party-card">
+        <div class="crusade-party-card-header">
+          <h3>${g.name === 'Unassigned' ? 'Unassigned' : escapeHtml(g.name)} — ${crusadeFormatDiamonds(g.total)} (${g.memberCount} member${g.memberCount === 1 ? '' : 's'})</h3>
+        </div>
+        <table class="members-table">
+          <thead><tr><th>IGN</th><th>Team</th><th>Salary</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+    })
     .join('');
-
-  document.getElementById('crusadeGuildSalaryBody').innerHTML =
-    rows + `<tr class="crusade-table-total-row"><td>Total</td><td>${grandCount}</td><td>${crusadeFormatDiamonds(grandTotal)}</td></tr>`;
 }
 
 // The team's own page shows *all* of its records in one place: roster

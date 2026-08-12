@@ -95,22 +95,26 @@
       </section>
 
       <section class="panel">
-        <div class="view-header space-between" style="margin-bottom:6px;">
-          <h2 style="margin:0;">Guild Salary</h2>
+        <div class="view-header space-between" style="margin:0;">
+          <div>
+            <h2 style="margin:0;">Guild Salary</h2>
+            <p style="color:var(--text-muted); font-size:13px; margin:4px 0 0;">Total diamonds owed to each guild across the whole crusade, broken down by IGN.</p>
+          </div>
+          <a href="#" id="viewGuildSalaryLink" class="btn primary small">View Guild Salary →</a>
         </div>
-        <p style="color:var(--text-muted); font-size:13px; margin:0 0 10px;">Total diamonds owed to each guild across the whole crusade — attendance, gold bid, and any management fee credited to that guild.</p>
-        <div class="table-scroll">
-          <table class="members-table">
-            <thead>
-              <tr>
-                <th>Guild</th>
-                <th>Members</th>
-                <th>Total Salary</th>
-              </tr>
-            </thead>
-            <tbody id="crusadeGuildSalaryBody"></tbody>
-          </table>
-        </div>
+      </section>
+    </div>
+
+    <!-- ===================== GUILD SALARY PANEL (crusade-wide, categorized by guild) ===================== -->
+    <div id="sovereignGuildSalaryPanel" class="hidden">
+      <div class="view-header space-between">
+        <a href="#" id="sovereignGuildSalaryBackLink" class="back-link">← Back to Crusade</a>
+      </div>
+
+      <section class="panel">
+        <h2>Guild Salary</h2>
+        <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;">Every participant's diamond salary across the whole crusade, grouped by guild — plus any management fee credited to that guild.</p>
+        <div id="crusadeGuildSalaryDetail" class="crusade-party-grid"></div>
       </section>
     </div>
 
@@ -324,6 +328,6 @@
   <div id="toast" class="toast hidden"></div>
 
   <script src="/common.js?v=35"></script>
-  <script src="/sovereign/crusade/app.js?v=20"></script>
+  <script src="/sovereign/crusade/app.js?v=21"></script>
 </body>
 </html>
