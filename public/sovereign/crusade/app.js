@@ -4,7 +4,7 @@
 // api()/toast()/escapeHtml()/session handling, which is why it's loaded here.
 
 // mode tracks which crusade-scoped page is active: 'overview' | 'team'.
-const sovereignState = { crusades: [], guilds: [], crusadeId: null, crusade: null, participants: [], items: [], memberList: [], activeTeam: null, mode: null };
+const sovereignState = { crusades: [], guilds: [], crusadeId: null, crusade: null, participants: [], items: [], fees: [], memberList: [], activeTeam: null, mode: null };
 
 function crusadeFormatDiamonds(amount) {
   return `${(amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 💎`;
@@ -228,6 +228,7 @@ async function loadCrusadeDetail(id) {
   sovereignState.crusade = crusade;
   sovereignState.participants = crusade.participants;
   sovereignState.items = crusade.items;
+  sovereignState.fees = crusade.fees;
   sovereignState.guilds = guilds;
   populateCrusadeGuildSelect(); // shared by the add/edit-participant modal regardless of which page opened it
 
@@ -460,6 +461,7 @@ function renderTeamDetail(n) {
   renderCrusadeGuildSummary(teamRows, 'crusadeTeamGuildSummary');
   renderTeamItemTable(n);
   renderCrusadeItemList();
+  renderCrusadeFeeList();
 }
 
 async function toggleCrusadeParticipantFlag(checkbox, field) {
@@ -551,17 +553,27 @@ document.getElementById('crusadeParticipantForm').addEventListener('submit', asy
 
 // ---------- Diamond distribution ----------
 
-// Half the reward splits evenly across everyone who attended; the other half
-// splits across gold bidders in proportion to their bid — this collapses to
-// an equal split when every bidder bids the same amount (the common case),
-// and scales fairly when bids differ.
+// Management fees take a percentage of the *total* diamond reward off the
+// top (e.g. a guild leader's cut) before anything else is computed — so the
+// pool that actually gets split by attendance/bid is the reward minus every
+// fee's amount.
+function totalCrusadeFeeAmount() {
+  const diamondReward = sovereignState.crusade ? sovereignState.crusade.diamondReward || 0 : 0;
+  return sovereignState.fees.reduce((sum, f) => sum + diamondReward * (f.percent / 100), 0);
+}
+
+// Half the (post-fee) reward splits evenly across everyone who attended; the
+// other half splits across gold bidders in proportion to their bid — this
+// collapses to an equal split when every bidder bids the same amount (the
+// common case), and scales fairly when bids differ.
 function computeCrusadeDistribution() {
   const c = sovereignState.crusade;
   const participants = sovereignState.participants;
   const diamondReward = c ? c.diamondReward || 0 : 0;
   const attendancePct = c ? c.attendancePct ?? 50 : 50;
-  const attendancePool = diamondReward * (attendancePct / 100);
-  const bidPool = diamondReward - attendancePool;
+  const netReward = Math.max(0, diamondReward - totalCrusadeFeeAmount());
+  const attendancePool = netReward * (attendancePct / 100);
+  const bidPool = netReward - attendancePool;
 
   const attendees = participants.filter((p) => p.attended);
   const attendanceShare = attendees.length ? attendancePool / attendees.length : 0;
@@ -692,6 +704,56 @@ document.getElementById('addCrusadeItemForm').addEventListener('submit', async (
     renderTeamItemTable(sovereignState.activeTeam);
     form.reset();
     toast(`${item.name} added`);
+  } catch (err) {
+    toast(err.message);
+  }
+});
+
+function renderCrusadeFeeList() {
+  const list = document.getElementById('crusadeFeeList');
+  document.getElementById('crusadeFeeListEmptyState').classList.toggle('hidden', sovereignState.fees.length !== 0);
+
+  const diamondReward = sovereignState.crusade ? sovereignState.crusade.diamondReward || 0 : 0;
+  list.innerHTML = sovereignState.fees
+    .map(
+      (fee) => `
+    <li style="display:flex; gap:8px; align-items:center;" data-fee-id="${fee.id}">
+      <span style="flex:1;">${escapeHtml(fee.name)}</span>
+      <span style="color:var(--text-muted);">${fee.percent}% → ${crusadeFormatDiamonds(diamondReward * (fee.percent / 100))}</span>
+      <button type="button" class="icon-btn admin-only" data-delete-fee="${fee.id}" title="Remove fee">✕</button>
+    </li>`
+    )
+    .join('');
+
+  list.querySelectorAll('[data-delete-fee]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const feeId = btn.getAttribute('data-delete-fee');
+      const fee = sovereignState.fees.find((f) => f.id === feeId);
+      if (!confirm(`Remove the ${fee?.percent}% management fee for "${fee?.name}"?`)) return;
+      try {
+        await api(`/api/crusades/${sovereignState.crusadeId}/fees/${feeId}`, { method: 'DELETE' });
+        sovereignState.fees = sovereignState.fees.filter((f) => f.id !== feeId);
+        renderTeamDetail(sovereignState.activeTeam); // fee removal changes the shared pool, so recompute (also re-renders this list)
+        toast('Fee removed');
+      } catch (err) {
+        toast(err.message);
+      }
+    });
+  });
+}
+
+document.getElementById('addCrusadeFeeForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  try {
+    const fee = await api(`/api/crusades/${sovereignState.crusadeId}/fees`, {
+      method: 'POST',
+      body: JSON.stringify({ name: form.elements.name.value, percent: Number(form.elements.percent.value) || 0 }),
+    });
+    sovereignState.fees.push(fee);
+    renderTeamDetail(sovereignState.activeTeam); // new fee changes the shared pool, so recompute (also re-renders this list)
+    form.reset();
+    toast(`${fee.name}'s fee added`);
   } catch (err) {
     toast(err.message);
   }
