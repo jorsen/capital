@@ -3,7 +3,7 @@
 // that crusade's roster + distribution. common.js still supplies
 // api()/toast()/escapeHtml()/session handling, which is why it's loaded here.
 
-// mode tracks which crusade-scoped page is active: 'overview' | 'teamList' | 'team'.
+// mode tracks which crusade-scoped page is active: 'overview' | 'team'.
 const sovereignState = { crusades: [], guilds: [], crusadeId: null, crusade: null, participants: [], memberList: [], activeTeam: null, mode: null };
 
 const CRUSADE_RESULT_LABELS = { pending: 'Pending', win: 'Win', lose: 'Lose', draw: 'Draw' };
@@ -27,15 +27,14 @@ function crusadeGuildBadge(guildName) {
   return `<span class="crusade-guild-badge" style="color:${color}; border-color:${color};">${escapeHtml(guildName)}</span>`;
 }
 
-// ---------- Routing between the five panels ----------
+// ---------- Routing between the four panels ----------
 // '' -> crusade list, '#members' -> master member list, '#crusade/<id>' ->
-// crusade overview (details + distribution), '#crusade/<id>/teams' -> the
-// team list as its own page, '#crusade/<id>/team/<n>' -> one team's roster.
+// crusade overview (details + team list), '#crusade/<id>/team/<n>' -> one
+// team's full records.
 
 function route() {
   const hash = window.location.hash.slice(1);
   const teamMatch = hash.match(/^crusade\/([^/]+)\/team\/(\d+)$/);
-  const teamListMatch = hash.match(/^crusade\/([^/]+)\/teams$/);
   const crusadeMatch = hash.match(/^crusade\/([^/]+)$/);
 
   if (hash === 'members') {
@@ -48,10 +47,6 @@ function route() {
     sovereignState.crusadeId = teamMatch[1];
     sovereignState.activeTeam = Number(teamMatch[2]);
     sovereignState.mode = 'team';
-  } else if (teamListMatch) {
-    sovereignState.crusadeId = teamListMatch[1];
-    sovereignState.activeTeam = null;
-    sovereignState.mode = 'teamList';
   } else if (crusadeMatch) {
     sovereignState.crusadeId = crusadeMatch[1];
     sovereignState.activeTeam = null;
@@ -62,18 +57,17 @@ function route() {
     loadCrusadeList().catch((err) => toast(err.message));
     return;
   }
-  showPanel(sovereignState.mode === 'overview' ? 'detail' : sovereignState.mode);
+  showPanel(sovereignState.mode === 'overview' ? 'detail' : 'team');
   loadCrusadeDetail(sovereignState.crusadeId).catch((err) => toast(err.message));
 }
 
 function showPanel(name) {
   document.getElementById('sovereignListPanel').classList.toggle('hidden', name !== 'list');
   document.getElementById('sovereignDetailPanel').classList.toggle('hidden', name !== 'detail');
-  document.getElementById('sovereignTeamListPanel').classList.toggle('hidden', name !== 'teamList');
   document.getElementById('sovereignTeamPanel').classList.toggle('hidden', name !== 'team');
   document.getElementById('sovereignMembersPanel').classList.toggle('hidden', name !== 'members');
   document.querySelectorAll('#pageNav .nav-link').forEach((a) => a.classList.toggle('active', a.getAttribute('data-panel') === name));
-  // 'detail', 'teamList' and 'team' set their own title once their data loads.
+  // 'detail' and 'team' set their own title once their data loads.
   if (name === 'list' || name === 'members') document.title = 'Sovereign — Crusade';
 }
 
@@ -82,19 +76,9 @@ document.getElementById('sovereignBackLink').addEventListener('click', (e) => {
   window.location.hash = '';
 });
 
-document.getElementById('viewTeamListLink').addEventListener('click', (e) => {
-  e.preventDefault();
-  window.location.hash = `crusade/${sovereignState.crusadeId}/teams`;
-});
-
-document.getElementById('sovereignTeamListBackLink').addEventListener('click', (e) => {
-  e.preventDefault();
-  window.location.hash = `crusade/${sovereignState.crusadeId}`;
-});
-
 document.getElementById('sovereignTeamBackLink').addEventListener('click', (e) => {
   e.preventDefault();
-  window.location.hash = `crusade/${sovereignState.crusadeId}/teams`;
+  window.location.hash = `crusade/${sovereignState.crusadeId}`;
 });
 
 window.addEventListener('hashchange', route);
@@ -239,15 +223,13 @@ async function loadCrusadeDetail(id) {
   sovereignState.guilds = guilds;
   populateCrusadeGuildSelect(); // shared by the add/edit-participant modal regardless of which page opened it
 
-  if (sovereignState.mode === 'teamList') {
-    document.title = `Sovereign — ${crusade.name} — Teams`;
-    renderTeamList();
-  } else if (sovereignState.mode === 'team') {
+  if (sovereignState.mode === 'team') {
     renderTeamDetail(sovereignState.activeTeam); // sets its own title
   } else {
     document.title = `Sovereign — ${crusade.name}`;
     populateCrusadeSummaryStrip();
     populateCrusadeHeaderForm();
+    renderTeamList();
   }
 }
 
@@ -257,9 +239,11 @@ async function loadCrusadeDetail(id) {
 // currently open team's full records — stays in sync, without needing to
 // re-render pages that aren't currently visible.
 function refreshAfterRosterChange() {
-  if (sovereignState.mode === 'teamList') renderTeamList();
-  else if (sovereignState.mode === 'team') renderTeamDetail(sovereignState.activeTeam);
-  else populateCrusadeSummaryStrip();
+  if (sovereignState.mode === 'team') renderTeamDetail(sovereignState.activeTeam);
+  else {
+    populateCrusadeSummaryStrip();
+    renderTeamList();
+  }
 }
 
 function nextTeamNumber() {
@@ -321,6 +305,7 @@ document.getElementById('crusadeHeaderForm').addEventListener('submit', async (e
     sovereignState.crusade = { ...sovereignState.crusade, ...updated };
     document.title = `Sovereign — ${updated.name}`;
     populateCrusadeSummaryStrip();
+    renderTeamList();
     toast('Crusade details saved');
   } catch (err) {
     toast(err.message);
