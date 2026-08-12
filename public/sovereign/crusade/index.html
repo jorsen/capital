@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/styles.css?v=68">
+  <link rel="stylesheet" href="/styles.css?v=69">
 </head>
 <body>
   <div class="app viz-root">
@@ -113,8 +113,31 @@
         <p id="crusadeTeamRosterEmptyState" class="empty-state hidden">No participants in this team yet.</p>
         <div id="crusadeTeamGuildSummary" class="crusade-guild-summary"></div>
 
-        <h3 id="crusadeTeamItemHeading" class="crusade-item-heading hidden"></h3>
-        <div id="crusadeTeamItemSummary" class="crusade-guild-summary"></div>
+        <h3 id="crusadeTeamItemsHeading" class="crusade-item-heading hidden">Items by Guild (attendees only)</h3>
+        <div class="table-scroll">
+          <table class="members-table hidden" id="crusadeTeamItemTable">
+            <thead><tr id="crusadeTeamItemTableHead"></tr></thead>
+            <tbody id="crusadeTeamItemTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="view-header space-between" style="margin-bottom:6px;">
+          <h2 style="margin:0;">Items</h2>
+        </div>
+        <p style="color:var(--text-muted); font-size:13px; margin:0 0 10px;">Each item is split evenly across everyone marked "Attended" on this crusade.</p>
+        <ul id="crusadeItemList" style="list-style:none; padding:0; margin:0 0 12px; display:flex; flex-direction:column; gap:8px;"></ul>
+        <p id="crusadeItemListEmptyState" class="empty-state hidden">No items added yet.</p>
+        <form id="addCrusadeItemForm" class="admin-only" style="display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end;">
+          <label style="flex:1; min-width:140px;"><span>Item Name</span>
+            <input type="text" name="name" maxlength="40" placeholder="e.g. Morion" required>
+          </label>
+          <label style="flex:1; min-width:120px;"><span>Quantity</span>
+            <input type="number" name="quantity" min="0" step="1" placeholder="e.g. 215" required>
+          </label>
+          <button type="submit" class="btn primary small">+ Add Item</button>
+        </form>
       </section>
 
       <section class="panel">
@@ -155,12 +178,6 @@
           </label>
           <label><span>Attendance Share %</span>
             <input class="admin-disable" name="attendancePct" type="number" min="0" max="100" step="1">
-          </label>
-          <label><span>Item Name</span>
-            <input class="admin-disable" name="itemName" type="text" maxlength="40" placeholder="e.g. Morion">
-          </label>
-          <label><span>Item Quantity</span>
-            <input class="admin-disable" name="itemQuantity" type="number" min="0" step="1" placeholder="e.g. 215">
           </label>
           <label class="crusade-notes-field"><span>Notes</span>
             <textarea class="admin-disable" name="notes" rows="2" placeholder="e.g. Morions / Loot Chest / Guild Coins split still being discussed"></textarea>
@@ -265,6 +282,6 @@
   <div id="toast" class="toast hidden"></div>
 
   <script src="/common.js?v=35"></script>
-  <script src="/sovereign/crusade/app.js?v=16"></script>
+  <script src="/sovereign/crusade/app.js?v=17"></script>
 </body>
 </html>

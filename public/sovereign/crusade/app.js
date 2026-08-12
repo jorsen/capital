@@ -4,7 +4,7 @@
 // api()/toast()/escapeHtml()/session handling, which is why it's loaded here.
 
 // mode tracks which crusade-scoped page is active: 'overview' | 'team'.
-const sovereignState = { crusades: [], guilds: [], crusadeId: null, crusade: null, participants: [], memberList: [], activeTeam: null, mode: null };
+const sovereignState = { crusades: [], guilds: [], crusadeId: null, crusade: null, participants: [], items: [], memberList: [], activeTeam: null, mode: null };
 
 function crusadeFormatDiamonds(amount) {
   return `${(amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 💎`;
@@ -227,6 +227,7 @@ async function loadCrusadeDetail(id) {
   const [crusade, guilds] = await Promise.all([api(`/api/crusades/${id}`), api('/api/crusade-guilds')]);
   sovereignState.crusade = crusade;
   sovereignState.participants = crusade.participants;
+  sovereignState.items = crusade.items;
   sovereignState.guilds = guilds;
   populateCrusadeGuildSelect(); // shared by the add/edit-participant modal regardless of which page opened it
 
@@ -278,8 +279,6 @@ function populateCrusadeHeaderForm() {
   form.elements.result.value = c.result || 'pending';
   form.elements.diamondReward.value = c.diamondReward || 0;
   form.elements.attendancePct.value = c.attendancePct ?? 50;
-  form.elements.itemName.value = c.itemName || '';
-  form.elements.itemQuantity.value = c.itemQuantity || 0;
   form.elements.notes.value = c.notes || '';
 }
 
@@ -306,8 +305,6 @@ document.getElementById('crusadeHeaderForm').addEventListener('submit', async (e
         result: form.elements.result.value,
         diamondReward: Number(form.elements.diamondReward.value) || 0,
         attendancePct: Number(form.elements.attendancePct.value),
-        itemName: form.elements.itemName.value || null,
-        itemQuantity: Number(form.elements.itemQuantity.value) || 0,
         notes: form.elements.notes.value || null,
       }),
     });
@@ -461,17 +458,8 @@ function renderTeamDetail(n) {
   });
 
   renderCrusadeGuildSummary(teamRows, 'crusadeTeamGuildSummary');
-
-  const itemHeading = document.getElementById('crusadeTeamItemHeading');
-  const hasItem = !!(sovereignState.crusade.itemName && sovereignState.crusade.itemQuantity);
-  itemHeading.classList.toggle('hidden', !hasItem);
-  if (hasItem) {
-    itemHeading.textContent = `${sovereignState.crusade.itemName} — ${crusadeFormatItemQty(sovereignState.crusade.itemQuantity)} total, by guild (attendees only)`;
-    const teamItemRows = computeCrusadeItemShares().filter(({ participant: p }) => p.partyNumber === n);
-    renderCrusadeGuildSummary(teamItemRows, 'crusadeTeamItemSummary', crusadeFormatItemQty);
-  } else {
-    document.getElementById('crusadeTeamItemSummary').innerHTML = '';
-  }
+  renderTeamItemTable(n);
+  renderCrusadeItemList();
 }
 
 async function toggleCrusadeParticipantFlag(checkbox, field) {
@@ -586,17 +574,128 @@ function computeCrusadeDistribution() {
   });
 }
 
-// A single named item (e.g. Morion) with a total quantity, split evenly
+// Each named item (e.g. Morion) has its own total quantity, split evenly
 // across attendees only — no bid portion, unlike diamonds. Non-attendees get
 // none, same "attended is a must" rule as the diamond attendance share.
-function computeCrusadeItemShares() {
-  const c = sovereignState.crusade;
+function computeCrusadeItemShares(item) {
   const participants = sovereignState.participants;
-  const quantity = c ? c.itemQuantity || 0 : 0;
+  const quantity = item ? item.quantity || 0 : 0;
   const attendees = participants.filter((p) => p.attended);
   const share = attendees.length ? quantity / attendees.length : 0;
   return participants.map((p) => ({ participant: p, total: p.attended ? share : 0 }));
 }
+
+// Multiple items laid out as columns (one per item) with one row per guild
+// present on this team, so several items can be compared at a glance instead
+// of scrolling through a separate summary per item.
+function renderTeamItemTable(n) {
+  const heading = document.getElementById('crusadeTeamItemsHeading');
+  const table = document.getElementById('crusadeTeamItemTable');
+  const items = sovereignState.items;
+
+  if (!items.length) {
+    heading.classList.add('hidden');
+    table.classList.add('hidden');
+    return;
+  }
+  heading.classList.remove('hidden');
+  table.classList.remove('hidden');
+
+  const teamParticipants = sovereignState.participants.filter((p) => p.partyNumber === n);
+  const guildNames = Array.from(new Set(teamParticipants.map((p) => p.guildName || 'Unassigned'))).sort((a, b) => {
+    if (a === 'Unassigned') return 1;
+    if (b === 'Unassigned') return -1;
+    return a.localeCompare(b);
+  });
+
+  const shareByGuildPerItem = items.map((item) => {
+    const byGuild = new Map();
+    computeCrusadeItemShares(item)
+      .filter(({ participant: p }) => p.partyNumber === n)
+      .forEach(({ participant: p, total }) => {
+        const key = p.guildName || 'Unassigned';
+        byGuild.set(key, (byGuild.get(key) || 0) + total);
+      });
+    return byGuild;
+  });
+
+  document.getElementById('crusadeTeamItemTableHead').innerHTML =
+    `<th>Guild</th>${items.map((it) => `<th>${escapeHtml(it.name)}</th>`).join('')}<th>Members</th>`;
+
+  const memberCountByGuild = new Map();
+  teamParticipants.forEach((p) => {
+    const key = p.guildName || 'Unassigned';
+    memberCountByGuild.set(key, (memberCountByGuild.get(key) || 0) + 1);
+  });
+
+  const rows = guildNames.map((guildName) => {
+    const color = guildName === 'Unassigned' ? null : crusadeGuildColor(guildName);
+    const cells = shareByGuildPerItem.map((byGuild) => `<td>${crusadeFormatItemQty(byGuild.get(guildName) || 0)}</td>`).join('');
+    return `<tr>
+      <td style="font-weight:600; ${color ? `color:${color};` : ''}">${escapeHtml(guildName)}</td>
+      ${cells}
+      <td>${memberCountByGuild.get(guildName)}</td>
+    </tr>`;
+  });
+
+  const totalCells = shareByGuildPerItem
+    .map((byGuild) => `<td>${crusadeFormatItemQty(Array.from(byGuild.values()).reduce((sum, v) => sum + v, 0))}</td>`)
+    .join('');
+  rows.push(`<tr class="crusade-table-total-row"><td>Total</td>${totalCells}<td>${teamParticipants.length}</td></tr>`);
+
+  document.getElementById('crusadeTeamItemTableBody').innerHTML = rows.join('');
+}
+
+function renderCrusadeItemList() {
+  const list = document.getElementById('crusadeItemList');
+  document.getElementById('crusadeItemListEmptyState').classList.toggle('hidden', sovereignState.items.length !== 0);
+
+  list.innerHTML = sovereignState.items
+    .map(
+      (item) => `
+    <li style="display:flex; gap:8px; align-items:center;" data-item-id="${item.id}">
+      <span style="flex:1;">${escapeHtml(item.name)}</span>
+      <span style="color:var(--text-muted);">${crusadeFormatItemQty(item.quantity)}</span>
+      <button type="button" class="icon-btn admin-only" data-delete-item="${item.id}" title="Remove item">✕</button>
+    </li>`
+    )
+    .join('');
+
+  list.querySelectorAll('[data-delete-item]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const itemId = btn.getAttribute('data-delete-item');
+      const item = sovereignState.items.find((i) => i.id === itemId);
+      if (!confirm(`Remove item "${item?.name}" from this crusade?`)) return;
+      try {
+        await api(`/api/crusades/${sovereignState.crusadeId}/items/${itemId}`, { method: 'DELETE' });
+        sovereignState.items = sovereignState.items.filter((i) => i.id !== itemId);
+        renderCrusadeItemList();
+        renderTeamItemTable(sovereignState.activeTeam);
+        toast('Item removed');
+      } catch (err) {
+        toast(err.message);
+      }
+    });
+  });
+}
+
+document.getElementById('addCrusadeItemForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  try {
+    const item = await api(`/api/crusades/${sovereignState.crusadeId}/items`, {
+      method: 'POST',
+      body: JSON.stringify({ name: form.elements.name.value, quantity: Number(form.elements.quantity.value) || 0 }),
+    });
+    sovereignState.items.push(item);
+    renderCrusadeItemList();
+    renderTeamItemTable(sovereignState.activeTeam);
+    form.reset();
+    toast(`${item.name} added`);
+  } catch (err) {
+    toast(err.message);
+  }
+});
 
 function renderCrusadeGuildSummary(rows, containerId, formatFn) {
   const format = formatFn || crusadeFormatDiamonds;

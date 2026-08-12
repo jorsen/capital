@@ -716,6 +716,9 @@ select:focus, input:focus, textarea:focus {
 .crusade-guild-summary-row span:last-child { min-width: 90px; text-align: right; }
 .crusade-guild-summary-total { background: none; border-top: 1px solid var(--border); font-weight: 600; padding-top: 10px; }
 .crusade-item-heading { margin: 16px 0 6px; font-size: 13px; color: var(--text-secondary); }
+.crusade-table-total-row { cursor: default; box-shadow: none; font-weight: 600; }
+.crusade-table-total-row:hover { background: none; box-shadow: none; }
+.crusade-table-total-row td { border-top: 1px solid var(--border); }
 
 .crusade-member-list-table th, .crusade-member-list-table td { border-right: 1px solid var(--gridline); cursor: default; }
 .crusade-member-list-table th:last-child, .crusade-member-list-table td:last-child { border-right: none; }
