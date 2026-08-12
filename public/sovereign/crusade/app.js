@@ -386,18 +386,14 @@ function renderTeamDetail(n) {
   });
   const partySlots = Array.from(new Set([1, ...byParty.keys()])).sort((a, b) => a - b);
 
+  // Each party is its own card/table side by side (grid wraps as needed) —
+  // reads all as columns instead of one long table, so a 4-party team
+  // doesn't turn into a long vertical scroll.
   const body = document.getElementById('crusadeTeamRosterBody');
   body.innerHTML = partySlots
     .map((slot) => {
       const rowsInParty = byParty.get(slot) || [];
       const full = rowsInParty.length >= CRUSADE_PARTY_MAX_MEMBERS;
-      const headerRow = `
-      <tr class="crusade-party-header-row">
-        <td colspan="10">
-          <span>Party ${slot} — ${rowsInParty.length}/${CRUSADE_PARTY_MAX_MEMBERS}</span>
-          <button type="button" class="icon-btn admin-only" data-add-to-party-slot="${slot}" title="Add to Party ${slot}" ${full ? 'disabled' : ''}>+</button>
-        </td>
-      </tr>`;
       const memberRows = rowsInParty
         .map(
           ({ participant: p, attendanceAmount, bidShare, total }) => `
@@ -418,7 +414,25 @@ function renderTeamDetail(n) {
       </tr>`
         )
         .join('');
-      return headerRow + memberRows;
+      return `
+      <div class="crusade-party-card">
+        <div class="crusade-party-card-header">
+          <h3>Party ${slot} — ${rowsInParty.length}/${CRUSADE_PARTY_MAX_MEMBERS}</h3>
+          <button type="button" class="icon-btn admin-only" data-add-to-party-slot="${slot}" title="Add to Party ${slot}" ${full ? 'disabled' : ''}>+</button>
+        </div>
+        <div class="table-scroll">
+          <table class="members-table">
+            <thead>
+              <tr>
+                <th>Name</th><th>Guild</th><th>Position</th><th>Gold Bid</th><th>Enter</th>
+                <th>Attendance</th><th>Bid Share</th><th>Total Diamonds</th>
+                <th class="admin-only">Paid</th><th class="admin-only"></th>
+              </tr>
+            </thead>
+            <tbody>${memberRows}</tbody>
+          </table>
+        </div>
+      </div>`;
     })
     .join('');
 

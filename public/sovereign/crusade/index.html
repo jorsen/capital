@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/styles.css?v=65">
+  <link rel="stylesheet" href="/styles.css?v=66">
 </head>
 <body>
   <div class="app viz-root">
@@ -109,25 +109,7 @@
         <p style="color:var(--text-muted); font-size:13px; margin-top:-4px;">
           Half the crusade's reward splits evenly across everyone marked "Attended"; the other half splits across gold bidders in proportion to their bid.
         </p>
-        <div class="table-scroll">
-          <table class="members-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Guild</th>
-                <th>Position</th>
-                <th>Gold Bid</th>
-                <th>Enter</th>
-                <th>Attendance</th>
-                <th>Bid Share</th>
-                <th>Total Diamonds</th>
-                <th class="admin-only">Paid</th>
-                <th class="admin-only"></th>
-              </tr>
-            </thead>
-            <tbody id="crusadeTeamRosterBody"></tbody>
-          </table>
-        </div>
+        <div id="crusadeTeamRosterBody" class="crusade-party-grid"></div>
         <p id="crusadeTeamRosterEmptyState" class="empty-state hidden">No participants in this team yet.</p>
         <div id="crusadeTeamGuildSummary" class="crusade-guild-summary"></div>
       </section>
@@ -274,6 +256,6 @@
   <div id="toast" class="toast hidden"></div>
 
   <script src="/common.js?v=35"></script>
-  <script src="/sovereign/crusade/app.js?v=13"></script>
+  <script src="/sovereign/crusade/app.js?v=14"></script>
 </body>
 </html>

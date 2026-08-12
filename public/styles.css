@@ -721,21 +721,37 @@ select:focus, input:focus, textarea:focus {
 .crusade-member-list-table tbody tr { cursor: default; box-shadow: none; }
 .crusade-member-list-table tbody tr:hover { background: none; box-shadow: none; }
 
-.crusade-party-header-row { cursor: default; box-shadow: none; }
-.crusade-party-header-row:hover { background: none; box-shadow: none; }
-.crusade-party-header-row td {
+/* Parties within a team's page sit side by side instead of stacked, so a
+   4-party team reads as columns rather than one long vertical scroll. */
+.crusade-party-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+  gap: 16px;
+}
+.crusade-party-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+}
+.crusade-party-card-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: var(--surface-2);
-  font-weight: 600;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.crusade-party-card-header h3 {
+  margin: 0;
   font-size: 12px;
+  font-weight: 600;
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
-.crusade-party-header-row .icon-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-.crusade-party-header-row .icon-btn:disabled:hover { background: none; color: inherit; }
+.crusade-party-card .members-table { font-size: 13px; }
+.crusade-party-card .members-table th, .crusade-party-card .members-table td { padding: 7px 8px; }
+.crusade-party-card-header .icon-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.crusade-party-card-header .icon-btn:disabled:hover { background: none; color: inherit; }
 
 /* Read-only "viewer" role (see common.js isAdmin/loadSession): the real
    enforcement is server-side (non-GET /api/* requires the admin role) — this
