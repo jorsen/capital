@@ -248,22 +248,18 @@ async function loadCrusadeDetail(id) {
     document.title = `Sovereign — ${crusade.name}`;
     populateCrusadeSummaryStrip();
     populateCrusadeHeaderForm();
-    renderCrusadeDistribution();
   }
 }
 
 // Called after any roster change (add/edit/delete participant, or toggling
 // attended/paid) so every place that reflects the roster — the summary
-// strip's participant count, the team list's per-team totals, the
-// distribution table, and the currently open team's roster if any — stays
-// in sync, without needing to re-render pages that aren't currently visible.
+// strip's participant count, the team list's per-team totals, and the
+// currently open team's full records — stays in sync, without needing to
+// re-render pages that aren't currently visible.
 function refreshAfterRosterChange() {
   if (sovereignState.mode === 'teamList') renderTeamList();
   else if (sovereignState.mode === 'team') renderTeamDetail(sovereignState.activeTeam);
-  else {
-    populateCrusadeSummaryStrip();
-    renderCrusadeDistribution();
-  }
+  else populateCrusadeSummaryStrip();
 }
 
 function nextTeamNumber() {
@@ -325,7 +321,6 @@ document.getElementById('crusadeHeaderForm').addEventListener('submit', async (e
     sovereignState.crusade = { ...sovereignState.crusade, ...updated };
     document.title = `Sovereign — ${updated.name}`;
     populateCrusadeSummaryStrip();
-    renderCrusadeDistribution();
     toast('Crusade details saved');
   } catch (err) {
     toast(err.message);
@@ -381,23 +376,31 @@ function renderTeamList() {
     .join('');
 }
 
+// The team's own page shows *all* of its records in one place: roster
+// fields plus each person's diamond earnings (still computed from the
+// crusade-wide attendance/bid pools, just filtered down to this team) and a
+// guild breakdown scoped to this team.
 function renderTeamDetail(n) {
   document.getElementById('crusadeTeamHeading').textContent = `Team ${n}`;
   document.title = `Sovereign — ${sovereignState.crusade.name} — Team ${n}`;
 
-  const teamParticipants = sovereignState.participants.filter((p) => p.partyNumber === n);
-  document.getElementById('crusadeTeamRosterEmptyState').classList.toggle('hidden', teamParticipants.length !== 0);
+  const teamRows = computeCrusadeDistribution().filter(({ participant: p }) => p.partyNumber === n);
+  document.getElementById('crusadeTeamRosterEmptyState').classList.toggle('hidden', teamRows.length !== 0);
 
   const body = document.getElementById('crusadeTeamRosterBody');
-  body.innerHTML = teamParticipants
+  body.innerHTML = teamRows
     .map(
-      (p) => `
+      ({ participant: p, attendanceAmount, bidShare, total }) => `
     <tr>
       <td style="font-weight:600;">${escapeHtml(p.name)}</td>
       <td>${crusadeGuildBadge(p.guildName)}</td>
       <td>${p.position ? escapeHtml(p.position) : '–'}</td>
       <td>${crusadeFormatGold(p.goldBid)}</td>
       <td><input type="checkbox" class="crusade-attended-check admin-disable" data-participant-id="${p.id}" ${p.attended ? 'checked' : ''}></td>
+      <td>${crusadeFormatDiamonds(attendanceAmount)}</td>
+      <td>${crusadeFormatDiamonds(bidShare)}</td>
+      <td style="font-weight:600;">${crusadeFormatDiamonds(total)}</td>
+      <td class="admin-only"><input type="checkbox" class="crusade-paid-check admin-disable" data-participant-id="${p.id}" ${p.paid ? 'checked' : ''}></td>
       <td class="admin-only" style="white-space:nowrap;">
         <button type="button" class="icon-btn" data-edit-participant="${p.id}" title="Edit">✎</button>
         <button type="button" class="icon-btn" data-delete-participant="${p.id}" title="Remove">✕</button>
@@ -409,12 +412,17 @@ function renderTeamDetail(n) {
   body.querySelectorAll('.crusade-attended-check').forEach((cb) => {
     cb.addEventListener('change', () => toggleCrusadeParticipantFlag(cb, 'attended'));
   });
+  body.querySelectorAll('.crusade-paid-check').forEach((cb) => {
+    cb.addEventListener('change', () => toggleCrusadeParticipantFlag(cb, 'paid'));
+  });
   body.querySelectorAll('[data-edit-participant]').forEach((btn) => {
     btn.addEventListener('click', () => openCrusadeParticipantModal(btn.getAttribute('data-edit-participant')));
   });
   body.querySelectorAll('[data-delete-participant]').forEach((btn) => {
     btn.addEventListener('click', () => deleteCrusadeParticipant(btn.getAttribute('data-delete-participant')));
   });
+
+  renderCrusadeGuildSummary(teamRows, 'crusadeTeamGuildSummary');
 }
 
 async function toggleCrusadeParticipantFlag(checkbox, field) {
@@ -526,34 +534,8 @@ function computeCrusadeDistribution() {
   });
 }
 
-function renderCrusadeDistribution() {
-  const rows = computeCrusadeDistribution();
-  const body = document.getElementById('crusadeDistributionBody');
-  document.getElementById('crusadeDistributionEmptyState').classList.toggle('hidden', rows.length !== 0);
-
-  body.innerHTML = rows
-    .map(
-      ({ participant: p, attendanceAmount, bidShare, total }) => `
-    <tr>
-      <td style="font-weight:600;">${escapeHtml(p.name)}</td>
-      <td>${crusadeGuildBadge(p.guildName)}</td>
-      <td>${crusadeFormatDiamonds(attendanceAmount)}</td>
-      <td>${crusadeFormatDiamonds(bidShare)}</td>
-      <td style="font-weight:600;">${crusadeFormatDiamonds(total)}</td>
-      <td class="admin-only"><input type="checkbox" class="crusade-paid-check admin-disable" data-participant-id="${p.id}" ${p.paid ? 'checked' : ''}></td>
-    </tr>`
-    )
-    .join('');
-
-  body.querySelectorAll('.crusade-paid-check').forEach((cb) => {
-    cb.addEventListener('change', () => toggleCrusadeParticipantFlag(cb, 'paid'));
-  });
-
-  renderCrusadeGuildSummary(rows);
-}
-
-function renderCrusadeGuildSummary(rows) {
-  const el = document.getElementById('crusadeGuildSummary');
+function renderCrusadeGuildSummary(rows, containerId) {
+  const el = document.getElementById(containerId);
   const byGuild = new Map();
   rows.forEach(({ participant: p, total }) => {
     const key = p.guildName || 'Unassigned';
