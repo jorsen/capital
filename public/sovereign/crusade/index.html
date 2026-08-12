@@ -81,15 +81,15 @@
         <div class="stat-tile gold"><span class="stat-label">Diamonds Reward</span><span class="stat-value" id="crusadeSummaryReward">—</span></div>
       </div>
 
-      <section class="panel">
-        <div class="view-header space-between" style="margin-bottom:6px;">
-          <h2 style="margin:0;">Teams</h2>
-          <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <button id="addCrusadeTeamBtn" type="button" class="btn small admin-only">+ Add Team</button>
-            <button id="addCrusadeParticipantBtn" type="button" class="btn small primary admin-only">+ Add Participant</button>
-          </div>
+      <div class="view-header space-between">
+        <p style="color:var(--text-muted); font-size:13px; margin:0; flex:1;">Click a team to see its roster.</p>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button id="addCrusadeParticipantBtn" type="button" class="btn small admin-only">+ Add Participant</button>
+          <button id="addCrusadeTeamBtn" type="button" class="btn primary admin-only">+ New Team</button>
         </div>
-        <p style="color:var(--text-muted); font-size:13px; margin:0 0 10px;">Click a team to see its roster.</p>
+      </div>
+
+      <section class="panel">
         <div class="table-scroll">
           <table class="members-table">
             <thead>
