@@ -82,6 +82,29 @@
       </div>
 
       <section class="panel">
+        <div class="view-header space-between" style="margin-bottom:6px;">
+          <h2 style="margin:0;">Teams</h2>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button id="addCrusadeTeamBtn" type="button" class="btn small admin-only">+ Add Team</button>
+            <button id="addCrusadeParticipantBtn" type="button" class="btn small primary admin-only">+ Add Participant</button>
+          </div>
+        </div>
+        <p style="color:var(--text-muted); font-size:13px; margin:0 0 10px;">Click a team to see its roster.</p>
+        <div class="table-scroll">
+          <table class="members-table">
+            <thead>
+              <tr>
+                <th>Team</th>
+                <th>Participants</th>
+                <th>Diamonds</th>
+              </tr>
+            </thead>
+            <tbody id="crusadeTeamListBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel">
         <h2>Crusade Details</h2>
         <form id="crusadeHeaderForm" class="crusade-header-form">
           <label><span>Name</span>
@@ -125,29 +148,6 @@
           </label>
           <button type="submit" class="btn primary small admin-only">Save</button>
         </form>
-      </section>
-
-      <section class="panel">
-        <div class="view-header space-between" style="margin-bottom:6px;">
-          <h2 style="margin:0;">Teams</h2>
-          <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <button id="addCrusadeTeamBtn" type="button" class="btn small admin-only">+ Add Team</button>
-            <button id="addCrusadeParticipantBtn" type="button" class="btn small primary admin-only">+ Add Participant</button>
-          </div>
-        </div>
-        <p style="color:var(--text-muted); font-size:13px; margin:0 0 10px;">Click a team to see its roster.</p>
-        <div class="table-scroll">
-          <table class="members-table">
-            <thead>
-              <tr>
-                <th>Team</th>
-                <th>Participants</th>
-                <th>Diamonds</th>
-              </tr>
-            </thead>
-            <tbody id="crusadeTeamListBody"></tbody>
-          </table>
-        </div>
       </section>
 
       <section class="panel">
