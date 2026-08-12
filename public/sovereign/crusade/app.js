@@ -319,9 +319,19 @@ document.getElementById('deleteCrusadeBtn').addEventListener('click', async () =
 
 // ---------- Team list (crusade-level) and single-team roster ----------
 
+// Teams 1-3 always show up (clickable, even empty) so there's always
+// somewhere to start adding a roster from; any higher team number that
+// already has a participant shows up too.
+function visibleTeamNumbers() {
+  const numbers = new Set(sovereignState.participants.map((p) => p.partyNumber));
+  numbers.add(1);
+  numbers.add(2);
+  numbers.add(3);
+  return Array.from(numbers).sort((a, b) => a - b);
+}
+
 function renderTeamList() {
   const body = document.getElementById('crusadeTeamListBody');
-  document.getElementById('crusadeRosterEmptyState').classList.toggle('hidden', sovereignState.participants.length !== 0);
 
   const byTeam = new Map();
   computeCrusadeDistribution().forEach(({ participant: p, total }) => {
@@ -331,10 +341,9 @@ function renderTeamList() {
     t.diamonds += total;
   });
 
-  const teamNumbers = Array.from(byTeam.keys()).sort((a, b) => a - b);
-  body.innerHTML = teamNumbers
+  body.innerHTML = visibleTeamNumbers()
     .map((n) => {
-      const t = byTeam.get(n);
+      const t = byTeam.get(n) || { count: 0, diamonds: 0 };
       return `
       <tr>
         <td><a href="#crusade/${sovereignState.crusadeId}/team/${n}" style="font-weight:600;">Team ${n}</a></td>
@@ -427,6 +436,14 @@ function openCrusadeParticipantModal(participantId, presetPartyNumber) {
 
 document.getElementById('addCrusadeParticipantBtn').addEventListener('click', () => openCrusadeParticipantModal(null));
 document.getElementById('addTeamParticipantBtn').addEventListener('click', () => openCrusadeParticipantModal(null, sovereignState.activeTeam));
+
+// Jumps straight to the next team past whatever's already visible in the
+// list (the 1-3 baseline, or higher if teams already exist beyond that) —
+// landing on its (empty) roster page ready for "+ Add Participant".
+document.getElementById('addCrusadeTeamBtn').addEventListener('click', () => {
+  const nextTeam = Math.max(...visibleTeamNumbers()) + 1;
+  window.location.hash = `crusade/${sovereignState.crusadeId}/team/${nextTeam}`;
+});
 
 document.getElementById('crusadeParticipantForm').addEventListener('submit', async (e) => {
   e.preventDefault();

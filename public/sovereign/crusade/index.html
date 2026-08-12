@@ -130,7 +130,10 @@
       <section class="panel">
         <div class="view-header space-between" style="margin-bottom:6px;">
           <h2 style="margin:0;">Teams</h2>
-          <button id="addCrusadeParticipantBtn" type="button" class="btn small primary admin-only">+ Add Participant</button>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button id="addCrusadeTeamBtn" type="button" class="btn small admin-only">+ Add Team</button>
+            <button id="addCrusadeParticipantBtn" type="button" class="btn small primary admin-only">+ Add Participant</button>
+          </div>
         </div>
         <p style="color:var(--text-muted); font-size:13px; margin:0 0 10px;">Click a team to see its roster.</p>
         <div class="table-scroll">
@@ -145,7 +148,6 @@
             <tbody id="crusadeTeamListBody"></tbody>
           </table>
         </div>
-        <p id="crusadeRosterEmptyState" class="empty-state hidden">No participants added yet.</p>
       </section>
 
       <section class="panel">
@@ -297,6 +299,6 @@
   <div id="toast" class="toast hidden"></div>
 
   <script src="/common.js?v=35"></script>
-  <script src="/sovereign/crusade/app.js?v=5"></script>
+  <script src="/sovereign/crusade/app.js?v=6"></script>
 </body>
 </html>
