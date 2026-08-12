@@ -398,7 +398,7 @@ function renderTeamDetail(n) {
         .map(
           ({ participant: p, attendanceAmount, bidShare, total }) => `
       <tr>
-        <td style="font-weight:600;">${escapeHtml(p.name)}</td>
+        <td style="font-weight:600; white-space:nowrap;">${escapeHtml(p.name)}</td>
         <td>${crusadeGuildBadge(p.guildName)}</td>
         <td>${p.position ? escapeHtml(p.position) : '–'}</td>
         <td>${crusadeFormatGold(p.goldBid)}</td>
@@ -651,7 +651,7 @@ function renderMemberList() {
       .map((g) => {
         const m = groups.get(g)[i];
         if (!m) return '<td></td>';
-        return `<td>${escapeHtml(m.name)} <button type="button" class="icon-btn admin-only" data-delete-member="${m.id}" title="Remove from member list">✕</button></td>`;
+        return `<td style="white-space:nowrap;">${escapeHtml(m.name)} <button type="button" class="icon-btn admin-only" data-delete-member="${m.id}" title="Remove from member list">✕</button></td>`;
       })
       .join('');
     rowsHtml.push(`<tr>${cells}</tr>`);
