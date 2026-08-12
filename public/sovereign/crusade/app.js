@@ -403,16 +403,34 @@ function renderTeamList() {
 // a specific team, so they show once per guild here, not once per team like
 // the per-team guild summary).
 function computeCrusadeGuildSalaryDetail() {
+  const items = sovereignState.items;
+  // One lookup per item: participant id -> that item's individual share, so
+  // each row can show every item's split alongside the diamond salary.
+  const itemSharesByParticipantId = items.map((item) => {
+    const map = new Map();
+    computeCrusadeItemShares(item).forEach(({ participant: p, total }) => map.set(p.id, total));
+    return map;
+  });
+
   const byGuild = new Map();
   computeCrusadeDistribution().forEach(({ participant: p, total }) => {
     const key = p.guildName || 'Unassigned';
     if (!byGuild.has(key)) byGuild.set(key, []);
-    byGuild.get(key).push({ name: p.name, team: p.partyNumber, salary: total, isFee: false, hasFee: false });
+    byGuild.get(key).push({
+      name: p.name,
+      team: p.partyNumber,
+      salary: total,
+      itemShares: itemSharesByParticipantId.map((m) => m.get(p.id) || 0),
+      isFee: false,
+      hasFee: false,
+    });
   });
   // If a fee's IGN matches an existing participant in the same guild
   // (case-insensitive), fold the fee into that one row instead of listing
   // them twice — just flag it so the row can note "+ management fee".
   // Only falls back to its own separate row when there's no such match.
+  // Fees only ever affect diamonds, never items, so a fee-only row's item
+  // shares are always zero.
   sovereignState.fees.forEach((fee) => {
     if (!fee.guildName) return;
     if (!byGuild.has(fee.guildName)) byGuild.set(fee.guildName, []);
@@ -423,7 +441,7 @@ function computeCrusadeGuildSalaryDetail() {
       match.salary += feeAmount;
       match.hasFee = true;
     } else {
-      entries.push({ name: fee.name, team: null, salary: feeAmount, isFee: true, hasFee: false });
+      entries.push({ name: fee.name, team: null, salary: feeAmount, itemShares: items.map(() => 0), isFee: true, hasFee: false });
     }
   });
 
@@ -433,34 +451,43 @@ function computeCrusadeGuildSalaryDetail() {
       entries: entries.sort((a, b) => b.salary - a.salary),
       memberCount: entries.filter((e) => !e.isFee).length,
       total: entries.reduce((sum, e) => sum + e.salary, 0),
+      itemTotals: items.map((_, i) => entries.reduce((sum, e) => sum + (e.itemShares[i] || 0), 0)),
     }))
     .sort((a, b) => b.total - a.total);
 }
 
 function renderCrusadeGuildSalary() {
   const guilds = computeCrusadeGuildSalaryDetail();
+  const items = sovereignState.items;
   const el = document.getElementById('crusadeGuildSalaryDetail');
 
   el.innerHTML = guilds
     .map((g) => {
       const rows = g.entries
-        .map(
-          (e) => `
+        .map((e) => {
+          const itemCells = items.map((it, i) => `<td>${crusadeFormatItemQty(e.itemShares[i])}</td>`).join('');
+          return `
         <tr>
           <td style="font-weight:600; white-space:nowrap;">${escapeHtml(e.name)}${e.isFee ? ' <span style="color:var(--text-muted); font-weight:400;">(fee)</span>' : e.hasFee ? ' <span style="color:var(--text-muted); font-weight:400;">(+ management fee)</span>' : ''}</td>
           <td>${e.team ? `Team ${e.team}` : '–'}</td>
           <td>${crusadeFormatDiamonds(e.salary)}</td>
-        </tr>`
-        )
+          ${itemCells}
+        </tr>`;
+        })
         .join('');
+      const totalRow = items.length
+        ? `<tr class="crusade-table-total-row"><td>Total</td><td></td><td>${crusadeFormatDiamonds(g.total)}</td>${items
+            .map((it, i) => `<td>${crusadeFormatItemQty(g.itemTotals[i])}</td>`)
+            .join('')}</tr>`
+        : '';
       return `
       <div class="crusade-party-card">
         <div class="crusade-party-card-header">
           <h3>${g.name === 'Unassigned' ? 'Unassigned' : escapeHtml(g.name)} — ${crusadeFormatDiamonds(g.total)} (${g.memberCount} member${g.memberCount === 1 ? '' : 's'})</h3>
         </div>
         <table class="members-table">
-          <thead><tr><th>IGN</th><th>Team</th><th>Salary</th></tr></thead>
-          <tbody>${rows}</tbody>
+          <thead><tr><th>IGN</th><th>Team</th><th>Salary</th>${items.map((it) => `<th>${escapeHtml(it.name)}</th>`).join('')}</tr></thead>
+          <tbody>${rows}${totalRow}</tbody>
         </table>
       </div>`;
     })
