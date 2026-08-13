@@ -771,8 +771,8 @@ select:focus, input:focus, textarea:focus {
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
-.crusade-party-card .members-table { font-size: 13px; }
-.crusade-party-card .members-table th, .crusade-party-card .members-table td { padding: 7px 8px; }
+.crusade-party-card .members-table { font-size: 12px; }
+.crusade-party-card .members-table th, .crusade-party-card .members-table td { padding: 6px 7px; white-space: nowrap; }
 .crusade-party-card-header .icon-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 .crusade-party-card-header .icon-btn:disabled:hover { background: none; color: inherit; }
 
