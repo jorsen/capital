@@ -27,6 +27,7 @@
         <nav class="page-nav" id="pageNav">
           <a href="#" data-panel="list" class="nav-link">Crusades</a>
           <a href="#members" data-panel="members" class="nav-link">Member List</a>
+          <a href="#raffle" data-panel="raffle" class="nav-link">Raffle</a>
         </nav>
       </div>
       <div class="topbar-right">
@@ -279,6 +280,33 @@
         <p id="sovereignMemberListEmptyState" class="empty-state hidden">No members saved yet — add a participant to a crusade roster to populate this list.</p>
       </section>
     </div>
+
+    <!-- ===================== RAFFLE PANEL ===================== -->
+    <div id="sovereignRafflePanel" class="hidden">
+      <div class="view-header space-between">
+        <p style="color:var(--text-muted); font-size:13px; margin:0; flex:1;">Check who's eligible below, then Draw picks one random winner from whoever's checked. Winners stack onto the list and drop out of the pool until you clear it.</p>
+        <button id="clearRaffleWinnersBtn" type="button" class="btn small danger admin-only">Clear Winners</button>
+      </div>
+
+      <section class="panel">
+        <div class="view-header space-between" style="margin-bottom:6px;">
+          <h2 style="margin:0;">Eligible Pool</h2>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span id="rafflePoolCount" style="color:var(--text-muted); font-size:13px;"></span>
+            <button id="raffleDrawBtn" type="button" class="btn primary small admin-only" disabled>🎲 Draw</button>
+          </div>
+        </div>
+        <div id="rafflePoolDetail" class="crusade-party-grid"></div>
+        <p id="rafflePoolEmptyState" class="empty-state hidden">Everyone's already won — clear the winners list to start a fresh raffle.</p>
+      </section>
+
+      <section class="panel">
+        <h2>Winners</h2>
+        <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;">Newest draw first — add what they won once you've handed it over.</p>
+        <p id="raffleWinnersEmptyState" class="empty-state hidden">No draws yet.</p>
+        <div id="raffleWinnersList" style="display:flex; flex-direction:column; gap:8px;"></div>
+      </section>
+    </div>
   </div>
 
   <!-- ===================== MODALS ===================== -->
@@ -354,6 +382,6 @@
   <div id="toast" class="toast hidden"></div>
 
   <script src="/common.js?v=35"></script>
-  <script src="/sovereign/crusade/app.js?v=39"></script>
+  <script src="/sovereign/crusade/app.js?v=40"></script>
 </body>
 </html>

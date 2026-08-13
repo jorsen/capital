@@ -8,7 +8,7 @@
 // result, diamond reward, attendance %, notes, items and fees -- so two
 // teams sharing a crusade's date can have completely different outcomes.
 // mode tracks which crusade-scoped page is active: 'overview' | 'team' | 'guildSalary'.
-const sovereignState = { crusades: [], guilds: [], crusadeId: null, crusade: null, participants: [], teams: [], memberList: [], activeTeam: null, mode: null };
+const sovereignState = { crusades: [], guilds: [], crusadeId: null, crusade: null, participants: [], teams: [], memberList: [], raffleWinners: [], activeTeam: null, mode: null };
 
 function crusadeFormatDiamonds(amount) {
   return `${Math.round(amount || 0).toLocaleString()} 💎`;
@@ -95,6 +95,12 @@ function route() {
     loadMemberList().catch((err) => toast(err.message));
     return;
   }
+  if (hash === 'raffle') {
+    sovereignState.mode = null;
+    showPanel('raffle');
+    loadRaffle().catch((err) => toast(err.message));
+    return;
+  }
   if (teamMatch) {
     sovereignState.crusadeId = teamMatch[1];
     sovereignState.activeTeam = Number(teamMatch[2]);
@@ -123,9 +129,10 @@ function showPanel(name) {
   document.getElementById('sovereignGuildSalaryPanel').classList.toggle('hidden', name !== 'guildSalary');
   document.getElementById('sovereignTeamPanel').classList.toggle('hidden', name !== 'team');
   document.getElementById('sovereignMembersPanel').classList.toggle('hidden', name !== 'members');
+  document.getElementById('sovereignRafflePanel').classList.toggle('hidden', name !== 'raffle');
   document.querySelectorAll('#pageNav .nav-link').forEach((a) => a.classList.toggle('active', a.getAttribute('data-panel') === name));
   // 'detail', 'guildSalary' and 'team' set their own title once their data loads.
-  if (name === 'list' || name === 'members') document.title = 'Sovereign — Crusade';
+  if (name === 'list' || name === 'members' || name === 'raffle') document.title = 'Sovereign — Crusade';
 }
 
 document.getElementById('sovereignBackLink').addEventListener('click', (e) => {
@@ -1279,6 +1286,189 @@ function renderMemberList() {
         sovereignState.memberList = sovereignState.memberList.filter((m) => m.id !== id);
         renderMemberList();
         toast('Member removed');
+      } catch (err) {
+        toast(err.message);
+      }
+    });
+  });
+}
+
+// ---------- Raffle (standalone, independent of any crusade) ----------
+// Draws from the same master Member List as above. Anyone already in the
+// Winners stack drops out of the eligible pool until "Clear Winners" resets
+// it -- the pool is derived each render, never stored separately.
+
+async function loadRaffle() {
+  const [members, guilds, winners] = await Promise.all([
+    api('/api/sovereign-members'),
+    api('/api/crusade-guilds'),
+    api('/api/raffle-winners'),
+  ]);
+  sovereignState.memberList = members;
+  sovereignState.guilds = guilds;
+  sovereignState.raffleWinners = winners;
+  renderRafflePool();
+  renderRaffleWinners();
+}
+
+function raffleEligibleMembers() {
+  const wonNames = new Set(sovereignState.raffleWinners.map((w) => w.memberName.trim().toLowerCase()));
+  return sovereignState.memberList.filter((m) => !wonNames.has(m.name.trim().toLowerCase()));
+}
+
+function renderRafflePool() {
+  const container = document.getElementById('rafflePoolDetail');
+  const eligible = raffleEligibleMembers();
+  document.getElementById('rafflePoolEmptyState').classList.toggle('hidden', eligible.length !== 0);
+
+  const groups = new Map();
+  eligible.forEach((m) => {
+    const key = m.guildName || 'Unassigned';
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(m);
+  });
+  groups.forEach((list) => list.sort((a, b) => a.name.localeCompare(b.name)));
+
+  const knownOrder = sovereignState.guilds.map((g) => g.name);
+  const guildKeys = Array.from(groups.keys()).filter((k) => k !== 'Unassigned');
+  guildKeys.sort((a, b) => {
+    const ai = knownOrder.indexOf(a);
+    const bi = knownOrder.indexOf(b);
+    if (ai === -1 && bi === -1) return a.localeCompare(b);
+    if (ai === -1) return 1;
+    if (bi === -1) return -1;
+    return ai - bi;
+  });
+  if (groups.has('Unassigned')) guildKeys.push('Unassigned');
+
+  container.innerHTML = guildKeys
+    .map((guildName) => {
+      const members = groups.get(guildName);
+      const items = members
+        .map(
+          (m) => `
+        <li>
+          <label style="display:flex; align-items:center; gap:8px; font-weight:400;">
+            <input type="checkbox" class="raffle-member-check admin-disable" data-name="${escapeHtml(m.name)}" data-guild="${escapeHtml(guildName === 'Unassigned' ? '' : guildName)}">
+            ${escapeHtml(m.name)}
+          </label>
+        </li>`
+        )
+        .join('');
+      return `
+      <div class="crusade-party-card">
+        <div class="crusade-party-card-header">
+          <h3>${guildName === 'Unassigned' ? 'Unassigned' : escapeHtml(guildName)} (${members.length})</h3>
+          <label style="display:flex; align-items:center; gap:4px; font-weight:400; font-size:11px; text-transform:none; color:var(--text-muted);">
+            <input type="checkbox" class="raffle-select-all admin-disable">
+            All
+          </label>
+        </div>
+        <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:6px;">${items}</ul>
+      </div>`;
+    })
+    .join('');
+
+  container.querySelectorAll('.raffle-select-all').forEach((allCb) => {
+    allCb.addEventListener('change', () => {
+      const card = allCb.closest('.crusade-party-card');
+      card.querySelectorAll('.raffle-member-check').forEach((cb) => (cb.checked = allCb.checked));
+      updateRafflePoolCount();
+    });
+  });
+  container.querySelectorAll('.raffle-member-check').forEach((cb) => {
+    cb.addEventListener('change', updateRafflePoolCount);
+  });
+  updateRafflePoolCount();
+}
+
+function updateRafflePoolCount() {
+  const checked = document.querySelectorAll('.raffle-member-check:checked').length;
+  document.getElementById('rafflePoolCount').textContent = checked ? `${checked} selected` : '';
+  document.getElementById('raffleDrawBtn').disabled = checked === 0;
+}
+
+document.getElementById('raffleDrawBtn').addEventListener('click', async () => {
+  const checked = Array.from(document.querySelectorAll('.raffle-member-check:checked')).map((cb) => ({
+    name: cb.getAttribute('data-name'),
+    guildName: cb.getAttribute('data-guild') || null,
+  }));
+  if (!checked.length) return;
+
+  const winner = checked[Math.floor(Math.random() * checked.length)];
+  try {
+    const created = await api('/api/raffle-winners', {
+      method: 'POST',
+      body: JSON.stringify({ memberName: winner.name, guildName: winner.guildName }),
+    });
+    sovereignState.raffleWinners.unshift(created);
+    renderRafflePool();
+    renderRaffleWinners();
+    toast(`🎲 ${winner.name} wins!`);
+  } catch (err) {
+    toast(err.message);
+  }
+});
+
+document.getElementById('clearRaffleWinnersBtn').addEventListener('click', async () => {
+  if (!sovereignState.raffleWinners.length) return;
+  if (!confirm(`Clear all ${sovereignState.raffleWinners.length} raffle winner(s)? Everyone becomes eligible again.`)) return;
+  try {
+    await api('/api/raffle-winners', { method: 'DELETE' });
+    sovereignState.raffleWinners = [];
+    renderRafflePool();
+    renderRaffleWinners();
+    toast('Raffle winners cleared');
+  } catch (err) {
+    toast(err.message);
+  }
+});
+
+function renderRaffleWinners() {
+  const winners = sovereignState.raffleWinners;
+  document.getElementById('raffleWinnersEmptyState').classList.toggle('hidden', winners.length !== 0);
+
+  const list = document.getElementById('raffleWinnersList');
+  list.innerHTML = winners
+    .map((w) => {
+      const color = crusadeGuildColor(w.guildName) || 'var(--text-muted)';
+      const time = new Date(w.createdAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      return `
+      <div class="crusade-guild-summary-row" data-winner-id="${w.id}">
+        <span class="schedule-dot" style="background:${color}"></span>
+        <span style="flex:1; font-weight:600; white-space:nowrap;">${escapeHtml(w.memberName)}</span>
+        ${crusadeGuildBadge(w.guildName)}
+        <input type="text" class="raffle-item-input admin-disable" data-winner-id="${w.id}" value="${escapeHtml(w.item || '')}" placeholder="What did they win?" style="max-width:200px; flex:1;">
+        <span style="color:var(--text-muted); font-size:12px; white-space:nowrap;">${time}</span>
+        <button type="button" class="icon-btn admin-only" data-remove-winner="${w.id}" title="Undo this draw">✕</button>
+      </div>`;
+    })
+    .join('');
+
+  list.querySelectorAll('.raffle-item-input').forEach((input) => {
+    input.addEventListener('change', async () => {
+      const id = input.getAttribute('data-winner-id');
+      try {
+        const updated = await api(`/api/raffle-winners/${id}`, { method: 'PUT', body: JSON.stringify({ item: input.value }) });
+        const idx = sovereignState.raffleWinners.findIndex((w) => w.id === id);
+        if (idx !== -1) sovereignState.raffleWinners[idx] = updated;
+        toast('Item saved');
+      } catch (err) {
+        toast(err.message);
+      }
+    });
+  });
+  list.querySelectorAll('[data-remove-winner]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-remove-winner');
+      const winner = sovereignState.raffleWinners.find((w) => w.id === id);
+      if (!confirm(`Undo ${winner?.memberName}'s win? They'll go back into the eligible pool.`)) return;
+      try {
+        await api(`/api/raffle-winners/${id}`, { method: 'DELETE' });
+        sovereignState.raffleWinners = sovereignState.raffleWinners.filter((w) => w.id !== id);
+        renderRafflePool();
+        renderRaffleWinners();
+        toast('Draw undone');
       } catch (err) {
         toast(err.message);
       }
