@@ -1322,7 +1322,7 @@ function renderRafflePool() {
     .map(
       (g) => `
     <li>
-      <label style="display:flex; align-items:center; gap:8px; font-weight:400;">
+      <label style="display:flex; flex-direction:row; align-items:center; gap:8px; font-weight:400;">
         <input type="checkbox" class="raffle-guild-check admin-disable" data-name="${escapeHtml(g.name)}">
         <span class="schedule-dot" style="background:${g.color}"></span>
         ${escapeHtml(g.name)}
@@ -1336,7 +1336,7 @@ function renderRafflePool() {
     <div class="crusade-party-card">
       <div class="crusade-party-card-header">
         <h3>Guilds (${eligible.length})</h3>
-        <label style="display:flex; align-items:center; gap:4px; font-weight:400; font-size:11px; text-transform:none; color:var(--text-muted);">
+        <label style="display:flex; flex-direction:row; align-items:center; gap:4px; font-weight:400; font-size:11px; text-transform:none; color:var(--text-muted);">
           <input type="checkbox" class="raffle-select-all admin-disable">
           All
         </label>
@@ -1364,11 +1364,30 @@ function updateRafflePoolCount() {
   document.getElementById('raffleDrawBtn').disabled = checked === 0;
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 document.getElementById('raffleDrawBtn').addEventListener('click', async () => {
   const checked = Array.from(document.querySelectorAll('.raffle-guild-check:checked')).map((cb) => cb.getAttribute('data-name'));
   if (!checked.length) return;
 
   const winnerName = checked[Math.floor(Math.random() * checked.length)];
+  const drawBtn = document.getElementById('raffleDrawBtn');
+  const display = document.getElementById('raffleDrawDisplay');
+
+  // The pick above is already final -- this just spins through the checked
+  // names first (slowing down toward the end) so the draw feels like an
+  // actual random shuffle landing on a winner, not an instant lookup.
+  drawBtn.disabled = true;
+  display.classList.remove('hidden');
+  const spinDelays = [70, 70, 70, 80, 90, 110, 140, 180, 230, 300, 380];
+  for (const delay of spinDelays) {
+    display.textContent = checked[Math.floor(Math.random() * checked.length)];
+    await sleep(delay);
+  }
+  display.textContent = winnerName;
+
   try {
     const created = await api('/api/raffle-winners', {
       method: 'POST',
@@ -1380,6 +1399,10 @@ document.getElementById('raffleDrawBtn').addEventListener('click', async () => {
     toast(`🎲 ${winnerName} wins!`);
   } catch (err) {
     toast(err.message);
+    updateRafflePoolCount(); // POST failed, so renderRafflePool() never ran to reset the button itself
+  } finally {
+    await sleep(1200);
+    display.classList.add('hidden');
   }
 });
 
