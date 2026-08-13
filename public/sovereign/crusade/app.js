@@ -4,7 +4,7 @@
 // api()/toast()/escapeHtml()/session handling, which is why it's loaded here.
 
 // mode tracks which crusade-scoped page is active: 'overview' | 'team'.
-const sovereignState = { crusades: [], guilds: [], crusadeId: null, crusade: null, participants: [], items: [], fees: [], memberList: [], activeTeam: null, mode: null };
+const sovereignState = { crusades: [], guilds: [], crusadeId: null, crusade: null, participants: [], items: [], fees: [], lastCrusadeBidders: [], memberList: [], activeTeam: null, mode: null };
 
 function crusadeFormatDiamonds(amount) {
   return `${Math.round(amount || 0).toLocaleString()} 💎`;
@@ -245,6 +245,7 @@ async function loadCrusadeDetail(id) {
   sovereignState.participants = crusade.participants;
   sovereignState.items = crusade.items;
   sovereignState.fees = crusade.fees;
+  sovereignState.lastCrusadeBidders = crusade.lastCrusadeBidders || [];
   sovereignState.guilds = guilds;
   populateCrusadeGuildSelect(); // shared by the add/edit-participant modal regardless of which page opened it
 
@@ -425,6 +426,8 @@ function computeCrusadeGuildSalaryDetail() {
       itemShares: itemSharesByParticipantId.map((m) => m.get(p.id) || 0),
       isFee: false,
       hasFee: false,
+      isBonus: false,
+      hasBonus: false,
     });
   });
   // If a fee's IGN matches an existing participant in the same guild
@@ -452,15 +455,47 @@ function computeCrusadeGuildSalaryDetail() {
         itemShares: items.map(() => 0),
         isFee: true,
         hasFee: false,
+        isBonus: false,
+        hasBonus: false,
       });
     }
   });
+
+  // Defense-win bonus: same name-match merge as management fees, so a
+  // last-crusade bidder who's also on this crusade's roster gets one row
+  // with the bonus folded in, instead of a duplicate line.
+  const { perBidder } = computeLastCrusadeBonusShares();
+  if (perBidder > 0) {
+    sovereignState.lastCrusadeBidders.forEach((bidder) => {
+      const guildKey = bidder.guildName || 'Unassigned';
+      if (!byGuild.has(guildKey)) byGuild.set(guildKey, []);
+      const entries = byGuild.get(guildKey);
+      const match = entries.find((e) => !e.isFee && e.name.trim().toLowerCase() === bidder.name.trim().toLowerCase());
+      if (match) {
+        match.salary += perBidder;
+        match.hasBonus = true;
+      } else {
+        entries.push({
+          name: bidder.name,
+          team: null,
+          goldBid: null,
+          attended: null,
+          salary: perBidder,
+          itemShares: items.map(() => 0),
+          isFee: false,
+          hasFee: false,
+          isBonus: true,
+          hasBonus: false,
+        });
+      }
+    });
+  }
 
   return Array.from(byGuild.entries())
     .map(([name, entries]) => ({
       name,
       entries: entries.sort((a, b) => b.salary - a.salary),
-      memberCount: entries.filter((e) => !e.isFee).length,
+      memberCount: entries.filter((e) => !e.isFee && !e.isBonus).length,
       total: entries.reduce((sum, e) => sum + e.salary, 0),
       itemTotals: items.map((_, i) => entries.reduce((sum, e) => sum + (e.itemShares[i] || 0), 0)),
     }))
@@ -481,14 +516,17 @@ function renderCrusadeGuildSalary() {
       const rows = g.entries
         .map((e) => {
           const itemCells = items.map((it, i) => `<td>${crusadeFormatItemQty(e.itemShares[i])}</td>`).join('');
-          const feeLabel = e.isFee
-            ? '<div style="font-weight:400; font-size:11px; color:var(--text-muted); white-space:nowrap;">(management fee)</div>'
-            : e.hasFee
-              ? '<div style="font-weight:400; font-size:11px; color:var(--text-muted); white-space:nowrap;">(+ management fee)</div>'
-              : '';
+          const tagLines = [];
+          if (e.isFee) tagLines.push('(management fee)');
+          else if (e.hasFee) tagLines.push('(+ management fee)');
+          if (e.isBonus) tagLines.push('(defense bonus)');
+          else if (e.hasBonus) tagLines.push('(+ defense bonus)');
+          const tagLabel = tagLines
+            .map((t) => `<div style="font-weight:400; font-size:11px; color:var(--text-muted); white-space:nowrap;">${t}</div>`)
+            .join('');
           return `
         <tr>
-          <td style="font-weight:600;"><div style="white-space:nowrap;">${escapeHtml(e.name)}</div>${feeLabel}</td>
+          <td style="font-weight:600;"><div style="white-space:nowrap;">${escapeHtml(e.name)}</div>${tagLabel}</td>
           <td>${e.team ? `Team ${e.team}` : '–'}</td>
           <td>${e.goldBid === null ? '–' : crusadeFormatGold(e.goldBid)}</td>
           <td>${e.attended === null ? '–' : e.attended ? '✓' : '✗'}</td>
@@ -722,10 +760,20 @@ function totalCrusadeFeeAmount() {
   return sovereignState.fees.reduce((sum, f) => sum + diamondReward * (f.percent / 100), 0);
 }
 
-// Half the (post-fee) reward splits evenly across everyone who attended; the
-// other half splits across gold bidders in proportion to their bid — this
-// collapses to an equal split when every bidder bids the same amount (the
-// common case), and scales fairly when bids differ.
+// Winning on Defense splits the (post-fee) reward 60/40 instead of paying it
+// all to this crusade's own roster: 60% stays here, 40% goes to whoever bid
+// gold last crusade (see computeLastCrusadeBonusShares). Any other stance/
+// result keeps the full reward for this roster, same as before.
+function isDefenseWin() {
+  const c = sovereignState.crusade;
+  return !!(c && c.stance === 'Defense' && c.result === 'win');
+}
+
+// Half the (post-fee, post-defense-split) reward splits evenly across
+// everyone who attended; the other half splits across gold bidders in
+// proportion to their bid — this collapses to an equal split when every
+// bidder bids the same amount (the common case), and scales fairly when bids
+// differ.
 function computeCrusadeDistribution() {
   const participants = sovereignState.participants;
   if (crusadeWasLost()) {
@@ -736,8 +784,9 @@ function computeCrusadeDistribution() {
   const diamondReward = c ? c.diamondReward || 0 : 0;
   const attendancePct = c ? c.attendancePct ?? 50 : 50;
   const netReward = Math.max(0, diamondReward - totalCrusadeFeeAmount());
-  const attendancePool = netReward * (attendancePct / 100);
-  const bidPool = netReward - attendancePool;
+  const ownPool = isDefenseWin() ? netReward * 0.6 : netReward;
+  const attendancePool = ownPool * (attendancePct / 100);
+  const bidPool = ownPool - attendancePool;
 
   const attendees = participants.filter((p) => p.attended);
   const attendanceShare = attendees.length ? attendancePool / attendees.length : 0;
@@ -748,6 +797,22 @@ function computeCrusadeDistribution() {
     const bidShare = p.goldBid > 0 && totalBid > 0 ? bidPool * (p.goldBid / totalBid) : 0;
     return { participant: p, attendanceAmount, bidShare, total: attendanceAmount + bidShare };
   });
+}
+
+// The other 40% of a Defense win's reward, split evenly across everyone who
+// placed a gold bid in the previous crusade (by event date) — paid out to
+// them by name/guild, regardless of whether they're on this crusade's roster
+// at all.
+function computeLastCrusadeBonusShares() {
+  if (crusadeWasLost() || !isDefenseWin()) return { pool: 0, perBidder: 0, bidders: [] };
+
+  const c = sovereignState.crusade;
+  const diamondReward = c ? c.diamondReward || 0 : 0;
+  const netReward = Math.max(0, diamondReward - totalCrusadeFeeAmount());
+  const pool = netReward * 0.4;
+  const bidders = sovereignState.lastCrusadeBidders || [];
+  const perBidder = bidders.length ? pool / bidders.length : 0;
+  return { pool, perBidder, bidders };
 }
 
 // Each named item (e.g. Morion) has its own total quantity, split evenly
