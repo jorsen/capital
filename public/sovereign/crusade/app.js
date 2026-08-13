@@ -1414,43 +1414,64 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// Fisher-Yates -- the shuffled order IS the draw result, index 0 = 1st place.
+function shuffled(arr) {
+  const out = [...arr];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
 document.getElementById('raffleDrawBtn').addEventListener('click', async () => {
   const checked = Array.from(document.querySelectorAll('.raffle-guild-check:checked')).map((cb) => cb.getAttribute('data-name'));
   if (!checked.length) return;
 
-  const winnerName = checked[Math.floor(Math.random() * checked.length)];
+  const order = shuffled(checked);
   const drawBtn = document.getElementById('raffleDrawBtn');
   const display = document.getElementById('raffleDrawDisplay');
 
-  // The pick above is already final -- this just spins through the checked
-  // names first (slowing down toward the end) so the draw feels like an
-  // actual random shuffle landing on a winner, not an instant lookup.
   drawBtn.disabled = true;
   display.classList.remove('hidden');
-  const spinDelays = [70, 70, 70, 80, 90, 110, 140, 180, 230, 300, 380];
+
+  // One spin to build suspense (cycling through everyone checked), then
+  // reveal every placement in the shuffled order -- one Draw ranks the whole
+  // checked pool at once instead of needing a click per placement.
+  const spinDelays = [70, 70, 70, 80, 90, 110, 140, 180, 230];
   for (const delay of spinDelays) {
     display.textContent = checked[Math.floor(Math.random() * checked.length)];
     await sleep(delay);
   }
-  display.textContent = winnerName;
 
-  try {
-    const created = await api('/api/raffle-winners', {
-      method: 'POST',
-      body: JSON.stringify({ memberName: winnerName, guildName: winnerName }),
-    });
-    sovereignState.raffleWinners.unshift(created);
-    renderRafflePool();
-    renderRaffleWinners();
-    refreshRaffleActivity();
-    toast(`🎲 ${winnerName} takes ${ordinal(sovereignState.raffleWinners.length)} place!`);
-  } catch (err) {
-    toast(err.message);
-    updateRafflePoolCount(); // POST failed, so renderRafflePool() never ran to reset the button itself
-  } finally {
-    await sleep(1200);
-    display.classList.add('hidden');
+  let failed = null;
+  for (const name of order) {
+    const nextPlace = sovereignState.raffleWinners.length + 1;
+    display.textContent = `${ordinal(nextPlace)}: ${name}`;
+    try {
+      const created = await api('/api/raffle-winners', {
+        method: 'POST',
+        body: JSON.stringify({ memberName: name, guildName: name }),
+      });
+      sovereignState.raffleWinners.unshift(created);
+      renderRafflePool();
+      renderRaffleWinners();
+    } catch (err) {
+      failed = err;
+      break;
+    }
+    await sleep(400);
   }
+  refreshRaffleActivity();
+
+  if (failed) {
+    toast(failed.message);
+    updateRafflePoolCount(); // the failed POST's renderRafflePool() never ran, so reset the button here
+  } else {
+    toast(`🎉 ${order.length} placement${order.length === 1 ? '' : 's'} drawn!`);
+  }
+  await sleep(1200);
+  display.classList.add('hidden');
 });
 
 document.getElementById('clearRaffleWinnersBtn').addEventListener('click', async () => {

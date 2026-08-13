@@ -285,7 +285,10 @@
     <div id="sovereignRafflePanel" class="hidden">
       <div class="view-header space-between">
         <p style="color:var(--text-muted); font-size:13px; margin:0; flex:1;">Check which guilds are eligible below, then Draw picks one random winning guild from whichever are checked. Winners stack onto the list and drop out of the pool until you clear it.</p>
-        <button id="clearRaffleWinnersBtn" type="button" class="btn small danger admin-only">Clear Winners</button>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button id="clearRaffleActivityBtn" type="button" class="btn small danger admin-only">Clear Log</button>
+          <button id="clearRaffleWinnersBtn" type="button" class="btn small danger admin-only">Clear Winners</button>
+        </div>
       </div>
 
       <section class="panel">
@@ -309,11 +312,8 @@
       </section>
 
       <section class="panel">
-        <div class="view-header space-between" style="margin-bottom:6px;">
-          <h2 style="margin:0;">Activity Log</h2>
-          <button id="clearRaffleActivityBtn" type="button" class="btn small danger admin-only">Clear Log</button>
-        </div>
-        <p style="color:var(--text-muted); font-size:13px; margin-top:-4px;">Every draw, item edit, undo and clear on this page, newest first.</p>
+        <h2>Activity Log</h2>
+        <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;">Every draw, item edit, undo and clear on this page, newest first.</p>
         <p id="raffleActivityEmptyState" class="empty-state hidden">No raffle activity yet.</p>
         <div id="raffleActivityList" style="display:flex; flex-direction:column; gap:6px;"></div>
       </section>
@@ -393,6 +393,6 @@
   <div id="toast" class="toast hidden"></div>
 
   <script src="/common.js?v=35"></script>
-  <script src="/sovereign/crusade/app.js?v=45"></script>
+  <script src="/sovereign/crusade/app.js?v=46"></script>
 </body>
 </html>
