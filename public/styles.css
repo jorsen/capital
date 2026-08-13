@@ -792,9 +792,9 @@ select:focus, input:focus, textarea:focus {
 .crusade-status-badge.draw { color: var(--gold); border-color: var(--gold); background: rgba(212,175,55,0.12); }
 .crusade-status-badge.pending { color: var(--text-muted); }
 
-/* Guild Salary page: one section per team, each holding that team's own
-   guild-card grid -- sections stack vertically, cards within a section
-   still wrap side by side via .crusade-party-grid. */
+/* Guild Salary page: one collapsible <details> section per team, each
+   holding that team's own guild-card grid -- sections stack vertically,
+   cards within a section still wrap side by side via .crusade-party-grid. */
 .crusade-team-salary-list { display: flex; flex-direction: column; gap: 20px; }
 .crusade-team-salary-section {
   border-top: 1px solid var(--gridline);
@@ -806,8 +806,52 @@ select:focus, input:focus, textarea:focus {
   align-items: center;
   gap: 10px;
   margin-bottom: 10px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
 }
+.crusade-team-salary-header::-webkit-details-marker { display: none; }
+.crusade-team-salary-header::before {
+  content: '▸';
+  display: inline-block;
+  color: var(--text-muted);
+  font-size: 11px;
+  transition: transform 0.15s;
+}
+.crusade-team-salary-section[open] > .crusade-team-salary-header::before { transform: rotate(90deg); }
 .crusade-team-salary-header h3 { margin: 0; font-size: 15px; }
+
+/* Guild Salary page's per-guild breakdown: a stacked list of rows (name +
+   amount, with secondary details on a smaller line below) instead of a wide
+   multi-column table -- reads better with a variable number of item columns
+   and doesn't force horizontal scrolling on narrow screens. */
+.crusade-salary-list { display: flex; flex-direction: column; }
+.crusade-salary-list-row {
+  padding: 8px 2px;
+  border-bottom: 1px solid var(--gridline);
+}
+.crusade-salary-list-row:last-child { border-bottom: none; }
+.crusade-salary-list-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+}
+.crusade-salary-list-name { font-weight: 600; }
+.crusade-salary-list-tag {
+  display: block;
+  font-weight: 400;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.crusade-salary-list-amount { font-weight: 600; white-space: nowrap; }
+.crusade-salary-list-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.crusade-salary-list-row.total .crusade-salary-list-name,
+.crusade-salary-list-row.total .crusade-salary-list-amount { font-weight: 700; }
 
 /* Read-only "viewer" role (see common.js isAdmin/loadSession): the real
    enforcement is server-side (non-GET /api/* requires the admin role) — this
