@@ -14,11 +14,11 @@ const worldDungeonState = {
 };
 
 const WORLD_DUNGEON_NAMES = ['Hisharat', 'Chantarat'];
-// Just the current 2-week set (one Thursday+Sunday pair) -- once it passes,
-// the anchor in worldDungeonUpcomingDates() naturally moves to the next
-// pair, so the table always shows only the current/next 2 weeks, not a
-// long rolling list of future ones.
-const WORLD_DUNGEON_UPCOMING_PAIRS = 1;
+// The current 2-week set plus the one after it (two Thursday+Sunday pairs)
+// -- once the first passes, the anchor in worldDungeonUpcomingDates()
+// naturally moves forward, so the table always shows the current set plus
+// the next one, not a long rolling list of future ones.
+const WORLD_DUNGEON_UPCOMING_PAIRS = 2;
 
 // Light pastel fills, one per guild (assigned by list order, same pattern as
 // Cave Schedule's SCHEDULE_COLORS) -- dark text stays readable on all of them.
