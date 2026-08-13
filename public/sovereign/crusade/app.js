@@ -438,16 +438,16 @@ document.getElementById('deleteTeamBtn').addEventListener('click', async () => {
 
 // ---------- Team list (crusade-level) and single-team roster ----------
 
-// Teams 1-3 always show up (clickable, even empty) so there's always
-// somewhere to start adding a roster from; any higher team number that
-// already has a participant or a saved Team Details row shows up too.
+// Only team numbers that actually have a participant or a saved Team
+// Details/items/fees row show up -- so deleting a team makes it disappear
+// entirely instead of reverting to an empty "Pending" placeholder. A
+// brand-new crusade with nothing on it yet still shows "Team 1" so there's
+// always somewhere to start.
 function visibleTeamNumbers() {
   const numbers = new Set(sovereignState.participants.map((p) => p.partyNumber));
   sovereignState.teams.forEach((t) => numbers.add(t.teamNumber));
-  numbers.add(1);
-  numbers.add(2);
-  numbers.add(3);
-  return Array.from(numbers).sort((a, b) => a - b);
+  const sorted = Array.from(numbers).sort((a, b) => a - b);
+  return sorted.length ? sorted : [1];
 }
 
 function renderTeamList() {
