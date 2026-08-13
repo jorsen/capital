@@ -421,6 +421,21 @@ document.getElementById('deleteCrusadeBtn').addEventListener('click', async () =
   }
 });
 
+document.getElementById('deleteTeamBtn').addEventListener('click', async () => {
+  const n = sovereignState.activeTeam;
+  const count = sovereignState.participants.filter((p) => p.partyNumber === n).length;
+  if (!confirm(`Delete Team ${n}? This removes its ${count} participant${count === 1 ? '' : 's'} and all of its items, fees, and details.`)) return;
+  try {
+    await api(`/api/crusades/${sovereignState.crusadeId}/teams/${n}`, { method: 'DELETE' });
+    sovereignState.participants = sovereignState.participants.filter((p) => p.partyNumber !== n);
+    sovereignState.teams = sovereignState.teams.filter((t) => t.teamNumber !== n);
+    toast(`Team ${n} deleted`);
+    window.location.hash = `crusade/${sovereignState.crusadeId}`;
+  } catch (err) {
+    toast(err.message);
+  }
+});
+
 // ---------- Team list (crusade-level) and single-team roster ----------
 
 // Teams 1-3 always show up (clickable, even empty) so there's always
