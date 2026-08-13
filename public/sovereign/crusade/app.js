@@ -1299,112 +1299,85 @@ function renderMemberList() {
 // it -- the pool is derived each render, never stored separately.
 
 async function loadRaffle() {
-  const [members, guilds, winners] = await Promise.all([
-    api('/api/sovereign-members'),
-    api('/api/crusade-guilds'),
-    api('/api/raffle-winners'),
-  ]);
-  sovereignState.memberList = members;
+  const [guilds, winners] = await Promise.all([api('/api/crusade-guilds'), api('/api/raffle-winners')]);
   sovereignState.guilds = guilds;
   sovereignState.raffleWinners = winners;
   renderRafflePool();
   renderRaffleWinners();
 }
 
-function raffleEligibleMembers() {
-  const wonNames = new Set(sovereignState.raffleWinners.map((w) => w.memberName.trim().toLowerCase()));
-  return sovereignState.memberList.filter((m) => !wonNames.has(m.name.trim().toLowerCase()));
+// The winner is a whole guild, not an individual member -- a guild already
+// in the Winners stack drops out of the pool until "Clear Winners" resets it.
+function raffleEligibleGuilds() {
+  const wonNames = new Set(sovereignState.raffleWinners.map((w) => w.guildName?.trim().toLowerCase()));
+  return sovereignState.guilds.filter((g) => !wonNames.has(g.name.trim().toLowerCase()));
 }
 
 function renderRafflePool() {
   const container = document.getElementById('rafflePoolDetail');
-  const eligible = raffleEligibleMembers();
+  const eligible = raffleEligibleGuilds();
   document.getElementById('rafflePoolEmptyState').classList.toggle('hidden', eligible.length !== 0);
 
-  const groups = new Map();
-  eligible.forEach((m) => {
-    const key = m.guildName || 'Unassigned';
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key).push(m);
-  });
-  groups.forEach((list) => list.sort((a, b) => a.name.localeCompare(b.name)));
-
-  const knownOrder = sovereignState.guilds.map((g) => g.name);
-  const guildKeys = Array.from(groups.keys()).filter((k) => k !== 'Unassigned');
-  guildKeys.sort((a, b) => {
-    const ai = knownOrder.indexOf(a);
-    const bi = knownOrder.indexOf(b);
-    if (ai === -1 && bi === -1) return a.localeCompare(b);
-    if (ai === -1) return 1;
-    if (bi === -1) return -1;
-    return ai - bi;
-  });
-  if (groups.has('Unassigned')) guildKeys.push('Unassigned');
-
-  container.innerHTML = guildKeys
-    .map((guildName) => {
-      const members = groups.get(guildName);
-      const items = members
-        .map(
-          (m) => `
-        <li>
-          <label style="display:flex; align-items:center; gap:8px; font-weight:400;">
-            <input type="checkbox" class="raffle-member-check admin-disable" data-name="${escapeHtml(m.name)}" data-guild="${escapeHtml(guildName === 'Unassigned' ? '' : guildName)}">
-            ${escapeHtml(m.name)}
-          </label>
-        </li>`
-        )
-        .join('');
-      return `
-      <div class="crusade-party-card">
-        <div class="crusade-party-card-header">
-          <h3>${guildName === 'Unassigned' ? 'Unassigned' : escapeHtml(guildName)} (${members.length})</h3>
-          <label style="display:flex; align-items:center; gap:4px; font-weight:400; font-size:11px; text-transform:none; color:var(--text-muted);">
-            <input type="checkbox" class="raffle-select-all admin-disable">
-            All
-          </label>
-        </div>
-        <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:6px;">${items}</ul>
-      </div>`;
-    })
+  const items = eligible
+    .map(
+      (g) => `
+    <li>
+      <label style="display:flex; align-items:center; gap:8px; font-weight:400;">
+        <input type="checkbox" class="raffle-guild-check admin-disable" data-name="${escapeHtml(g.name)}">
+        <span class="schedule-dot" style="background:${g.color}"></span>
+        ${escapeHtml(g.name)}
+      </label>
+    </li>`
+    )
     .join('');
+
+  container.innerHTML = eligible.length
+    ? `
+    <div class="crusade-party-card">
+      <div class="crusade-party-card-header">
+        <h3>Guilds (${eligible.length})</h3>
+        <label style="display:flex; align-items:center; gap:4px; font-weight:400; font-size:11px; text-transform:none; color:var(--text-muted);">
+          <input type="checkbox" class="raffle-select-all admin-disable">
+          All
+        </label>
+      </div>
+      <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:6px;">${items}</ul>
+    </div>`
+    : '';
 
   container.querySelectorAll('.raffle-select-all').forEach((allCb) => {
     allCb.addEventListener('change', () => {
       const card = allCb.closest('.crusade-party-card');
-      card.querySelectorAll('.raffle-member-check').forEach((cb) => (cb.checked = allCb.checked));
+      card.querySelectorAll('.raffle-guild-check').forEach((cb) => (cb.checked = allCb.checked));
       updateRafflePoolCount();
     });
   });
-  container.querySelectorAll('.raffle-member-check').forEach((cb) => {
+  container.querySelectorAll('.raffle-guild-check').forEach((cb) => {
     cb.addEventListener('change', updateRafflePoolCount);
   });
   updateRafflePoolCount();
 }
 
 function updateRafflePoolCount() {
-  const checked = document.querySelectorAll('.raffle-member-check:checked').length;
+  const checked = document.querySelectorAll('.raffle-guild-check:checked').length;
   document.getElementById('rafflePoolCount').textContent = checked ? `${checked} selected` : '';
   document.getElementById('raffleDrawBtn').disabled = checked === 0;
 }
 
 document.getElementById('raffleDrawBtn').addEventListener('click', async () => {
-  const checked = Array.from(document.querySelectorAll('.raffle-member-check:checked')).map((cb) => ({
-    name: cb.getAttribute('data-name'),
-    guildName: cb.getAttribute('data-guild') || null,
-  }));
+  const checked = Array.from(document.querySelectorAll('.raffle-guild-check:checked')).map((cb) => cb.getAttribute('data-name'));
   if (!checked.length) return;
 
-  const winner = checked[Math.floor(Math.random() * checked.length)];
+  const winnerName = checked[Math.floor(Math.random() * checked.length)];
   try {
     const created = await api('/api/raffle-winners', {
       method: 'POST',
-      body: JSON.stringify({ memberName: winner.name, guildName: winner.guildName }),
+      body: JSON.stringify({ memberName: winnerName, guildName: winnerName }),
     });
     sovereignState.raffleWinners.unshift(created);
     renderRafflePool();
     renderRaffleWinners();
-    toast(`🎲 ${winner.name} wins!`);
+    toast(`🎲 ${winnerName} wins!`);
   } catch (err) {
     toast(err.message);
   }
@@ -1412,7 +1385,7 @@ document.getElementById('raffleDrawBtn').addEventListener('click', async () => {
 
 document.getElementById('clearRaffleWinnersBtn').addEventListener('click', async () => {
   if (!sovereignState.raffleWinners.length) return;
-  if (!confirm(`Clear all ${sovereignState.raffleWinners.length} raffle winner(s)? Everyone becomes eligible again.`)) return;
+  if (!confirm(`Clear all ${sovereignState.raffleWinners.length} raffle winner(s)? Every guild becomes eligible again.`)) return;
   try {
     await api('/api/raffle-winners', { method: 'DELETE' });
     sovereignState.raffleWinners = [];
@@ -1436,8 +1409,7 @@ function renderRaffleWinners() {
       return `
       <div class="crusade-guild-summary-row" data-winner-id="${w.id}">
         <span class="schedule-dot" style="background:${color}"></span>
-        <span style="flex:1; font-weight:600; white-space:nowrap;">${escapeHtml(w.memberName)}</span>
-        ${crusadeGuildBadge(w.guildName)}
+        <span style="flex:1; font-weight:600; white-space:nowrap;">${escapeHtml(w.guildName || w.memberName)}</span>
         <input type="text" class="raffle-item-input admin-disable" data-winner-id="${w.id}" value="${escapeHtml(w.item || '')}" placeholder="What did they win?" style="max-width:200px; flex:1;">
         <span style="color:var(--text-muted); font-size:12px; white-space:nowrap;">${time}</span>
         <button type="button" class="icon-btn admin-only" data-remove-winner="${w.id}" title="Undo this draw">✕</button>
@@ -1462,7 +1434,7 @@ function renderRaffleWinners() {
     btn.addEventListener('click', async () => {
       const id = btn.getAttribute('data-remove-winner');
       const winner = sovereignState.raffleWinners.find((w) => w.id === id);
-      if (!confirm(`Undo ${winner?.memberName}'s win? They'll go back into the eligible pool.`)) return;
+      if (!confirm(`Undo ${winner?.guildName || winner?.memberName}'s win? It'll go back into the eligible pool.`)) return;
       try {
         await api(`/api/raffle-winners/${id}`, { method: 'DELETE' });
         sovereignState.raffleWinners = sovereignState.raffleWinners.filter((w) => w.id !== id);

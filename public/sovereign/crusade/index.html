@@ -284,25 +284,25 @@
     <!-- ===================== RAFFLE PANEL ===================== -->
     <div id="sovereignRafflePanel" class="hidden">
       <div class="view-header space-between">
-        <p style="color:var(--text-muted); font-size:13px; margin:0; flex:1;">Check who's eligible below, then Draw picks one random winner from whoever's checked. Winners stack onto the list and drop out of the pool until you clear it.</p>
+        <p style="color:var(--text-muted); font-size:13px; margin:0; flex:1;">Check which guilds are eligible below, then Draw picks one random winning guild from whichever are checked. Winners stack onto the list and drop out of the pool until you clear it.</p>
         <button id="clearRaffleWinnersBtn" type="button" class="btn small danger admin-only">Clear Winners</button>
       </div>
 
       <section class="panel">
         <div class="view-header space-between" style="margin-bottom:6px;">
-          <h2 style="margin:0;">Eligible Pool</h2>
+          <h2 style="margin:0;">Eligible Guilds</h2>
           <div style="display:flex; align-items:center; gap:10px;">
             <span id="rafflePoolCount" style="color:var(--text-muted); font-size:13px;"></span>
             <button id="raffleDrawBtn" type="button" class="btn primary small admin-only" disabled>🎲 Draw</button>
           </div>
         </div>
         <div id="rafflePoolDetail" class="crusade-party-grid"></div>
-        <p id="rafflePoolEmptyState" class="empty-state hidden">Everyone's already won — clear the winners list to start a fresh raffle.</p>
+        <p id="rafflePoolEmptyState" class="empty-state hidden">Every guild has already won — clear the winners list to start a fresh raffle.</p>
       </section>
 
       <section class="panel">
         <h2>Winners</h2>
-        <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;">Newest draw first — add what they won once you've handed it over.</p>
+        <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;">Newest draw first — add what the guild won once it's been handed over.</p>
         <p id="raffleWinnersEmptyState" class="empty-state hidden">No draws yet.</p>
         <div id="raffleWinnersList" style="display:flex; flex-direction:column; gap:8px;"></div>
       </section>
@@ -382,6 +382,6 @@
   <div id="toast" class="toast hidden"></div>
 
   <script src="/common.js?v=35"></script>
-  <script src="/sovereign/crusade/app.js?v=40"></script>
+  <script src="/sovereign/crusade/app.js?v=41"></script>
 </body>
 </html>
