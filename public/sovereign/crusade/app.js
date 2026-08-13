@@ -8,7 +8,7 @@
 // result, diamond reward, attendance %, notes, items and fees -- so two
 // teams sharing a crusade's date can have completely different outcomes.
 // mode tracks which crusade-scoped page is active: 'overview' | 'team' | 'guildSalary'.
-const sovereignState = { crusades: [], guilds: [], crusadeId: null, crusade: null, participants: [], teams: [], memberList: [], raffleWinners: [], activeTeam: null, mode: null };
+const sovereignState = { crusades: [], guilds: [], crusadeId: null, crusade: null, participants: [], teams: [], memberList: [], raffleWinners: [], raffleActivity: [], activeTeam: null, mode: null };
 
 function crusadeFormatDiamonds(amount) {
   return `${Math.round(amount || 0).toLocaleString()} 💎`;
@@ -1299,11 +1299,45 @@ function renderMemberList() {
 // it -- the pool is derived each render, never stored separately.
 
 async function loadRaffle() {
-  const [guilds, winners] = await Promise.all([api('/api/crusade-guilds'), api('/api/raffle-winners')]);
+  const [guilds, winners, activity] = await Promise.all([
+    api('/api/crusade-guilds'),
+    api('/api/raffle-winners'),
+    api('/api/activity-log?entityType=raffle_winner&limit=50'),
+  ]);
   sovereignState.guilds = guilds;
   sovereignState.raffleWinners = winners;
+  sovereignState.raffleActivity = activity;
   renderRafflePool();
   renderRaffleWinners();
+  renderRaffleActivity();
+}
+
+// Re-fetches just the log (draw/edit/undo/clear all write through
+// logActivity() server-side, so the freshest record is whatever comes back
+// from there rather than something reconstructed client-side).
+async function refreshRaffleActivity() {
+  try {
+    sovereignState.raffleActivity = await api('/api/activity-log?entityType=raffle_winner&limit=50');
+    renderRaffleActivity();
+  } catch (err) {
+    // non-fatal -- the action itself already succeeded
+  }
+}
+
+function renderRaffleActivity() {
+  const entries = sovereignState.raffleActivity || [];
+  document.getElementById('raffleActivityEmptyState').classList.toggle('hidden', entries.length !== 0);
+
+  document.getElementById('raffleActivityList').innerHTML = entries
+    .map((e) => {
+      const time = new Date(e.createdAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      return `
+      <div style="display:flex; justify-content:space-between; gap:12px; padding:6px 0; border-bottom:1px solid var(--gridline); font-size:13px;">
+        <span>${escapeHtml(e.description || '')}</span>
+        <span style="color:var(--text-muted); white-space:nowrap;">${e.username ? `${escapeHtml(e.username)} · ` : ''}${time}</span>
+      </div>`;
+    })
+    .join('');
 }
 
 // The winner is a whole guild, not an individual member -- a guild already
@@ -1396,6 +1430,7 @@ document.getElementById('raffleDrawBtn').addEventListener('click', async () => {
     sovereignState.raffleWinners.unshift(created);
     renderRafflePool();
     renderRaffleWinners();
+    refreshRaffleActivity();
     toast(`🎲 ${winnerName} wins!`);
   } catch (err) {
     toast(err.message);
@@ -1414,6 +1449,7 @@ document.getElementById('clearRaffleWinnersBtn').addEventListener('click', async
     sovereignState.raffleWinners = [];
     renderRafflePool();
     renderRaffleWinners();
+    refreshRaffleActivity();
     toast('Raffle winners cleared');
   } catch (err) {
     toast(err.message);
@@ -1447,6 +1483,7 @@ function renderRaffleWinners() {
         const updated = await api(`/api/raffle-winners/${id}`, { method: 'PUT', body: JSON.stringify({ item: input.value }) });
         const idx = sovereignState.raffleWinners.findIndex((w) => w.id === id);
         if (idx !== -1) sovereignState.raffleWinners[idx] = updated;
+        refreshRaffleActivity();
         toast('Item saved');
       } catch (err) {
         toast(err.message);
@@ -1463,6 +1500,7 @@ function renderRaffleWinners() {
         sovereignState.raffleWinners = sovereignState.raffleWinners.filter((w) => w.id !== id);
         renderRafflePool();
         renderRaffleWinners();
+        refreshRaffleActivity();
         toast('Draw undone');
       } catch (err) {
         toast(err.message);
