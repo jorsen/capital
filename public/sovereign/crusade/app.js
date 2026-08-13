@@ -32,6 +32,19 @@ function crusadeGuildColor(guildName) {
 // server is what actually enforces the cap.
 const CRUSADE_PARTY_MAX_MEMBERS = 5;
 
+// pending/win/lose/draw -> a small colored pill, reused on the Team List
+// overview (one per row) and each team's own page (next to its heading), so
+// the outcome is visible at a glance without opening Team Details.
+function crusadeStatusLabel(result) {
+  const value = result || 'pending';
+  return { value, label: value.charAt(0).toUpperCase() + value.slice(1) };
+}
+
+function crusadeStatusBadge(result) {
+  const { value, label } = crusadeStatusLabel(result);
+  return `<span class="crusade-status-badge ${escapeHtml(value)}">${escapeHtml(label)}</span>`;
+}
+
 function crusadeGuildBadge(guildName) {
   if (!guildName) return '–';
   const color = crusadeGuildColor(guildName) || 'var(--text-muted)';
@@ -427,12 +440,14 @@ function renderTeamList() {
 
   body.innerHTML = visibleTeamNumbers()
     .map((n) => {
+      const team = getTeamData(n);
       const rows = computeTeamDistribution(n);
       const count = sovereignState.participants.filter((p) => p.partyNumber === n).length;
       const diamonds = rows.reduce((sum, r) => sum + r.total, 0);
       return `
       <tr>
         <td><a href="#crusade/${sovereignState.crusadeId}/team/${n}" style="font-weight:600;">Team ${n}</a></td>
+        <td>${crusadeStatusBadge(team.result)}</td>
         <td>${count}</td>
         <td>${crusadeFormatDiamonds(diamonds)}</td>
       </tr>`;
@@ -677,6 +692,10 @@ function renderTeamDetail(n) {
   document.title = `Sovereign — ${sovereignState.crusade.name} — Team ${n}`;
 
   const team = getTeamData(n);
+  const { value: statusValue, label: statusLabel } = crusadeStatusLabel(team.result);
+  const statusBadge = document.getElementById('crusadeTeamStatusBadge');
+  statusBadge.className = `crusade-status-badge ${statusValue}`;
+  statusBadge.textContent = statusLabel;
   const teamRows = computeTeamDistribution(n);
   document.getElementById('crusadeTeamRosterEmptyState').classList.toggle('hidden', teamRows.length !== 0);
 

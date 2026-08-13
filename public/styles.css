@@ -776,6 +776,22 @@ select:focus, input:focus, textarea:focus {
 .crusade-party-card-header .icon-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 .crusade-party-card-header .icon-btn:disabled:hover { background: none; color: inherit; }
 
+.crusade-status-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+.crusade-status-badge.win { color: var(--good); border-color: var(--good); background: rgba(74,222,128,0.12); }
+.crusade-status-badge.lose { color: var(--bad); border-color: var(--bad); background: rgba(239,68,68,0.12); }
+.crusade-status-badge.draw { color: var(--gold); border-color: var(--gold); background: rgba(212,175,55,0.12); }
+.crusade-status-badge.pending { color: var(--text-muted); }
+
 /* Read-only "viewer" role (see common.js isAdmin/loadSession): the real
    enforcement is server-side (non-GET /api/* requires the admin role) — this
    is just UX polish so a viewer isn't shown controls that would just 403. */
