@@ -1,5 +1,5 @@
 // World Dungeon Schedule — a fixed weekly cadence (every Thursday and
-// Friday), two fixed bosses (Hisharat, Chantarat). An admin manually assigns
+// Sunday), two fixed bosses (Hisharat, Chantarat). An admin manually assigns
 // which guild is taking on each boss per date. Guild picklist is shared with
 // Cave Schedule's server list (see the comment in lib/db.js) rather than a
 // second duplicate list.
@@ -10,9 +10,9 @@ const worldDungeonState = {
 };
 
 const WORLD_DUNGEON_NAMES = ['Hisharat', 'Chantarat'];
-const WORLD_DUNGEON_UPCOMING_COUNT = 12; // ~6 weeks of Thursday+Friday pairs
+const WORLD_DUNGEON_UPCOMING_COUNT = 12; // ~6 weeks of Thursday+Sunday pairs
 
-// Every Thursday (4) and Friday (5) starting today, walked in UTC day-math
+// Every Thursday (4) and Sunday (0) starting today, walked in UTC day-math
 // so a DST shift can't skip or duplicate a date.
 function worldDungeonUpcomingDates(count) {
   const dates = [];
@@ -20,7 +20,7 @@ function worldDungeonUpcomingDates(count) {
   let cursor = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
   while (dates.length < count) {
     const dow = cursor.getUTCDay();
-    if (dow === 4 || dow === 5) dates.push(cursor.toISOString().slice(0, 10));
+    if (dow === 4 || dow === 0) dates.push(cursor.toISOString().slice(0, 10));
     cursor = new Date(cursor.getTime() + 86400000);
   }
   return dates;
@@ -50,7 +50,7 @@ function renderWorldDungeonSchedule() {
   body.innerHTML = dates
     .map((date) => {
       const dow = new Date(`${date}T00:00:00Z`).getUTCDay();
-      const dayLabel = dow === 4 ? 'Thursday' : 'Friday';
+      const dayLabel = dow === 4 ? 'Thursday' : 'Sunday';
       const assigned = worldDungeonState.entries[date] || {};
       const cells = WORLD_DUNGEON_NAMES.map((dungeon) => {
         const current = assigned[dungeon] || '';

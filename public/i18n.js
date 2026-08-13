@@ -18,7 +18,7 @@ const TRANSLATIONS = {
     'topbar.readonly': 'Viewing (read-only)',
     'topbar.logout': 'Logout',
 
-    'worldDungeon.hint': 'Every Thursday and Friday, assign which guild is taking on each boss.',
+    'worldDungeon.hint': 'Every Thursday and Sunday, assign which guild is taking on each boss.',
     'worldDungeon.manageGuilds': 'Manage Guilds',
     'worldDungeon.heading': 'World Dungeon Schedule',
     'worldDungeon.thDate': 'Date',
