@@ -294,7 +294,7 @@ async function loadCrusadeDetail(id) {
     populateTeamDetailsForm(sovereignState.activeTeam);
     renderTeamDetail(sovereignState.activeTeam); // sets its own title
   } else if (sovereignState.mode === 'guildSalary') {
-    document.title = `Sovereign — ${crusade.name} — Guild Salary`;
+    document.title = `Sovereign — ${crusade.name} — Crusade Salary`;
     renderCrusadeGuildSalary();
   } else {
     document.title = `Sovereign — ${crusade.name}`;
