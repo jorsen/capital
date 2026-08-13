@@ -23,6 +23,8 @@ const TRANSLATIONS = {
     'worldDungeon.heading': 'World Dungeon Schedule',
     'worldDungeon.thDate': 'Date',
     'worldDungeon.noGuilds': 'No guilds added yet — click "Manage Guilds" to add one.',
+    'worldDungeon.miniBoss': 'Mini Boss',
+    'worldDungeon.ffa': 'FFA',
     'worldDungeon.manageGuildsTitle': 'Manage Guilds',
     'worldDungeon.manageGuildsHint': "Shared with Cave Schedule's server list — these are the guild names offered for both. Remove any, or add new ones.",
     'worldDungeon.newGuildPlaceholder': 'New guild name…',

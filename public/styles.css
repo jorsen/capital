@@ -668,32 +668,59 @@ select:focus, input:focus, textarea:focus {
   .schedule-day-select, .schedule-day-badge { font-size: 13px; }
 }
 
-/* World Dungeon Schedule's calendar: each Thursday/Sunday cell holds two
-   compact selects (one per boss) instead of Cave Schedule's one big one, so
-   it needs more height and much smaller controls. Other weekdays don't
-   apply -- just the day number, dimmed. */
-.world-dungeon-day { min-height: 118px; gap: 4px; }
-.world-dungeon-day-inactive .schedule-day-number { opacity: 0.35; }
-.world-dungeon-day-row { display: flex; align-items: center; gap: 4px; }
-.world-dungeon-day-label {
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--text-muted);
-  width: 12px;
-  flex-shrink: 0;
+/* World Dungeon Schedule: styled as a plain white "announcement" card
+   (spreadsheet look, thin black grid) rather than the app's usual dark
+   theme, since it's meant to be screenshotted/shared with the guild as-is.
+   Deliberately fixed light colors here, not theme variables. */
+.world-dungeon-card {
+  background: #ffffff;
+  border: 2px solid #000000;
+  border-radius: 4px;
+  padding: 18px;
+  max-width: 640px;
+  margin: 0 auto;
+}
+.world-dungeon-title {
+  margin: 0 0 14px;
   text-align: center;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: #000000;
+  text-transform: uppercase;
 }
-.world-dungeon-select {
-  font-size: 11px;
-  padding: 2px 3px;
+.world-dungeon-table {
   width: 100%;
-  min-width: 0;
-  height: auto;
+  border-collapse: collapse;
 }
-@media (max-width: 720px) {
-  .world-dungeon-day { min-height: 90px; }
-  .world-dungeon-select { font-size: 10px; padding: 1px 2px; }
+.world-dungeon-table th,
+.world-dungeon-table td {
+  border: 1px solid #000000;
+  padding: 10px 12px;
+  text-align: center;
+  color: #111111;
+  font-weight: 600;
 }
+.world-dungeon-table thead th {
+  background: #f0f0f0;
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.world-dungeon-table tbody td:first-child { font-weight: 700; white-space: nowrap; }
+.world-dungeon-select {
+  width: 100%;
+  min-width: 90px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 700;
+  color: #111111;
+  text-align: center;
+  text-align-last: center;
+}
+.world-dungeon-miniboss-row td { background: #ece1f7 !important; font-weight: 700; }
 
 /* ---------- Sovereign / Crusade ---------- */
 
