@@ -1340,6 +1340,18 @@ function renderRaffleActivity() {
     .join('');
 }
 
+document.getElementById('clearRaffleActivityBtn').addEventListener('click', async () => {
+  if (!sovereignState.raffleActivity.length) return;
+  if (!confirm(`Clear all ${sovereignState.raffleActivity.length} raffle activity log entr${sovereignState.raffleActivity.length === 1 ? 'y' : 'ies'}? This can't be undone.`)) return;
+  try {
+    await api('/api/activity-log?entityType=raffle_winner', { method: 'DELETE' });
+    await refreshRaffleActivity();
+    toast('Raffle activity log cleared');
+  } catch (err) {
+    toast(err.message);
+  }
+});
+
 // The winner is a whole guild, not an individual member -- a guild already
 // in the Winners stack drops out of the pool until "Clear Winners" resets it.
 function raffleEligibleGuilds() {
