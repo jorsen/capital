@@ -42,6 +42,10 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             <span data-i18n="nav.bosses">Boss Timers</span>
           </a>
+          <a href="#/world-dungeon" data-view="world-dungeon" class="nav-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4Z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+            <span data-i18n="nav.worldDungeon">World Dungeon</span>
+          </a>
           <a href="#/users" data-view="users" class="nav-link owner-only">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             <span data-i18n="nav.users">Users</span>
@@ -443,6 +447,31 @@
       </section>
     </div>
 
+    <!-- ===================== WORLD DUNGEON SCHEDULE VIEW ===================== -->
+    <div id="view-world-dungeon" class="view hidden">
+      <div class="view-header space-between">
+        <p style="color:var(--text-muted); font-size:13px; margin:0; flex:1;" data-i18n="worldDungeon.hint">Every Thursday and Friday, assign which guild is taking on each boss.</p>
+        <button id="manageWorldDungeonGuildsBtn" class="btn small admin-only" data-i18n="worldDungeon.manageGuilds">Manage Guilds</button>
+      </div>
+
+      <section class="panel">
+        <h2 data-i18n="worldDungeon.heading">World Dungeon Schedule</h2>
+        <div class="table-scroll">
+          <table class="members-table">
+            <thead>
+              <tr>
+                <th data-i18n="worldDungeon.thDate">Date</th>
+                <th>Hisharat</th>
+                <th>Chantarat</th>
+              </tr>
+            </thead>
+            <tbody id="worldDungeonScheduleBody"></tbody>
+          </table>
+        </div>
+        <p id="worldDungeonNoGuildsState" class="empty-state hidden" data-i18n="worldDungeon.noGuilds">No guilds added yet — click "Manage Guilds" to add one.</p>
+      </section>
+    </div>
+
     <!-- ===================== ITEM REPORT VIEW ===================== -->
     <div id="view-items" class="view hidden">
       <div class="view-header space-between">
@@ -736,6 +765,19 @@
     </div>
   </div>
 
+  <div id="manageWorldDungeonGuildsModal" class="modal-overlay hidden">
+    <div class="modal">
+      <button class="modal-close" data-close="manageWorldDungeonGuildsModal" aria-label="Close">×</button>
+      <h2 data-i18n="worldDungeon.manageGuildsTitle">Manage Guilds</h2>
+      <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;" data-i18n="worldDungeon.manageGuildsHint">Shared with Cave Schedule's server list — these are the guild names offered for both. Remove any, or add new ones.</p>
+      <ul id="worldDungeonGuildList" style="list-style:none; padding:0; margin:14px 0; display:flex; flex-direction:column; gap:8px;"></ul>
+      <form id="addWorldDungeonGuildForm" style="display:flex; gap:8px;">
+        <input type="text" name="name" placeholder="New guild name…" required style="flex:1;" data-i18n-placeholder="worldDungeon.newGuildPlaceholder">
+        <button type="submit" class="btn primary small" data-i18n="common.add">Add</button>
+      </form>
+    </div>
+  </div>
+
   <div id="userModal" class="modal-overlay hidden">
     <div class="modal">
       <button class="modal-close" data-close="userModal" aria-label="Close">×</button>
@@ -780,10 +822,11 @@
   <script src="item-report-view.js?v=30"></script>
   <script src="boss-timer-view.js?v=33"></script>
   <script src="boss-history-view.js?v=33"></script>
+  <script src="world-dungeon-view.js?v=1"></script>
   <script src="users-view.js?v=3"></script>
   <script src="activity-log-view.js?v=5"></script>
   <script src="auth.js?v=29"></script>
-  <script src="i18n.js?v=7"></script>
-  <script src="router.js?v=35"></script>
+  <script src="i18n.js?v=8"></script>
+  <script src="router.js?v=36"></script>
 </body>
 </html>

@@ -11,11 +11,21 @@ const TRANSLATIONS = {
     'nav.loot': 'Guild Dungeon Loot',
     'nav.caves': 'Cave Attendance',
     'nav.bosses': 'Boss Timers',
+    'nav.worldDungeon': 'World Dungeon',
     'nav.users': 'Users',
     'nav.activityLog': 'Activity Log',
 
     'topbar.readonly': 'Viewing (read-only)',
     'topbar.logout': 'Logout',
+
+    'worldDungeon.hint': 'Every Thursday and Friday, assign which guild is taking on each boss.',
+    'worldDungeon.manageGuilds': 'Manage Guilds',
+    'worldDungeon.heading': 'World Dungeon Schedule',
+    'worldDungeon.thDate': 'Date',
+    'worldDungeon.noGuilds': 'No guilds added yet — click "Manage Guilds" to add one.',
+    'worldDungeon.manageGuildsTitle': 'Manage Guilds',
+    'worldDungeon.manageGuildsHint': "Shared with Cave Schedule's server list — these are the guild names offered for both. Remove any, or add new ones.",
+    'worldDungeon.newGuildPlaceholder': 'New guild name…',
 
     'common.manageItems': 'Manage Items',
     'common.manageClasses': 'Manage Classes',
