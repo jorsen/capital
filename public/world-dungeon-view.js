@@ -1,5 +1,6 @@
-// World Dungeon Schedule — a fixed weekly cadence (every Thursday and
-// Sunday), two fixed bosses (Hisharat, Chantarat). An admin manually assigns
+// World Dungeon Schedule — a fixed biweekly cadence (a Thursday+Sunday pair,
+// then skipped the following week, then the next pair two weeks later, and
+// so on), two fixed bosses (Hisharat, Chantarat). An admin manually assigns
 // which guild is taking on each boss per date. Styled as a plain white
 // "announcement" table (spreadsheet look, not the app's usual dark theme)
 // since it's meant to be screenshotted/shared with the guild, with each
@@ -13,7 +14,7 @@ const worldDungeonState = {
 };
 
 const WORLD_DUNGEON_NAMES = ['Hisharat', 'Chantarat'];
-const WORLD_DUNGEON_UPCOMING_COUNT = 12; // ~6 weeks of Thursday+Sunday pairs
+const WORLD_DUNGEON_UPCOMING_PAIRS = 6; // ~12 weeks of biweekly Thursday+Sunday pairs
 
 // Light pastel fills, one per guild (assigned by list order, same pattern as
 // Cave Schedule's SCHEDULE_COLORS) -- dark text stays readable on all of them.
@@ -25,16 +26,22 @@ function worldDungeonGuildColor(name) {
   return idx === -1 ? null : WORLD_DUNGEON_PASTELS[idx % WORLD_DUNGEON_PASTELS.length];
 }
 
-// Every Thursday (4) and Sunday (0) starting today, walked in UTC day-math
-// so a DST shift can't skip or duplicate a date.
-function worldDungeonUpcomingDates(count) {
-  const dates = [];
+// The next upcoming Thursday (today counts if today is one) anchors "pair
+// 1" -- its Sunday is 3 days later, then each following pair's Thursday is
+// 14 days after the previous one's, skipping the in-between week entirely.
+// Walked in UTC day-math so a DST shift can't skip or duplicate a date.
+function worldDungeonUpcomingDates(pairCount) {
   const now = new Date();
-  let cursor = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
-  while (dates.length < count) {
-    const dow = cursor.getUTCDay();
-    if (dow === 4 || dow === 0) dates.push(cursor.toISOString().slice(0, 10));
-    cursor = new Date(cursor.getTime() + 86400000);
+  let anchorThursday = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+  while (anchorThursday.getUTCDay() !== 4) {
+    anchorThursday = new Date(anchorThursday.getTime() + 86400000);
+  }
+
+  const dates = [];
+  for (let i = 0; i < pairCount; i++) {
+    const thursday = new Date(anchorThursday.getTime() + i * 14 * 86400000);
+    const sunday = new Date(thursday.getTime() + 3 * 86400000);
+    dates.push(thursday.toISOString().slice(0, 10), sunday.toISOString().slice(0, 10));
   }
   return dates;
 }
@@ -69,7 +76,7 @@ async function loadWorldDungeonScheduleData() {
 function renderWorldDungeonSchedule() {
   document.getElementById('worldDungeonNoGuildsState').classList.toggle('hidden', worldDungeonState.guilds.length !== 0);
 
-  const dates = worldDungeonUpcomingDates(WORLD_DUNGEON_UPCOMING_COUNT);
+  const dates = worldDungeonUpcomingDates(WORLD_DUNGEON_UPCOMING_PAIRS);
   const body = document.getElementById('worldDungeonScheduleBody');
   body.innerHTML = dates
     .map((date) => {
