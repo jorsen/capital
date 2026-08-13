@@ -792,6 +792,23 @@ select:focus, input:focus, textarea:focus {
 .crusade-status-badge.draw { color: var(--gold); border-color: var(--gold); background: rgba(212,175,55,0.12); }
 .crusade-status-badge.pending { color: var(--text-muted); }
 
+/* Guild Salary page: one section per team, each holding that team's own
+   guild-card grid -- sections stack vertically, cards within a section
+   still wrap side by side via .crusade-party-grid. */
+.crusade-team-salary-list { display: flex; flex-direction: column; gap: 20px; }
+.crusade-team-salary-section {
+  border-top: 1px solid var(--gridline);
+  padding-top: 14px;
+}
+.crusade-team-salary-section:first-child { border-top: none; padding-top: 0; }
+.crusade-team-salary-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.crusade-team-salary-header h3 { margin: 0; font-size: 15px; }
+
 /* Read-only "viewer" role (see common.js isAdmin/loadSession): the real
    enforcement is server-side (non-GET /api/* requires the admin role) — this
    is just UX polish so a viewer isn't shown controls that would just 403. */

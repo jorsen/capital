@@ -476,110 +476,92 @@ function allKnownTeamNumbers() {
   return visibleTeamNumbers();
 }
 
-// Every item name across every team, alphabetical -- used as this page's
-// item columns so two teams' quantities under the same item name add up in
-// one column, even though each team tracks its own items independently.
-function allCrusadeItemNames() {
-  const names = new Set();
-  sovereignState.teams.forEach((t) => (t.items || []).forEach((i) => names.add(i.name)));
-  return Array.from(names).sort((a, b) => a.localeCompare(b));
-}
+// One team's own roster, categorized by guild: each guild's entry list is
+// every participant's own IGN + their individual salary (from that team's
+// own pool), plus a line for any management fee or Defense-bonus payout
+// credited to that guild. Scoped to a single team -- unlike the old
+// crusade-wide version, nothing here is merged across teams.
+function computeTeamGuildSalaryDetail(teamNumber) {
+  const team = getTeamData(teamNumber);
+  const items = team.items || [];
+  const itemSharesByParticipantId = items.map((item) => {
+    const map = new Map();
+    computeTeamItemShares(teamNumber, item).forEach(({ participant: p, total }) => map.set(p.id, total));
+    return map;
+  });
 
-// Crusade-wide (every team combined), categorized by guild: each guild's
-// entry list is every participant's own IGN + their individual salary
-// (computed from their own team's pool), plus a line for any management fee
-// or Defense-bonus payout credited to that guild.
-function computeCrusadeGuildSalaryDetail() {
-  const itemNames = allCrusadeItemNames();
   const byGuild = new Map();
-
-  allKnownTeamNumbers().forEach((teamNumber) => {
-    const team = getTeamData(teamNumber);
-
-    // item name -> Map(participantId -> share), only for items this team has.
-    const shareMapsByItemName = new Map();
-    (team.items || []).forEach((item) => {
-      const map = new Map();
-      computeTeamItemShares(teamNumber, item).forEach(({ participant: p, total }) => map.set(p.id, total));
-      shareMapsByItemName.set(item.name, map);
+  computeTeamDistribution(teamNumber).forEach(({ participant: p, total }) => {
+    const key = p.guildName || 'Unassigned';
+    if (!byGuild.has(key)) byGuild.set(key, []);
+    byGuild.get(key).push({
+      name: p.name,
+      goldBid: p.goldBid,
+      attended: p.attended,
+      salary: total,
+      itemShares: itemSharesByParticipantId.map((m) => m.get(p.id) || 0),
+      isFee: false,
+      hasFee: false,
+      isBonus: false,
+      hasBonus: false,
     });
-    const itemSharesFor = (participantId) => itemNames.map((name) => (shareMapsByItemName.get(name)?.get(participantId)) || 0);
+  });
 
-    computeTeamDistribution(teamNumber).forEach(({ participant: p, total }) => {
-      const key = p.guildName || 'Unassigned';
-      if (!byGuild.has(key)) byGuild.set(key, []);
-      byGuild.get(key).push({
-        name: p.name,
-        team: p.partyNumber,
-        goldBid: p.goldBid,
-        attended: p.attended,
-        salary: total,
-        itemShares: itemSharesFor(p.id),
-        isFee: false,
+  // If a fee's IGN matches an existing participant in the same guild
+  // (case-insensitive), fold the fee into that one row instead of listing
+  // them twice — just flag it so the row can note "+ management fee".
+  (team.fees || []).forEach((fee) => {
+    if (!fee.guildName) return;
+    if (!byGuild.has(fee.guildName)) byGuild.set(fee.guildName, []);
+    const entries = byGuild.get(fee.guildName);
+    const feeAmount = crusadeFeeAmount(fee, team);
+    const match = entries.find((e) => !e.isFee && e.name.trim().toLowerCase() === fee.name.trim().toLowerCase());
+    if (match) {
+      match.salary += feeAmount;
+      match.hasFee = true;
+    } else {
+      entries.push({
+        name: fee.name,
+        goldBid: null,
+        attended: null,
+        salary: feeAmount,
+        itemShares: items.map(() => 0),
+        isFee: true,
         hasFee: false,
         isBonus: false,
         hasBonus: false,
       });
-    });
+    }
+  });
 
-    // If a fee's IGN matches an existing participant in the same guild
-    // (case-insensitive), fold the fee into that one row instead of listing
-    // them twice — just flag it so the row can note "+ management fee".
-    (team.fees || []).forEach((fee) => {
-      if (!fee.guildName) return;
-      if (!byGuild.has(fee.guildName)) byGuild.set(fee.guildName, []);
-      const entries = byGuild.get(fee.guildName);
-      const feeAmount = crusadeFeeAmount(fee, team);
-      const match = entries.find((e) => !e.isFee && e.name.trim().toLowerCase() === fee.name.trim().toLowerCase());
+  // Defense-win bonus: same name-match merge as management fees, so a
+  // last-team bidder who's also on this team's roster gets one row with the
+  // bonus folded in, instead of a duplicate line.
+  const { perBidder } = computeTeamBonusShares(teamNumber);
+  if (perBidder > 0) {
+    (team.lastTeamBidders || []).forEach((bidder) => {
+      const guildKey = bidder.guildName || 'Unassigned';
+      if (!byGuild.has(guildKey)) byGuild.set(guildKey, []);
+      const entries = byGuild.get(guildKey);
+      const match = entries.find((e) => !e.isFee && e.name.trim().toLowerCase() === bidder.name.trim().toLowerCase());
       if (match) {
-        match.salary += feeAmount;
-        match.hasFee = true;
+        match.salary += perBidder;
+        match.hasBonus = true;
       } else {
         entries.push({
-          name: fee.name,
-          team: null,
+          name: bidder.name,
           goldBid: null,
           attended: null,
-          salary: feeAmount,
-          itemShares: itemNames.map(() => 0),
-          isFee: true,
+          salary: perBidder,
+          itemShares: items.map(() => 0),
+          isFee: false,
           hasFee: false,
-          isBonus: false,
+          isBonus: true,
           hasBonus: false,
         });
       }
     });
-
-    // Defense-win bonus: same name-match merge as management fees, so a
-    // last-team bidder who's also on this crusade's roster gets one row
-    // with the bonus folded in, instead of a duplicate line.
-    const { perBidder } = computeTeamBonusShares(teamNumber);
-    if (perBidder > 0) {
-      (team.lastTeamBidders || []).forEach((bidder) => {
-        const guildKey = bidder.guildName || 'Unassigned';
-        if (!byGuild.has(guildKey)) byGuild.set(guildKey, []);
-        const entries = byGuild.get(guildKey);
-        const match = entries.find((e) => !e.isFee && e.name.trim().toLowerCase() === bidder.name.trim().toLowerCase());
-        if (match) {
-          match.salary += perBidder;
-          match.hasBonus = true;
-        } else {
-          entries.push({
-            name: bidder.name,
-            team: null,
-            goldBid: null,
-            attended: null,
-            salary: perBidder,
-            itemShares: itemNames.map(() => 0),
-            isFee: false,
-            hasFee: false,
-            isBonus: true,
-            hasBonus: false,
-          });
-        }
-      });
-    }
-  });
+  }
 
   return Array.from(byGuild.entries())
     .map(([name, entries]) => ({
@@ -587,60 +569,79 @@ function computeCrusadeGuildSalaryDetail() {
       entries: entries.sort((a, b) => b.salary - a.salary),
       memberCount: entries.filter((e) => !e.isFee && !e.isBonus).length,
       total: entries.reduce((sum, e) => sum + e.salary, 0),
-      itemTotals: itemNames.map((_, i) => entries.reduce((sum, e) => sum + (e.itemShares[i] || 0), 0)),
+      itemTotals: items.map((_, i) => entries.reduce((sum, e) => sum + (e.itemShares[i] || 0), 0)),
     }))
     .sort((a, b) => b.total - a.total);
 }
 
+function renderTeamGuildSalaryCard(g, itemNames) {
+  const rows = g.entries
+    .map((e) => {
+      const itemCells = itemNames.map((_, i) => `<td>${crusadeFormatItemQty(e.itemShares[i])}</td>`).join('');
+      const tagLines = [];
+      if (e.isFee) tagLines.push('(management fee)');
+      else if (e.hasFee) tagLines.push('(+ management fee)');
+      if (e.isBonus) tagLines.push('(defense bonus)');
+      else if (e.hasBonus) tagLines.push('(+ defense bonus)');
+      const tagLabel = tagLines
+        .map((t) => `<div style="font-weight:400; font-size:11px; color:var(--text-muted); white-space:nowrap;">${t}</div>`)
+        .join('');
+      return `
+    <tr>
+      <td style="font-weight:600;"><div style="white-space:nowrap;">${escapeHtml(e.name)}</div>${tagLabel}</td>
+      <td>${e.goldBid === null ? '–' : crusadeFormatGold(e.goldBid)}</td>
+      <td>${e.attended === null ? '–' : e.attended ? '✓' : '✗'}</td>
+      <td>${crusadeFormatDiamonds(e.salary)}</td>
+      ${itemCells}
+    </tr>`;
+    })
+    .join('');
+  const totalRow = itemNames.length
+    ? `<tr class="crusade-table-total-row"><td>Total</td><td></td><td></td><td>${crusadeFormatDiamonds(g.total)}</td>${itemNames
+        .map((_, i) => `<td>${crusadeFormatItemQty(g.itemTotals[i])}</td>`)
+        .join('')}</tr>`
+    : '';
+  return `
+  <div class="crusade-party-card">
+    <div class="crusade-party-card-header">
+      <h3>${g.name === 'Unassigned' ? 'Unassigned' : escapeHtml(g.name)} — ${crusadeFormatDiamonds(g.total)} (${g.memberCount} member${g.memberCount === 1 ? '' : 's'})</h3>
+    </div>
+    <div class="table-scroll">
+      <table class="members-table">
+        <thead><tr><th>IGN</th><th>Max Bid</th><th>Present</th><th>Salary</th>${itemNames.map((name) => `<th>${escapeHtml(name)}</th>`).join('')}</tr></thead>
+        <tbody>${rows}${totalRow}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+// One section per team (Team 1, Team 2, ...), each holding that team's own
+// guild-card breakdown -- every team is its own independent battle with its
+// own reward, so nothing here is merged across teams.
 function renderCrusadeGuildSalary() {
   const c = sovereignState.crusade;
   const dateText = c && c.eventDate ? formatLongDate(String(c.eventDate).slice(0, 10)) : 'No date set';
   document.getElementById('crusadeGuildSalaryMeta').textContent = `${c ? c.name : ''} — ${dateText}`;
 
-  const guilds = computeCrusadeGuildSalaryDetail();
-  const itemNames = allCrusadeItemNames();
   const el = document.getElementById('crusadeGuildSalaryDetail');
+  el.innerHTML = allKnownTeamNumbers()
+    .map((teamNumber) => {
+      const team = getTeamData(teamNumber);
+      const guilds = computeTeamGuildSalaryDetail(teamNumber);
+      const itemNames = (team.items || []).map((i) => i.name);
+      const teamTotal = guilds.reduce((sum, g) => sum + g.total, 0);
+      const cards = guilds.length
+        ? guilds.map((g) => renderTeamGuildSalaryCard(g, itemNames)).join('')
+        : '<p class="empty-state">No participants in this team yet.</p>';
 
-  el.innerHTML = guilds
-    .map((g) => {
-      const rows = g.entries
-        .map((e) => {
-          const itemCells = itemNames.map((_, i) => `<td>${crusadeFormatItemQty(e.itemShares[i])}</td>`).join('');
-          const tagLines = [];
-          if (e.isFee) tagLines.push('(management fee)');
-          else if (e.hasFee) tagLines.push('(+ management fee)');
-          if (e.isBonus) tagLines.push('(defense bonus)');
-          else if (e.hasBonus) tagLines.push('(+ defense bonus)');
-          const tagLabel = tagLines
-            .map((t) => `<div style="font-weight:400; font-size:11px; color:var(--text-muted); white-space:nowrap;">${t}</div>`)
-            .join('');
-          return `
-        <tr>
-          <td style="font-weight:600;"><div style="white-space:nowrap;">${escapeHtml(e.name)}</div>${tagLabel}</td>
-          <td>${e.team ? `Team ${e.team}` : '–'}</td>
-          <td>${e.goldBid === null ? '–' : crusadeFormatGold(e.goldBid)}</td>
-          <td>${e.attended === null ? '–' : e.attended ? '✓' : '✗'}</td>
-          <td>${crusadeFormatDiamonds(e.salary)}</td>
-          ${itemCells}
-        </tr>`;
-        })
-        .join('');
-      const totalRow = itemNames.length
-        ? `<tr class="crusade-table-total-row"><td>Total</td><td></td><td></td><td></td><td>${crusadeFormatDiamonds(g.total)}</td>${itemNames
-            .map((_, i) => `<td>${crusadeFormatItemQty(g.itemTotals[i])}</td>`)
-            .join('')}</tr>`
-        : '';
       return `
-      <div class="crusade-party-card">
-        <div class="crusade-party-card-header">
-          <h3>${g.name === 'Unassigned' ? 'Unassigned' : escapeHtml(g.name)} — ${crusadeFormatDiamonds(g.total)} (${g.memberCount} member${g.memberCount === 1 ? '' : 's'})</h3>
+      <div class="crusade-team-salary-section">
+        <div class="crusade-team-salary-header">
+          <h3>Team ${teamNumber}</h3>
+          ${crusadeStatusBadge(team.result)}
+          <span style="color:var(--text-muted); font-size:13px;">${crusadeFormatDiamonds(teamTotal)}</span>
         </div>
-        <div class="table-scroll">
-          <table class="members-table">
-            <thead><tr><th>IGN</th><th>Team</th><th>Max Bid</th><th>Present</th><th>Salary</th>${itemNames.map((name) => `<th>${escapeHtml(name)}</th>`).join('')}</tr></thead>
-            <tbody>${rows}${totalRow}</tbody>
-          </table>
-        </div>
+        <div class="crusade-party-grid">${cards}</div>
       </div>`;
     })
     .join('');
