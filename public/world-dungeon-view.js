@@ -169,3 +169,15 @@ document.getElementById('addWorldDungeonGuildForm').addEventListener('submit', a
     toast(err.message);
   }
 });
+
+// worldDungeonUpcomingDates() always computes from "now", so if someone
+// leaves this page open across the date rolling into the next set, it would
+// otherwise keep showing the stale set until they manually reload. Re-check
+// hourly (only while this view is actually the visible one) so it rolls
+// over on its own.
+setInterval(() => {
+  const view = document.getElementById('view-world-dungeon');
+  if (view && !view.classList.contains('hidden')) {
+    loadWorldDungeonScheduleData().catch((err) => toast(err.message));
+  }
+}, 60 * 60 * 1000);
