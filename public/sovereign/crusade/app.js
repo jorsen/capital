@@ -4,7 +4,7 @@
 // api()/toast()/escapeHtml()/session handling, which is why it's loaded here.
 
 // mode tracks which crusade-scoped page is active: 'overview' | 'team'.
-const sovereignState = { crusades: [], guilds: [], crusadeId: null, crusade: null, participants: [], items: [], fees: [], lastCrusadeBidders: [], memberList: [], activeTeam: null, mode: null };
+const sovereignState = { crusades: [], guilds: [], crusadeId: null, crusade: null, participants: [], items: [], fees: [], lastCrusade: null, lastCrusadeBidders: [], memberList: [], activeTeam: null, mode: null };
 
 function crusadeFormatDiamonds(amount) {
   return `${Math.round(amount || 0).toLocaleString()} 💎`;
@@ -245,6 +245,7 @@ async function loadCrusadeDetail(id) {
   sovereignState.participants = crusade.participants;
   sovereignState.items = crusade.items;
   sovereignState.fees = crusade.fees;
+  sovereignState.lastCrusade = crusade.lastCrusade || null;
   sovereignState.lastCrusadeBidders = crusade.lastCrusadeBidders || [];
   sovereignState.guilds = guilds;
   populateCrusadeGuildSelect(); // shared by the add/edit-participant modal regardless of which page opened it
@@ -554,6 +555,48 @@ function renderCrusadeGuildSalary() {
       </div>`;
     })
     .join('');
+
+  renderLastCrusadeBidders();
+}
+
+// Independent of the per-guild breakdown above -- lists every bidder from
+// the previous crusade by name (regardless of guild) so it's easy to check
+// who's owed a share and how much, whether or not this crusade ended up
+// being a Defense win.
+function renderLastCrusadeBidders() {
+  const meta = document.getElementById('crusadeLastBiddersMeta');
+  const emptyState = document.getElementById('crusadeLastBiddersEmptyState');
+  const table = document.getElementById('crusadeLastBiddersTable');
+  const body = document.getElementById('crusadeLastBiddersBody');
+
+  const lastCrusade = sovereignState.lastCrusade;
+  const bidders = sovereignState.lastCrusadeBidders || [];
+  const { perBidder } = computeLastCrusadeBonusShares();
+
+  meta.textContent = lastCrusade
+    ? `${lastCrusade.name} — ${lastCrusade.eventDate ? formatLongDate(String(lastCrusade.eventDate).slice(0, 10)) : 'No date set'}`
+    : '';
+
+  emptyState.classList.toggle('hidden', bidders.length !== 0);
+  table.classList.toggle('hidden', bidders.length === 0);
+  if (!bidders.length) {
+    body.innerHTML = '';
+    return;
+  }
+
+  const rows = bidders
+    .map(
+      (b) => `
+    <tr>
+      <td style="font-weight:600; white-space:nowrap;">${escapeHtml(b.name)}</td>
+      <td>${crusadeGuildBadge(b.guildName)}</td>
+      <td>${crusadeFormatGold(b.goldBid)}</td>
+      <td>${crusadeFormatDiamonds(perBidder)}</td>
+    </tr>`
+    )
+    .join('');
+  const totalRow = `<tr class="crusade-table-total-row"><td>Total</td><td></td><td></td><td>${crusadeFormatDiamonds(perBidder * bidders.length)}</td></tr>`;
+  body.innerHTML = rows + totalRow;
 }
 
 // The team's own page shows *all* of its records in one place: roster

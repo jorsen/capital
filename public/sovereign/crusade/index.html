@@ -126,6 +126,19 @@
         </p>
         <div id="crusadeGuildSalaryDetail" class="crusade-party-grid"></div>
       </section>
+
+      <section class="panel">
+        <h2>Last Crusade's Bidders</h2>
+        <p id="crusadeLastBiddersMeta" style="color:var(--text-muted); font-size:13px; margin-top:-8px;"></p>
+        <p style="color:var(--text-muted); font-size:13px;">Everyone who bid gold last time, tracked here so a Defense win's 40% bonus always has a clear paper trail.</p>
+        <p id="crusadeLastBiddersEmptyState" class="empty-state hidden">No bids recorded in a previous crusade.</p>
+        <div class="table-scroll">
+          <table class="members-table" id="crusadeLastBiddersTable">
+            <thead><tr><th>IGN</th><th>Guild</th><th>Gold Bid</th><th>Bonus Share</th></tr></thead>
+            <tbody id="crusadeLastBiddersBody"></tbody>
+          </table>
+        </div>
+      </section>
     </div>
 
     <!-- ===================== TEAM DETAIL PANEL (all of that team's records) ===================== -->
@@ -338,6 +351,6 @@
   <div id="toast" class="toast hidden"></div>
 
   <script src="/common.js?v=35"></script>
-  <script src="/sovereign/crusade/app.js?v=30"></script>
+  <script src="/sovereign/crusade/app.js?v=31"></script>
 </body>
 </html>
