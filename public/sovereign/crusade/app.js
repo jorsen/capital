@@ -574,55 +574,48 @@ function computeTeamGuildSalaryDetail(teamNumber) {
     .sort((a, b) => b.total - a.total);
 }
 
-// Each entry renders as a stacked list row (name + amount, with a smaller
-// "Max Bid X · Present Y · Item Z pcs" line underneath) instead of a wide
-// table column per attribute -- reads better with a variable item count and
-// never forces horizontal scrolling.
+// Back to a table (IGN / Max Bid / Present / Salary / one column per item)
+// instead of the stacked list -- with several items per person, cramming
+// "Max Bid X · Present Y · Item Z pcs · Item2 W pcs" onto one line read
+// worse than aligned columns.
 function renderTeamGuildSalaryCard(g, itemNames) {
-  const metaLine = (e) => {
-    const parts = [];
-    if (e.goldBid !== null) parts.push(`Max Bid ${crusadeFormatGold(e.goldBid)}`);
-    if (e.attended !== null) parts.push(`Present ${e.attended ? '✓' : '✗'}`);
-    itemNames.forEach((name, i) => parts.push(`${name} ${crusadeFormatItemQty(e.itemShares[i])}`));
-    return parts.join(' · ');
-  };
-
   const rows = g.entries
     .map((e) => {
+      const itemCells = itemNames.map((_, i) => `<td>${crusadeFormatItemQty(e.itemShares[i])}</td>`).join('');
       const tagLines = [];
       if (e.isFee) tagLines.push('(management fee)');
       else if (e.hasFee) tagLines.push('(+ management fee)');
       if (e.isBonus) tagLines.push('(defense bonus)');
       else if (e.hasBonus) tagLines.push('(+ defense bonus)');
-      const tagLabel = tagLines.map((t) => `<span class="crusade-salary-list-tag">${t}</span>`).join('');
-      const meta = metaLine(e);
+      const tagLabel = tagLines
+        .map((t) => `<div style="font-weight:400; font-size:11px; color:var(--text-muted); white-space:nowrap;">${t}</div>`)
+        .join('');
       return `
-    <div class="crusade-salary-list-row">
-      <div class="crusade-salary-list-main">
-        <span class="crusade-salary-list-name">${escapeHtml(e.name)}${tagLabel}</span>
-        <span class="crusade-salary-list-amount">${crusadeFormatDiamonds(e.salary)}</span>
-      </div>
-      ${meta ? `<div class="crusade-salary-list-meta">${meta}</div>` : ''}
-    </div>`;
+    <tr>
+      <td style="font-weight:600;"><div style="white-space:nowrap;">${escapeHtml(e.name)}</div>${tagLabel}</td>
+      <td>${e.goldBid === null ? '–' : crusadeFormatGold(e.goldBid)}</td>
+      <td>${e.attended === null ? '–' : e.attended ? '✓' : '✗'}</td>
+      <td>${crusadeFormatDiamonds(e.salary)}</td>
+      ${itemCells}
+    </tr>`;
     })
     .join('');
-
-  const totalMeta = itemNames.map((name, i) => `${name} ${crusadeFormatItemQty(g.itemTotals[i])}`).join(' · ');
-  const totalRow = `
-    <div class="crusade-salary-list-row total">
-      <div class="crusade-salary-list-main">
-        <span class="crusade-salary-list-name">Total</span>
-        <span class="crusade-salary-list-amount">${crusadeFormatDiamonds(g.total)}</span>
-      </div>
-      ${totalMeta ? `<div class="crusade-salary-list-meta">${totalMeta}</div>` : ''}
-    </div>`;
-
+  const totalRow = itemNames.length
+    ? `<tr class="crusade-table-total-row"><td>Total</td><td></td><td></td><td>${crusadeFormatDiamonds(g.total)}</td>${itemNames
+        .map((_, i) => `<td>${crusadeFormatItemQty(g.itemTotals[i])}</td>`)
+        .join('')}</tr>`
+    : '';
   return `
   <div class="crusade-party-card">
     <div class="crusade-party-card-header">
       <h3>${g.name === 'Unassigned' ? 'Unassigned' : escapeHtml(g.name)} — ${crusadeFormatDiamonds(g.total)} (${g.memberCount} member${g.memberCount === 1 ? '' : 's'})</h3>
     </div>
-    <div class="crusade-salary-list">${rows}${totalRow}</div>
+    <div class="table-scroll">
+      <table class="members-table">
+        <thead><tr><th>IGN</th><th>Max Bid</th><th>Present</th><th>Salary</th>${itemNames.map((name) => `<th>${escapeHtml(name)}</th>`).join('')}</tr></thead>
+        <tbody>${rows}${totalRow}</tbody>
+      </table>
+    </div>
   </div>`;
 }
 
