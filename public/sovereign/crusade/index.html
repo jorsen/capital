@@ -71,6 +71,20 @@
         <button id="deleteCrusadeBtn" type="button" class="btn small danger admin-only">Delete Crusade</button>
       </div>
 
+      <section class="panel">
+        <h2>Crusade Info</h2>
+        <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;">Shared across every team on this crusade. War type, stance, result, diamond reward, etc. are set per team instead — open a team below.</p>
+        <form id="crusadeInfoForm" class="crusade-header-form">
+          <label><span>Name</span>
+            <input class="admin-disable" required name="name" type="text" maxlength="60" placeholder="e.g. Army1">
+          </label>
+          <label><span>Date</span>
+            <input class="admin-disable" name="eventDate" type="date">
+          </label>
+          <button type="submit" class="btn primary small admin-only">Save</button>
+        </form>
+      </section>
+
       <div class="view-header space-between">
         <p style="color:var(--text-muted); font-size:13px; margin:0; flex:1;">Click a team to see its roster.</p>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
@@ -129,15 +143,9 @@
 
       <section class="panel">
         <h2>Last Crusade's Bidders</h2>
-        <p id="crusadeLastBiddersMeta" style="color:var(--text-muted); font-size:13px; margin-top:-8px;"></p>
-        <p style="color:var(--text-muted); font-size:13px;">Everyone who bid gold last time, tracked here so a Defense win's 40% bonus always has a clear paper trail.</p>
-        <p id="crusadeLastBiddersEmptyState" class="empty-state hidden">No bids recorded in a previous crusade.</p>
-        <div class="table-scroll">
-          <table class="members-table" id="crusadeLastBiddersTable">
-            <thead><tr><th>IGN</th><th>Guild</th><th>Gold Bid</th><th>Bonus Share</th></tr></thead>
-            <tbody id="crusadeLastBiddersBody"></tbody>
-          </table>
-        </div>
+        <p style="color:var(--text-muted); font-size:13px;">Every team here is its own independent battle, so each team below tracks its own bonus separately -- who bid gold on the team it inherited its Defense bonus from, and how much they're owed.</p>
+        <p id="crusadeLastBiddersEmptyState" class="empty-state hidden">No team on this crusade has a Defense-bonus bidder list yet.</p>
+        <div id="crusadeLastBiddersDetail" class="crusade-party-grid"></div>
       </section>
     </div>
 
@@ -153,7 +161,7 @@
           <button id="addTeamParticipantBtn" type="button" class="btn small primary admin-only">+ Add Participant</button>
         </div>
         <p style="color:var(--text-muted); font-size:13px; margin-top:-4px;">
-          Half the crusade's reward splits evenly across everyone marked "Attended"; the other half splits across gold bidders in proportion to their bid. If the crusade's Result is Lose, no rewards go out at all.
+          Half this team's reward splits evenly across everyone marked "Attended"; the other half splits across gold bidders in proportion to their bid. If this team's Result is Lose, no rewards go out at all.
         </p>
         <div id="crusadeTeamRosterBody" class="crusade-party-grid"></div>
         <p id="crusadeTeamRosterEmptyState" class="empty-state hidden">No participants in this team yet.</p>
@@ -172,7 +180,7 @@
         <div class="view-header space-between" style="margin-bottom:6px;">
           <h2 style="margin:0;">Items</h2>
         </div>
-        <p style="color:var(--text-muted); font-size:13px; margin:0 0 10px;">Each item is split evenly across everyone marked "Attended" on this crusade.</p>
+        <p style="color:var(--text-muted); font-size:13px; margin:0 0 10px;">Each item is split evenly across everyone marked "Attended" on this team.</p>
         <ul id="crusadeItemList" style="list-style:none; padding:0; margin:0 0 12px; display:flex; flex-direction:column; gap:8px;"></ul>
         <p id="crusadeItemListEmptyState" class="empty-state hidden">No items added yet.</p>
         <form id="addCrusadeItemForm" class="admin-only" style="display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end;">
@@ -190,7 +198,7 @@
         <div class="view-header space-between" style="margin-bottom:6px;">
           <h2 style="margin:0;">Management Fees</h2>
         </div>
-        <p style="color:var(--text-muted); font-size:13px; margin:0 0 10px;">Each fee takes a percentage of the total diamond reward off the top, before the rest is split by attendance/bid.</p>
+        <p style="color:var(--text-muted); font-size:13px; margin:0 0 10px;">Each fee takes a percentage of this team's diamond reward off the top, before the rest is split by attendance/bid.</p>
         <ul id="crusadeFeeList" style="list-style:none; padding:0; margin:0 0 12px; display:flex; flex-direction:column; gap:8px;"></ul>
         <p id="crusadeFeeListEmptyState" class="empty-state hidden">No management fees added yet.</p>
         <form id="addCrusadeFeeForm" class="admin-only" style="display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end;">
@@ -210,14 +218,9 @@
       </section>
 
       <section class="panel">
-        <h2>Crusade Details</h2>
-        <form id="crusadeHeaderForm" class="crusade-header-form">
-          <label><span>Name</span>
-            <input class="admin-disable" required name="name" type="text" maxlength="60" placeholder="e.g. Army1 / Team 1">
-          </label>
-          <label><span>Date</span>
-            <input class="admin-disable" name="eventDate" type="date">
-          </label>
+        <h2>Team Details</h2>
+        <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;">Specific to this team only — other teams on this crusade keep their own war type, stance, result, diamond reward, etc.</p>
+        <form id="teamDetailsForm" class="crusade-header-form">
           <label><span>War Type</span>
             <input class="admin-disable" name="warType" type="text" maxlength="20" placeholder="e.g. 20vs20">
           </label>
@@ -293,18 +296,13 @@
     <div class="modal">
       <button class="modal-close" data-close="addCrusadeModal" aria-label="Close">×</button>
       <h2>New Crusade</h2>
+      <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;">War type, stance, result, diamond reward and everything else is set per team, once you open a team on this crusade.</p>
       <form id="addCrusadeForm">
         <label><span>Name</span>
           <input required name="name" type="text" maxlength="60" placeholder="e.g. Army1 / Team 1">
         </label>
         <label><span>Date</span>
           <input name="eventDate" type="date">
-        </label>
-        <label><span>War Type</span>
-          <input name="warType" type="text" maxlength="20" placeholder="e.g. 20vs20">
-        </label>
-        <label><span>Diamond Reward</span>
-          <input name="diamondReward" type="number" min="0" step="0.01" placeholder="e.g. 8976">
         </label>
         <button type="submit" class="btn primary">Add</button>
       </form>
@@ -351,6 +349,6 @@
   <div id="toast" class="toast hidden"></div>
 
   <script src="/common.js?v=35"></script>
-  <script src="/sovereign/crusade/app.js?v=31"></script>
+  <script src="/sovereign/crusade/app.js?v=32"></script>
 </body>
 </html>

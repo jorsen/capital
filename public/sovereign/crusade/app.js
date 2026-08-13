@@ -3,8 +3,12 @@
 // that crusade's roster + distribution. common.js still supplies
 // api()/toast()/escapeHtml()/session handling, which is why it's loaded here.
 
-// mode tracks which crusade-scoped page is active: 'overview' | 'team'.
-const sovereignState = { crusades: [], guilds: [], crusadeId: null, crusade: null, participants: [], items: [], fees: [], lastCrusade: null, lastCrusadeBidders: [], memberList: [], activeTeam: null, mode: null };
+// A crusade is just the shared date/event container (name + date); every
+// team on it is its own independent battle with its own war type, stance,
+// result, diamond reward, attendance %, notes, items and fees -- so two
+// teams sharing a crusade's date can have completely different outcomes.
+// mode tracks which crusade-scoped page is active: 'overview' | 'team' | 'guildSalary'.
+const sovereignState = { crusades: [], guilds: [], crusadeId: null, crusade: null, participants: [], teams: [], memberList: [], activeTeam: null, mode: null };
 
 function crusadeFormatDiamonds(amount) {
   return `${Math.round(amount || 0).toLocaleString()} 💎`;
@@ -32,6 +36,33 @@ function crusadeGuildBadge(guildName) {
   if (!guildName) return '–';
   const color = crusadeGuildColor(guildName) || 'var(--text-muted)';
   return `<span class="crusade-guild-badge" style="color:${color}; border-color:${color};">${escapeHtml(guildName)}</span>`;
+}
+
+// A team that's never been saved doesn't have a row on the server yet --
+// this fills in the same defaults the backend would apply once it's first
+// saved, so opening a brand-new team shows a sensible blank slate instead of
+// an error.
+function defaultTeamData(teamNumber) {
+  return {
+    id: null,
+    teamNumber,
+    warType: '',
+    stance: '',
+    area: '',
+    leader: '',
+    result: 'pending',
+    diamondReward: 0,
+    attendancePct: 50,
+    notes: '',
+    items: [],
+    fees: [],
+    lastTeam: null,
+    lastTeamBidders: [],
+  };
+}
+
+function getTeamData(teamNumber) {
+  return sovereignState.teams.find((t) => t.teamNumber === teamNumber) || defaultTeamData(teamNumber);
 }
 
 // ---------- Routing between the four panels ----------
@@ -174,8 +205,6 @@ document.getElementById('addCrusadeForm').addEventListener('submit', async (e) =
       body: JSON.stringify({
         name: fd.get('name'),
         eventDate: fd.get('eventDate') || null,
-        warType: fd.get('warType') || null,
-        diamondReward: fd.get('diamondReward') ? Number(fd.get('diamondReward')) : 0,
       }),
     });
     document.getElementById('addCrusadeModal').classList.add('hidden');
@@ -243,16 +272,13 @@ async function loadCrusadeDetail(id) {
   const [crusade, guilds] = await Promise.all([api(`/api/crusades/${id}`), api('/api/crusade-guilds')]);
   sovereignState.crusade = crusade;
   sovereignState.participants = crusade.participants;
-  sovereignState.items = crusade.items;
-  sovereignState.fees = crusade.fees;
-  sovereignState.lastCrusade = crusade.lastCrusade || null;
-  sovereignState.lastCrusadeBidders = crusade.lastCrusadeBidders || [];
+  sovereignState.teams = crusade.teams;
   sovereignState.guilds = guilds;
   populateCrusadeGuildSelect(); // shared by the add/edit-participant modal regardless of which page opened it
-
-  populateCrusadeHeaderForm(); // now lives on the team page, but the crusade fields it edits are shared
+  populateCrusadeInfoForm();
 
   if (sovereignState.mode === 'team') {
+    populateTeamDetailsForm(sovereignState.activeTeam);
     renderTeamDetail(sovereignState.activeTeam); // sets its own title
   } else if (sovereignState.mode === 'guildSalary') {
     document.title = `Sovereign — ${crusade.name} — Guild Salary`;
@@ -290,19 +316,27 @@ function nextAvailablePartySlot(teamNumber) {
   return slot;
 }
 
-function populateCrusadeHeaderForm() {
-  const form = document.getElementById('crusadeHeaderForm');
+// Name + Date only -- shared by every team on this crusade.
+function populateCrusadeInfoForm() {
+  const form = document.getElementById('crusadeInfoForm');
   const c = sovereignState.crusade;
   form.elements.name.value = c.name || '';
   form.elements.eventDate.value = c.eventDate ? String(c.eventDate).slice(0, 10) : '';
-  form.elements.warType.value = c.warType || '';
-  form.elements.stance.value = c.stance || '';
-  form.elements.area.value = c.area || '';
-  form.elements.leader.value = c.leader || '';
-  form.elements.result.value = c.result || 'pending';
-  form.elements.diamondReward.value = c.diamondReward || 0;
-  form.elements.attendancePct.value = c.attendancePct ?? 50;
-  form.elements.notes.value = c.notes || '';
+}
+
+// Everything else -- war type, stance, result, diamond reward, attendance %,
+// notes -- lives on the active team, independent of every other team.
+function populateTeamDetailsForm(teamNumber) {
+  const form = document.getElementById('teamDetailsForm');
+  const t = getTeamData(teamNumber);
+  form.elements.warType.value = t.warType || '';
+  form.elements.stance.value = t.stance || '';
+  form.elements.area.value = t.area || '';
+  form.elements.leader.value = t.leader || '';
+  form.elements.result.value = t.result || 'pending';
+  form.elements.diamondReward.value = t.diamondReward || 0;
+  form.elements.attendancePct.value = t.attendancePct ?? 50;
+  form.elements.notes.value = t.notes || '';
 }
 
 function populateCrusadeGuildSelect() {
@@ -315,7 +349,7 @@ function populateCrusadeGuildSelect() {
   });
 }
 
-document.getElementById('crusadeHeaderForm').addEventListener('submit', async (e) => {
+document.getElementById('crusadeInfoForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const form = e.target;
   try {
@@ -324,6 +358,24 @@ document.getElementById('crusadeHeaderForm').addEventListener('submit', async (e
       body: JSON.stringify({
         name: form.elements.name.value,
         eventDate: form.elements.eventDate.value || null,
+      }),
+    });
+    sovereignState.crusade = { ...sovereignState.crusade, ...updated };
+    document.title = sovereignState.mode === 'team' ? `Sovereign — ${updated.name} — Team ${sovereignState.activeTeam}` : `Sovereign — ${updated.name}`;
+    toast('Crusade info saved');
+  } catch (err) {
+    toast(err.message);
+  }
+});
+
+document.getElementById('teamDetailsForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const teamNumber = sovereignState.activeTeam;
+  try {
+    const updated = await api(`/api/crusades/${sovereignState.crusadeId}/teams/${teamNumber}`, {
+      method: 'PUT',
+      body: JSON.stringify({
         warType: form.elements.warType.value || null,
         stance: form.elements.stance.value || null,
         area: form.elements.area.value || null,
@@ -331,17 +383,14 @@ document.getElementById('crusadeHeaderForm').addEventListener('submit', async (e
         result: form.elements.result.value,
         diamondReward: Number(form.elements.diamondReward.value) || 0,
         attendancePct: Number(form.elements.attendancePct.value),
-        notes: form.elements.notes.value || null,
       }),
     });
-    sovereignState.crusade = { ...sovereignState.crusade, ...updated };
-    if (sovereignState.mode === 'team') {
-      renderTeamDetail(sovereignState.activeTeam); // diamond math depends on reward/attendance %, so recompute
-    } else {
-      document.title = `Sovereign — ${updated.name}`;
-      renderTeamList();
-    }
-    toast('Crusade details saved');
+    // The team may not have existed server-side until this save -- refetch
+    // its full detail (items/fees/lastTeam) rather than patching in place.
+    const crusade = await api(`/api/crusades/${sovereignState.crusadeId}`);
+    sovereignState.teams = crusade.teams;
+    renderTeamDetail(teamNumber); // diamond math depends on reward/attendance %, so recompute
+    toast('Team details saved');
   } catch (err) {
     toast(err.message);
   }
@@ -363,9 +412,10 @@ document.getElementById('deleteCrusadeBtn').addEventListener('click', async () =
 
 // Teams 1-3 always show up (clickable, even empty) so there's always
 // somewhere to start adding a roster from; any higher team number that
-// already has a participant shows up too.
+// already has a participant or a saved Team Details row shows up too.
 function visibleTeamNumbers() {
   const numbers = new Set(sovereignState.participants.map((p) => p.partyNumber));
+  sovereignState.teams.forEach((t) => numbers.add(t.teamNumber));
   numbers.add(1);
   numbers.add(2);
   numbers.add(3);
@@ -375,122 +425,131 @@ function visibleTeamNumbers() {
 function renderTeamList() {
   const body = document.getElementById('crusadeTeamListBody');
 
-  const byTeam = new Map();
-  computeCrusadeDistribution().forEach(({ participant: p, total }) => {
-    if (!byTeam.has(p.partyNumber)) byTeam.set(p.partyNumber, { count: 0, diamonds: 0 });
-    const t = byTeam.get(p.partyNumber);
-    t.count += 1;
-    t.diamonds += total;
-  });
-
   body.innerHTML = visibleTeamNumbers()
     .map((n) => {
-      const t = byTeam.get(n) || { count: 0, diamonds: 0 };
+      const rows = computeTeamDistribution(n);
+      const count = sovereignState.participants.filter((p) => p.partyNumber === n).length;
+      const diamonds = rows.reduce((sum, r) => sum + r.total, 0);
       return `
       <tr>
         <td><a href="#crusade/${sovereignState.crusadeId}/team/${n}" style="font-weight:600;">Team ${n}</a></td>
-        <td>${t.count}</td>
-        <td>${crusadeFormatDiamonds(t.diamonds)}</td>
+        <td>${count}</td>
+        <td>${crusadeFormatDiamonds(diamonds)}</td>
       </tr>`;
     })
     .join('');
 }
 
-// Crusade-wide (every team combined) — each guild's total diamond salary,
-// including any management fee credited to that guild. Unlike the per-team
-// guild summary, a fee is only ever added once here, not once per team.
-// Crusade-wide (every team combined), categorized by guild: each guild's
-// entry list is every participant's own IGN + their individual salary, plus
-// a line for any management fee credited to that guild (fees aren't tied to
-// a specific team, so they show once per guild here, not once per team like
-// the per-team guild summary).
-function computeCrusadeGuildSalaryDetail() {
-  const items = sovereignState.items;
-  // One lookup per item: participant id -> that item's individual share, so
-  // each row can show every item's split alongside the diamond salary.
-  const itemSharesByParticipantId = items.map((item) => {
-    const map = new Map();
-    computeCrusadeItemShares(item).forEach(({ participant: p, total }) => map.set(p.id, total));
-    return map;
-  });
+// Every team number known on this crusade, whether it already has a saved
+// Team Details row or is still just a baseline/participant-only number.
+function allKnownTeamNumbers() {
+  return visibleTeamNumbers();
+}
 
+// Every item name across every team, alphabetical -- used as this page's
+// item columns so two teams' quantities under the same item name add up in
+// one column, even though each team tracks its own items independently.
+function allCrusadeItemNames() {
+  const names = new Set();
+  sovereignState.teams.forEach((t) => (t.items || []).forEach((i) => names.add(i.name)));
+  return Array.from(names).sort((a, b) => a.localeCompare(b));
+}
+
+// Crusade-wide (every team combined), categorized by guild: each guild's
+// entry list is every participant's own IGN + their individual salary
+// (computed from their own team's pool), plus a line for any management fee
+// or Defense-bonus payout credited to that guild.
+function computeCrusadeGuildSalaryDetail() {
+  const itemNames = allCrusadeItemNames();
   const byGuild = new Map();
-  computeCrusadeDistribution().forEach(({ participant: p, total }) => {
-    const key = p.guildName || 'Unassigned';
-    if (!byGuild.has(key)) byGuild.set(key, []);
-    byGuild.get(key).push({
-      name: p.name,
-      team: p.partyNumber,
-      goldBid: p.goldBid,
-      attended: p.attended,
-      salary: total,
-      itemShares: itemSharesByParticipantId.map((m) => m.get(p.id) || 0),
-      isFee: false,
-      hasFee: false,
-      isBonus: false,
-      hasBonus: false,
+
+  allKnownTeamNumbers().forEach((teamNumber) => {
+    const team = getTeamData(teamNumber);
+
+    // item name -> Map(participantId -> share), only for items this team has.
+    const shareMapsByItemName = new Map();
+    (team.items || []).forEach((item) => {
+      const map = new Map();
+      computeTeamItemShares(teamNumber, item).forEach(({ participant: p, total }) => map.set(p.id, total));
+      shareMapsByItemName.set(item.name, map);
     });
-  });
-  // If a fee's IGN matches an existing participant in the same guild
-  // (case-insensitive), fold the fee into that one row instead of listing
-  // them twice — just flag it so the row can note "+ management fee".
-  // Only falls back to its own separate row when there's no such match.
-  // Fees only ever affect diamonds, never items, so a fee-only row's item
-  // shares are always zero.
-  sovereignState.fees.forEach((fee) => {
-    if (!fee.guildName) return;
-    if (!byGuild.has(fee.guildName)) byGuild.set(fee.guildName, []);
-    const entries = byGuild.get(fee.guildName);
-    const feeAmount = crusadeFeeAmount(fee);
-    const match = entries.find((e) => !e.isFee && e.name.trim().toLowerCase() === fee.name.trim().toLowerCase());
-    if (match) {
-      match.salary += feeAmount;
-      match.hasFee = true;
-    } else {
-      entries.push({
-        name: fee.name,
-        team: null,
-        goldBid: null,
-        attended: null,
-        salary: feeAmount,
-        itemShares: items.map(() => 0),
-        isFee: true,
+    const itemSharesFor = (participantId) => itemNames.map((name) => (shareMapsByItemName.get(name)?.get(participantId)) || 0);
+
+    computeTeamDistribution(teamNumber).forEach(({ participant: p, total }) => {
+      const key = p.guildName || 'Unassigned';
+      if (!byGuild.has(key)) byGuild.set(key, []);
+      byGuild.get(key).push({
+        name: p.name,
+        team: p.partyNumber,
+        goldBid: p.goldBid,
+        attended: p.attended,
+        salary: total,
+        itemShares: itemSharesFor(p.id),
+        isFee: false,
         hasFee: false,
         isBonus: false,
         hasBonus: false,
       });
-    }
-  });
+    });
 
-  // Defense-win bonus: same name-match merge as management fees, so a
-  // last-crusade bidder who's also on this crusade's roster gets one row
-  // with the bonus folded in, instead of a duplicate line.
-  const { perBidder } = computeLastCrusadeBonusShares();
-  if (perBidder > 0) {
-    sovereignState.lastCrusadeBidders.forEach((bidder) => {
-      const guildKey = bidder.guildName || 'Unassigned';
-      if (!byGuild.has(guildKey)) byGuild.set(guildKey, []);
-      const entries = byGuild.get(guildKey);
-      const match = entries.find((e) => !e.isFee && e.name.trim().toLowerCase() === bidder.name.trim().toLowerCase());
+    // If a fee's IGN matches an existing participant in the same guild
+    // (case-insensitive), fold the fee into that one row instead of listing
+    // them twice — just flag it so the row can note "+ management fee".
+    (team.fees || []).forEach((fee) => {
+      if (!fee.guildName) return;
+      if (!byGuild.has(fee.guildName)) byGuild.set(fee.guildName, []);
+      const entries = byGuild.get(fee.guildName);
+      const feeAmount = crusadeFeeAmount(fee, team);
+      const match = entries.find((e) => !e.isFee && e.name.trim().toLowerCase() === fee.name.trim().toLowerCase());
       if (match) {
-        match.salary += perBidder;
-        match.hasBonus = true;
+        match.salary += feeAmount;
+        match.hasFee = true;
       } else {
         entries.push({
-          name: bidder.name,
+          name: fee.name,
           team: null,
           goldBid: null,
           attended: null,
-          salary: perBidder,
-          itemShares: items.map(() => 0),
-          isFee: false,
+          salary: feeAmount,
+          itemShares: itemNames.map(() => 0),
+          isFee: true,
           hasFee: false,
-          isBonus: true,
+          isBonus: false,
           hasBonus: false,
         });
       }
     });
-  }
+
+    // Defense-win bonus: same name-match merge as management fees, so a
+    // last-team bidder who's also on this crusade's roster gets one row
+    // with the bonus folded in, instead of a duplicate line.
+    const { perBidder } = computeTeamBonusShares(teamNumber);
+    if (perBidder > 0) {
+      (team.lastTeamBidders || []).forEach((bidder) => {
+        const guildKey = bidder.guildName || 'Unassigned';
+        if (!byGuild.has(guildKey)) byGuild.set(guildKey, []);
+        const entries = byGuild.get(guildKey);
+        const match = entries.find((e) => !e.isFee && e.name.trim().toLowerCase() === bidder.name.trim().toLowerCase());
+        if (match) {
+          match.salary += perBidder;
+          match.hasBonus = true;
+        } else {
+          entries.push({
+            name: bidder.name,
+            team: null,
+            goldBid: null,
+            attended: null,
+            salary: perBidder,
+            itemShares: itemNames.map(() => 0),
+            isFee: false,
+            hasFee: false,
+            isBonus: true,
+            hasBonus: false,
+          });
+        }
+      });
+    }
+  });
 
   return Array.from(byGuild.entries())
     .map(([name, entries]) => ({
@@ -498,7 +557,7 @@ function computeCrusadeGuildSalaryDetail() {
       entries: entries.sort((a, b) => b.salary - a.salary),
       memberCount: entries.filter((e) => !e.isFee && !e.isBonus).length,
       total: entries.reduce((sum, e) => sum + e.salary, 0),
-      itemTotals: items.map((_, i) => entries.reduce((sum, e) => sum + (e.itemShares[i] || 0), 0)),
+      itemTotals: itemNames.map((_, i) => entries.reduce((sum, e) => sum + (e.itemShares[i] || 0), 0)),
     }))
     .sort((a, b) => b.total - a.total);
 }
@@ -509,14 +568,14 @@ function renderCrusadeGuildSalary() {
   document.getElementById('crusadeGuildSalaryMeta').textContent = `${c ? c.name : ''} — ${dateText}`;
 
   const guilds = computeCrusadeGuildSalaryDetail();
-  const items = sovereignState.items;
+  const itemNames = allCrusadeItemNames();
   const el = document.getElementById('crusadeGuildSalaryDetail');
 
   el.innerHTML = guilds
     .map((g) => {
       const rows = g.entries
         .map((e) => {
-          const itemCells = items.map((it, i) => `<td>${crusadeFormatItemQty(e.itemShares[i])}</td>`).join('');
+          const itemCells = itemNames.map((_, i) => `<td>${crusadeFormatItemQty(e.itemShares[i])}</td>`).join('');
           const tagLines = [];
           if (e.isFee) tagLines.push('(management fee)');
           else if (e.hasFee) tagLines.push('(+ management fee)');
@@ -536,9 +595,9 @@ function renderCrusadeGuildSalary() {
         </tr>`;
         })
         .join('');
-      const totalRow = items.length
-        ? `<tr class="crusade-table-total-row"><td>Total</td><td></td><td></td><td></td><td>${crusadeFormatDiamonds(g.total)}</td>${items
-            .map((it, i) => `<td>${crusadeFormatItemQty(g.itemTotals[i])}</td>`)
+      const totalRow = itemNames.length
+        ? `<tr class="crusade-table-total-row"><td>Total</td><td></td><td></td><td></td><td>${crusadeFormatDiamonds(g.total)}</td>${itemNames
+            .map((_, i) => `<td>${crusadeFormatItemQty(g.itemTotals[i])}</td>`)
             .join('')}</tr>`
         : '';
       return `
@@ -548,7 +607,7 @@ function renderCrusadeGuildSalary() {
         </div>
         <div class="table-scroll">
           <table class="members-table">
-            <thead><tr><th>IGN</th><th>Team</th><th>Max Bid</th><th>Present</th><th>Salary</th>${items.map((it) => `<th>${escapeHtml(it.name)}</th>`).join('')}</tr></thead>
+            <thead><tr><th>IGN</th><th>Team</th><th>Max Bid</th><th>Present</th><th>Salary</th>${itemNames.map((name) => `<th>${escapeHtml(name)}</th>`).join('')}</tr></thead>
             <tbody>${rows}${totalRow}</tbody>
           </table>
         </div>
@@ -559,55 +618,66 @@ function renderCrusadeGuildSalary() {
   renderLastCrusadeBidders();
 }
 
-// Independent of the per-guild breakdown above -- lists every bidder from
-// the previous crusade by name (regardless of guild) so it's easy to check
-// who's owed a share and how much, whether or not this crusade ended up
-// being a Defense win.
+// Every team is its own independent battle now, so each team's Defense
+// bonus (if it has one) pulls from its own "last team" -- this renders one
+// card per team that actually has bidders to track, rather than one shared
+// table for the whole crusade.
 function renderLastCrusadeBidders() {
-  const meta = document.getElementById('crusadeLastBiddersMeta');
   const emptyState = document.getElementById('crusadeLastBiddersEmptyState');
-  const table = document.getElementById('crusadeLastBiddersTable');
-  const body = document.getElementById('crusadeLastBiddersBody');
+  const container = document.getElementById('crusadeLastBiddersDetail');
 
-  const lastCrusade = sovereignState.lastCrusade;
-  const bidders = sovereignState.lastCrusadeBidders || [];
-  const { perBidder } = computeLastCrusadeBonusShares();
+  const cards = allKnownTeamNumbers()
+    .map((teamNumber) => {
+      const team = getTeamData(teamNumber);
+      const bidders = team.lastTeamBidders || [];
+      if (!bidders.length) return null;
+      const { perBidder } = computeTeamBonusShares(teamNumber);
+      const lastTeam = team.lastTeam;
+      const sourceText = lastTeam
+        ? `${lastTeam.crusadeName} Team ${lastTeam.teamNumber} — ${lastTeam.eventDate ? formatLongDate(String(lastTeam.eventDate).slice(0, 10)) : 'No date set'}`
+        : '';
 
-  meta.textContent = lastCrusade
-    ? `${lastCrusade.name} — ${lastCrusade.eventDate ? formatLongDate(String(lastCrusade.eventDate).slice(0, 10)) : 'No date set'}`
-    : '';
+      const rows = bidders
+        .map(
+          (b) => `
+        <tr>
+          <td style="font-weight:600; white-space:nowrap;">${escapeHtml(b.name)}</td>
+          <td>${crusadeGuildBadge(b.guildName)}</td>
+          <td>${crusadeFormatGold(b.goldBid)}</td>
+          <td>${crusadeFormatDiamonds(perBidder)}</td>
+        </tr>`
+        )
+        .join('');
+      const totalRow = `<tr class="crusade-table-total-row"><td>Total</td><td></td><td></td><td>${crusadeFormatDiamonds(perBidder * bidders.length)}</td></tr>`;
 
-  emptyState.classList.toggle('hidden', bidders.length !== 0);
-  table.classList.toggle('hidden', bidders.length === 0);
-  if (!bidders.length) {
-    body.innerHTML = '';
-    return;
-  }
+      return `
+      <div class="crusade-party-card">
+        <div class="crusade-party-card-header">
+          <h3>Team ${teamNumber}'s bonus — from ${sourceText}</h3>
+        </div>
+        <div class="table-scroll">
+          <table class="members-table">
+            <thead><tr><th>IGN</th><th>Guild</th><th>Gold Bid</th><th>Bonus Share</th></tr></thead>
+            <tbody>${rows}${totalRow}</tbody>
+          </table>
+        </div>
+      </div>`;
+    })
+    .filter(Boolean);
 
-  const rows = bidders
-    .map(
-      (b) => `
-    <tr>
-      <td style="font-weight:600; white-space:nowrap;">${escapeHtml(b.name)}</td>
-      <td>${crusadeGuildBadge(b.guildName)}</td>
-      <td>${crusadeFormatGold(b.goldBid)}</td>
-      <td>${crusadeFormatDiamonds(perBidder)}</td>
-    </tr>`
-    )
-    .join('');
-  const totalRow = `<tr class="crusade-table-total-row"><td>Total</td><td></td><td></td><td>${crusadeFormatDiamonds(perBidder * bidders.length)}</td></tr>`;
-  body.innerHTML = rows + totalRow;
+  emptyState.classList.toggle('hidden', cards.length !== 0);
+  container.innerHTML = cards.join('');
 }
 
 // The team's own page shows *all* of its records in one place: roster
-// fields plus each person's diamond earnings (still computed from the
-// crusade-wide attendance/bid pools, just filtered down to this team) and a
-// guild breakdown scoped to this team.
+// fields plus each person's diamond earnings (computed from this team's own
+// attendance/bid pool) and a guild breakdown scoped to this team.
 function renderTeamDetail(n) {
   document.getElementById('crusadeTeamHeading').textContent = `Team ${n}`;
   document.title = `Sovereign — ${sovereignState.crusade.name} — Team ${n}`;
 
-  const teamRows = computeCrusadeDistribution().filter(({ participant: p }) => p.partyNumber === n);
+  const team = getTeamData(n);
+  const teamRows = computeTeamDistribution(n);
   document.getElementById('crusadeTeamRosterEmptyState').classList.toggle('hidden', teamRows.length !== 0);
 
   // Split into parties of up to 5 — Party 1 always shows even if empty, so
@@ -687,14 +757,14 @@ function renderTeamDetail(n) {
   });
 
   const feeCreditsByGuild = new Map();
-  sovereignState.fees.forEach((fee) => {
+  (team.fees || []).forEach((fee) => {
     if (!fee.guildName) return;
-    feeCreditsByGuild.set(fee.guildName, (feeCreditsByGuild.get(fee.guildName) || 0) + crusadeFeeAmount(fee));
+    feeCreditsByGuild.set(fee.guildName, (feeCreditsByGuild.get(fee.guildName) || 0) + crusadeFeeAmount(fee, team));
   });
   renderCrusadeGuildSummary(teamRows, 'crusadeTeamGuildSummary', undefined, feeCreditsByGuild);
   renderTeamItemTable(n);
-  renderCrusadeItemList();
-  renderCrusadeFeeList();
+  renderCrusadeItemList(n);
+  renderCrusadeFeeList(n);
 }
 
 async function toggleCrusadeParticipantFlag(checkbox, field) {
@@ -784,51 +854,48 @@ document.getElementById('crusadeParticipantForm').addEventListener('submit', asy
   }
 });
 
-// ---------- Diamond distribution ----------
+// ---------- Diamond distribution (per team) ----------
 
-// A lost crusade pays out nothing at all — diamonds, items, and management
-// fees all drop to 0 regardless of what's entered, rather than splitting a
+// A lost team pays out nothing at all — diamonds, items, and management fees
+// all drop to 0 regardless of what's entered, rather than splitting a
 // reward that was never actually earned.
-function crusadeWasLost() {
-  return !!(sovereignState.crusade && sovereignState.crusade.result === 'lose');
+function crusadeWasLost(team) {
+  return !!(team && team.result === 'lose');
 }
 
-// Management fees take a percentage of the *total* diamond reward off the
+// Management fees take a percentage of a team's *own* diamond reward off the
 // top (e.g. a guild leader's cut) before anything else is computed — so the
-// pool that actually gets split by attendance/bid is the reward minus every
-// fee's amount.
-function totalCrusadeFeeAmount() {
-  if (crusadeWasLost()) return 0;
-  const diamondReward = sovereignState.crusade ? sovereignState.crusade.diamondReward || 0 : 0;
-  return sovereignState.fees.reduce((sum, f) => sum + diamondReward * (f.percent / 100), 0);
+// pool that actually gets split by attendance/bid is that team's reward
+// minus every one of its fees' amounts.
+function totalTeamFeeAmount(team) {
+  if (crusadeWasLost(team)) return 0;
+  return (team.fees || []).reduce((sum, f) => sum + team.diamondReward * (f.percent / 100), 0);
 }
 
-// Winning on Defense splits the (post-fee) reward 60/40 instead of paying it
-// all to this crusade's own roster: 60% stays here, 40% goes to whoever bid
-// gold last crusade (see computeLastCrusadeBonusShares). Any other stance/
-// result keeps the full reward for this roster, same as before.
-function isDefenseWin() {
-  const c = sovereignState.crusade;
-  return !!(c && c.stance === 'Defense' && c.result === 'win');
+// Winning on Defense splits a team's (post-fee) reward 60/40 instead of
+// paying it all to that team's own roster: 60% stays there, 40% goes to
+// whoever bid gold on the team it inherited the bonus from (see
+// computeTeamBonusShares). Any other stance/result keeps the full reward for
+// that team's roster, same as before.
+function isTeamDefenseWin(team) {
+  return !!(team && team.stance === 'Defense' && team.result === 'win');
 }
 
-// Half the (post-fee, post-defense-split) reward splits evenly across
-// everyone who attended; the other half splits across gold bidders in
-// proportion to their bid — this collapses to an equal split when every
-// bidder bids the same amount (the common case), and scales fairly when bids
-// differ.
-function computeCrusadeDistribution() {
-  const participants = sovereignState.participants;
-  if (crusadeWasLost()) {
+// Half a team's (post-fee, post-defense-split) reward splits evenly across
+// everyone on that team who attended; the other half splits across that
+// team's gold bidders in proportion to their bid — this collapses to an
+// equal split when every bidder bids the same amount (the common case), and
+// scales fairly when bids differ.
+function computeTeamDistribution(teamNumber) {
+  const team = getTeamData(teamNumber);
+  const participants = sovereignState.participants.filter((p) => p.partyNumber === teamNumber);
+  if (crusadeWasLost(team)) {
     return participants.map((p) => ({ participant: p, attendanceAmount: 0, bidShare: 0, total: 0 }));
   }
 
-  const c = sovereignState.crusade;
-  const diamondReward = c ? c.diamondReward || 0 : 0;
-  const attendancePct = c ? c.attendancePct ?? 50 : 50;
-  const netReward = Math.max(0, diamondReward - totalCrusadeFeeAmount());
-  const ownPool = isDefenseWin() ? netReward * 0.6 : netReward;
-  const attendancePool = ownPool * (attendancePct / 100);
+  const netReward = Math.max(0, team.diamondReward - totalTeamFeeAmount(team));
+  const ownPool = isTeamDefenseWin(team) ? netReward * 0.6 : netReward;
+  const attendancePool = ownPool * (team.attendancePct / 100);
   const bidPool = ownPool - attendancePool;
 
   const attendees = participants.filter((p) => p.attended);
@@ -843,27 +910,28 @@ function computeCrusadeDistribution() {
 }
 
 // The other 40% of a Defense win's reward, split evenly across everyone who
-// placed a gold bid in the previous crusade (by event date) — paid out to
-// them by name/guild, regardless of whether they're on this crusade's roster
+// placed a gold bid on the team this one inherited its bonus from — paid out
+// to them by name/guild, regardless of whether they're on this team's roster
 // at all.
-function computeLastCrusadeBonusShares() {
-  if (crusadeWasLost() || !isDefenseWin()) return { pool: 0, perBidder: 0, bidders: [] };
+function computeTeamBonusShares(teamNumber) {
+  const team = getTeamData(teamNumber);
+  if (crusadeWasLost(team) || !isTeamDefenseWin(team)) return { pool: 0, perBidder: 0, bidders: [] };
 
-  const c = sovereignState.crusade;
-  const diamondReward = c ? c.diamondReward || 0 : 0;
-  const netReward = Math.max(0, diamondReward - totalCrusadeFeeAmount());
+  const netReward = Math.max(0, team.diamondReward - totalTeamFeeAmount(team));
   const pool = netReward * 0.4;
-  const bidders = sovereignState.lastCrusadeBidders || [];
+  const bidders = team.lastTeamBidders || [];
   const perBidder = bidders.length ? pool / bidders.length : 0;
   return { pool, perBidder, bidders };
 }
 
 // Each named item (e.g. Morion) has its own total quantity, split evenly
-// across attendees only — no bid portion, unlike diamonds. Non-attendees get
-// none, same "attended is a must" rule as the diamond attendance share.
-function computeCrusadeItemShares(item) {
-  const participants = sovereignState.participants;
-  if (crusadeWasLost()) return participants.map((p) => ({ participant: p, total: 0 }));
+// across that team's attendees only — no bid portion, unlike diamonds.
+// Non-attendees get none, same "attended is a must" rule as the diamond
+// attendance share.
+function computeTeamItemShares(teamNumber, item) {
+  const team = getTeamData(teamNumber);
+  const participants = sovereignState.participants.filter((p) => p.partyNumber === teamNumber);
+  if (crusadeWasLost(team)) return participants.map((p) => ({ participant: p, total: 0 }));
 
   const quantity = item ? item.quantity || 0 : 0;
   const attendees = participants.filter((p) => p.attended);
@@ -877,7 +945,7 @@ function computeCrusadeItemShares(item) {
 function renderTeamItemTable(n) {
   const heading = document.getElementById('crusadeTeamItemsHeading');
   const table = document.getElementById('crusadeTeamItemTable');
-  const items = sovereignState.items;
+  const items = getTeamData(n).items || [];
 
   if (!items.length) {
     heading.classList.add('hidden');
@@ -896,12 +964,10 @@ function renderTeamItemTable(n) {
 
   const shareByGuildPerItem = items.map((item) => {
     const byGuild = new Map();
-    computeCrusadeItemShares(item)
-      .filter(({ participant: p }) => p.partyNumber === n)
-      .forEach(({ participant: p, total }) => {
-        const key = p.guildName || 'Unassigned';
-        byGuild.set(key, (byGuild.get(key) || 0) + total);
-      });
+    computeTeamItemShares(n, item).forEach(({ participant: p, total }) => {
+      const key = p.guildName || 'Unassigned';
+      byGuild.set(key, (byGuild.get(key) || 0) + total);
+    });
     return byGuild;
   });
 
@@ -932,11 +998,12 @@ function renderTeamItemTable(n) {
   document.getElementById('crusadeTeamItemTableBody').innerHTML = rows.join('');
 }
 
-function renderCrusadeItemList() {
+function renderCrusadeItemList(n) {
   const list = document.getElementById('crusadeItemList');
-  document.getElementById('crusadeItemListEmptyState').classList.toggle('hidden', sovereignState.items.length !== 0);
+  const items = getTeamData(n).items || [];
+  document.getElementById('crusadeItemListEmptyState').classList.toggle('hidden', items.length !== 0);
 
-  list.innerHTML = sovereignState.items
+  list.innerHTML = items
     .map(
       (item) => `
     <li style="display:flex; gap:8px; align-items:center;" data-item-id="${item.id}">
@@ -950,13 +1017,14 @@ function renderCrusadeItemList() {
   list.querySelectorAll('[data-delete-item]').forEach((btn) => {
     btn.addEventListener('click', async () => {
       const itemId = btn.getAttribute('data-delete-item');
-      const item = sovereignState.items.find((i) => i.id === itemId);
-      if (!confirm(`Remove item "${item?.name}" from this crusade?`)) return;
+      const item = items.find((i) => i.id === itemId);
+      if (!confirm(`Remove item "${item?.name}" from this team?`)) return;
       try {
-        await api(`/api/crusades/${sovereignState.crusadeId}/items/${itemId}`, { method: 'DELETE' });
-        sovereignState.items = sovereignState.items.filter((i) => i.id !== itemId);
-        renderCrusadeItemList();
-        renderTeamItemTable(sovereignState.activeTeam);
+        await api(`/api/crusades/${sovereignState.crusadeId}/teams/${n}/items/${itemId}`, { method: 'DELETE' });
+        const team = sovereignState.teams.find((t) => t.teamNumber === n);
+        if (team) team.items = team.items.filter((i) => i.id !== itemId);
+        renderCrusadeItemList(n);
+        renderTeamItemTable(n);
         toast('Item removed');
       } catch (err) {
         toast(err.message);
@@ -968,14 +1036,20 @@ function renderCrusadeItemList() {
 document.getElementById('addCrusadeItemForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const form = e.target;
+  const n = sovereignState.activeTeam;
   try {
-    const item = await api(`/api/crusades/${sovereignState.crusadeId}/items`, {
+    const item = await api(`/api/crusades/${sovereignState.crusadeId}/teams/${n}/items`, {
       method: 'POST',
       body: JSON.stringify({ name: form.elements.name.value, quantity: Number(form.elements.quantity.value) || 0 }),
     });
-    sovereignState.items.push(item);
-    renderCrusadeItemList();
-    renderTeamItemTable(sovereignState.activeTeam);
+    let team = sovereignState.teams.find((t) => t.teamNumber === n);
+    if (!team) {
+      team = { ...defaultTeamData(n), id: item.teamId };
+      sovereignState.teams.push(team);
+    }
+    team.items.push(item);
+    renderCrusadeItemList(n);
+    renderTeamItemTable(n);
     form.reset();
     toast(`${item.name} added`);
   } catch (err) {
@@ -983,23 +1057,24 @@ document.getElementById('addCrusadeItemForm').addEventListener('submit', async (
   }
 });
 
-function crusadeFeeAmount(fee) {
-  if (crusadeWasLost()) return 0;
-  const diamondReward = sovereignState.crusade ? sovereignState.crusade.diamondReward || 0 : 0;
-  return diamondReward * (fee.percent / 100);
+function crusadeFeeAmount(fee, team) {
+  if (crusadeWasLost(team)) return 0;
+  return (team ? team.diamondReward || 0 : 0) * (fee.percent / 100);
 }
 
-function renderCrusadeFeeList() {
+function renderCrusadeFeeList(n) {
   const list = document.getElementById('crusadeFeeList');
-  document.getElementById('crusadeFeeListEmptyState').classList.toggle('hidden', sovereignState.fees.length !== 0);
+  const team = getTeamData(n);
+  const fees = team.fees || [];
+  document.getElementById('crusadeFeeListEmptyState').classList.toggle('hidden', fees.length !== 0);
 
-  list.innerHTML = sovereignState.fees
+  list.innerHTML = fees
     .map(
       (fee) => `
     <li style="display:flex; gap:8px; align-items:center;" data-fee-id="${fee.id}">
       <span style="flex:1;">${escapeHtml(fee.name)}</span>
       ${crusadeGuildBadge(fee.guildName)}
-      <span style="color:var(--text-muted);">${fee.percent}% → ${crusadeFormatDiamonds(crusadeFeeAmount(fee))}</span>
+      <span style="color:var(--text-muted);">${fee.percent}% → ${crusadeFormatDiamonds(crusadeFeeAmount(fee, team))}</span>
       <button type="button" class="icon-btn admin-only" data-delete-fee="${fee.id}" title="Remove fee">✕</button>
     </li>`
     )
@@ -1008,12 +1083,13 @@ function renderCrusadeFeeList() {
   list.querySelectorAll('[data-delete-fee]').forEach((btn) => {
     btn.addEventListener('click', async () => {
       const feeId = btn.getAttribute('data-delete-fee');
-      const fee = sovereignState.fees.find((f) => f.id === feeId);
+      const fee = fees.find((f) => f.id === feeId);
       if (!confirm(`Remove the ${fee?.percent}% management fee for "${fee?.name}"?`)) return;
       try {
-        await api(`/api/crusades/${sovereignState.crusadeId}/fees/${feeId}`, { method: 'DELETE' });
-        sovereignState.fees = sovereignState.fees.filter((f) => f.id !== feeId);
-        renderTeamDetail(sovereignState.activeTeam); // fee removal changes the shared pool, so recompute (also re-renders this list)
+        await api(`/api/crusades/${sovereignState.crusadeId}/teams/${n}/fees/${feeId}`, { method: 'DELETE' });
+        const teamState = sovereignState.teams.find((t) => t.teamNumber === n);
+        if (teamState) teamState.fees = teamState.fees.filter((f) => f.id !== feeId);
+        renderTeamDetail(n); // fee removal changes this team's pool, so recompute (also re-renders this list)
         toast('Fee removed');
       } catch (err) {
         toast(err.message);
@@ -1025,8 +1101,9 @@ function renderCrusadeFeeList() {
 document.getElementById('addCrusadeFeeForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const form = e.target;
+  const n = sovereignState.activeTeam;
   try {
-    const fee = await api(`/api/crusades/${sovereignState.crusadeId}/fees`, {
+    const fee = await api(`/api/crusades/${sovereignState.crusadeId}/teams/${n}/fees`, {
       method: 'POST',
       body: JSON.stringify({
         name: form.elements.name.value,
@@ -1034,8 +1111,13 @@ document.getElementById('addCrusadeFeeForm').addEventListener('submit', async (e
         percent: Number(form.elements.percent.value) || 0,
       }),
     });
-    sovereignState.fees.push(fee);
-    renderTeamDetail(sovereignState.activeTeam); // new fee changes the shared pool, so recompute (also re-renders this list)
+    let team = sovereignState.teams.find((t) => t.teamNumber === n);
+    if (!team) {
+      team = { ...defaultTeamData(n), id: fee.teamId };
+      sovereignState.teams.push(team);
+    }
+    team.fees.push(fee);
+    renderTeamDetail(n); // new fee changes this team's pool, so recompute (also re-renders this list)
     form.reset();
     toast(`${fee.name}'s fee added`);
   } catch (err) {
