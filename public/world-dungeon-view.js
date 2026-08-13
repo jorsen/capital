@@ -1,12 +1,11 @@
-// World Dungeon Schedule — a fixed biweekly cadence (a Thursday+Sunday pair,
-// then skipped the following week, then the next pair two weeks later, and
-// so on), two fixed bosses (Hisharat, Chantarat). An admin manually assigns
-// which guild is taking on each boss per date. Styled as a plain white
-// "announcement" table (spreadsheet look, not the app's usual dark theme)
-// since it's meant to be screenshotted/shared with the guild, with each
-// guild's cells shaded a consistent pastel color. Guild picklist is shared
-// with Cave Schedule's server list (see the comment in lib/db.js) rather
-// than a second duplicate list.
+// World Dungeon Schedule — every Thursday and Sunday, every single week
+// (no skipping), two fixed bosses (Hisharat, Chantarat). An admin manually
+// assigns which guild is taking on each boss per date. Styled as a plain
+// white "announcement" table (spreadsheet look, not the app's usual dark
+// theme) since it's meant to be screenshotted/shared with the guild, with
+// each guild's cells shaded a consistent pastel color. Guild picklist is
+// shared with Cave Schedule's server list (see the comment in lib/db.js)
+// rather than a second duplicate list.
 
 const worldDungeonState = {
   guilds: [], // [{id, name}] -- shared cave_schedule_servers list
@@ -14,10 +13,10 @@ const worldDungeonState = {
 };
 
 const WORLD_DUNGEON_NAMES = ['Hisharat', 'Chantarat'];
-// The current 2-week set plus the one after it (two Thursday+Sunday pairs)
-// -- once the first passes, the anchor in worldDungeonUpcomingDates()
-// naturally moves forward, so the table always shows the current set plus
-// the next one, not a long rolling list of future ones.
+// This week's pair plus next week's (two Thursday+Sunday pairs) -- once the
+// first passes, the anchor in worldDungeonUpcomingDates() naturally moves
+// forward, so the table always shows the current week plus the next one,
+// not a long rolling list of future weeks.
 const WORLD_DUNGEON_UPCOMING_PAIRS = 2;
 
 // Light pastel fills, one per guild (assigned by list order, same pattern as
@@ -32,8 +31,8 @@ function worldDungeonGuildColor(name) {
 
 // The next upcoming Thursday (today counts if today is one) anchors "pair
 // 1" -- its Sunday is 3 days later, then each following pair's Thursday is
-// 14 days after the previous one's, skipping the in-between week entirely.
-// Walked in UTC day-math so a DST shift can't skip or duplicate a date.
+// 7 days after the previous one's (every week, no skipping). Walked in UTC
+// day-math so a DST shift can't skip or duplicate a date.
 function worldDungeonUpcomingDates(pairCount) {
   const now = new Date();
   let anchorThursday = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
@@ -43,7 +42,7 @@ function worldDungeonUpcomingDates(pairCount) {
 
   const dates = [];
   for (let i = 0; i < pairCount; i++) {
-    const thursday = new Date(anchorThursday.getTime() + i * 14 * 86400000);
+    const thursday = new Date(anchorThursday.getTime() + i * 7 * 86400000);
     const sunday = new Date(thursday.getTime() + 3 * 86400000);
     dates.push(thursday.toISOString().slice(0, 10), sunday.toISOString().slice(0, 10));
   }
