@@ -1,36 +1,27 @@
 // World Dungeon Schedule — a fixed weekly cadence (every Thursday and
 // Sunday), two fixed bosses (Hisharat, Chantarat). An admin manually assigns
-// which guild is taking on each boss per date. Guild picklist is shared with
-// Cave Schedule's server list (see the comment in lib/db.js) rather than a
-// second duplicate list.
+// which guild is taking on each boss per date, browsed month by month like
+// Cave Schedule's calendar. Guild picklist is shared with Cave Schedule's
+// server list (see the comment in lib/db.js) rather than a second duplicate
+// list.
 
 const worldDungeonState = {
+  month: null,
   guilds: [], // [{id, name}] -- shared cave_schedule_servers list
   entries: {}, // { 'YYYY-MM-DD': { Hisharat: 'GuildName', Chantarat: 'GuildName' } }
 };
 
 const WORLD_DUNGEON_NAMES = ['Hisharat', 'Chantarat'];
-const WORLD_DUNGEON_UPCOMING_COUNT = 12; // ~6 weeks of Thursday+Sunday pairs
-
-// Every Thursday (4) and Sunday (0) starting today, walked in UTC day-math
-// so a DST shift can't skip or duplicate a date.
-function worldDungeonUpcomingDates(count) {
-  const dates = [];
-  const now = new Date();
-  let cursor = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
-  while (dates.length < count) {
-    const dow = cursor.getUTCDay();
-    if (dow === 4 || dow === 0) dates.push(cursor.toISOString().slice(0, 10));
-    cursor = new Date(cursor.getTime() + 86400000);
-  }
-  return dates;
-}
+const WORLD_DUNGEON_WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 async function loadWorldDungeonScheduleData() {
-  const fromDate = worldDungeonUpcomingDates(1)[0];
+  const monthInput = document.getElementById('worldDungeonMonthInput');
+  if (!worldDungeonState.month) worldDungeonState.month = currentMonthValue();
+  monthInput.value = worldDungeonState.month;
+
   const [guilds, entries] = await Promise.all([
     api('/api/cave-schedule-servers'),
-    api(`/api/world-dungeon-schedule?from=${fromDate}`),
+    api(`/api/world-dungeon-schedule?month=${worldDungeonState.month}`),
   ]);
   worldDungeonState.guilds = guilds;
   worldDungeonState.entries = {};
@@ -39,35 +30,53 @@ async function loadWorldDungeonScheduleData() {
     if (!worldDungeonState.entries[key]) worldDungeonState.entries[key] = {};
     worldDungeonState.entries[key][e.dungeon] = e.guildName;
   });
-  renderWorldDungeonSchedule();
+  renderWorldDungeonCalendar();
 }
 
-function renderWorldDungeonSchedule() {
+function renderWorldDungeonCalendar() {
   document.getElementById('worldDungeonNoGuildsState').classList.toggle('hidden', worldDungeonState.guilds.length !== 0);
+  document.getElementById('worldDungeonMonthHeading').textContent = formatMonthYear(worldDungeonState.month);
+  document.getElementById('worldDungeonWeekdayRow').innerHTML = WORLD_DUNGEON_WEEKDAY_LABELS.map((d) => `<div class="schedule-weekday">${d}</div>`).join('');
 
-  const dates = worldDungeonUpcomingDates(WORLD_DUNGEON_UPCOMING_COUNT);
-  const body = document.getElementById('worldDungeonScheduleBody');
-  body.innerHTML = dates
-    .map((date) => {
-      const dow = new Date(`${date}T00:00:00Z`).getUTCDay();
-      const dayLabel = dow === 4 ? 'Thursday' : 'Sunday';
-      const assigned = worldDungeonState.entries[date] || {};
-      const cells = WORLD_DUNGEON_NAMES.map((dungeon) => {
-        const current = assigned[dungeon] || '';
-        const options = worldDungeonState.guilds
-          .map((g) => `<option value="${escapeHtml(g.name)}" ${g.name === current ? 'selected' : ''}>${escapeHtml(g.name)}</option>`)
-          .join('');
-        return `<td><select class="world-dungeon-select admin-disable" data-date="${date}" data-dungeon="${dungeon}"><option value="">—</option>${options}</select></td>`;
-      }).join('');
+  const [year, month] = worldDungeonState.month.split('-').map(Number);
+  const firstDow = new Date(Date.UTC(year, month - 1, 1)).getUTCDay();
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+
+  const cells = [];
+  for (let i = 0; i < firstDow; i++) cells.push('<div class="schedule-day schedule-day-empty"></div>');
+  for (let day = 1; day <= daysInMonth; day++) {
+    const date = `${worldDungeonState.month}-${String(day).padStart(2, '0')}`;
+    const dow = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
+    const applicable = dow === 4 || dow === 0; // Thursday or Sunday
+
+    if (!applicable) {
+      cells.push(`<div class="schedule-day world-dungeon-day-inactive"><div class="schedule-day-number">${day}</div></div>`);
+      continue;
+    }
+
+    const assigned = worldDungeonState.entries[date] || {};
+    const rows = WORLD_DUNGEON_NAMES.map((dungeon) => {
+      const current = assigned[dungeon] || '';
+      const options = worldDungeonState.guilds
+        .map((g) => `<option value="${escapeHtml(g.name)}" ${g.name === current ? 'selected' : ''}>${escapeHtml(g.name)}</option>`)
+        .join('');
       return `
-      <tr>
-        <td style="font-weight:600; white-space:nowrap;">${formatLongDate(date)}<div style="color:var(--text-muted); font-size:12px; font-weight:400;">${dayLabel}</div></td>
-        ${cells}
-      </tr>`;
-    })
-    .join('');
+        <div class="world-dungeon-day-row">
+          <span class="world-dungeon-day-label" title="${escapeHtml(dungeon)}">${escapeHtml(dungeon.slice(0, 1))}</span>
+          <select class="world-dungeon-select admin-disable" data-date="${date}" data-dungeon="${dungeon}"><option value="">—</option>${options}</select>
+        </div>`;
+    }).join('');
+    cells.push(`
+      <div class="schedule-day world-dungeon-day">
+        <div class="schedule-day-number">${day}</div>
+        ${rows}
+      </div>`);
+  }
 
-  body.querySelectorAll('.world-dungeon-select').forEach((sel) => {
+  const grid = document.getElementById('worldDungeonCalendarGrid');
+  grid.innerHTML = cells.join('');
+
+  grid.querySelectorAll('.world-dungeon-select').forEach((sel) => {
     sel.addEventListener('change', async () => {
       const date = sel.getAttribute('data-date');
       const dungeon = sel.getAttribute('data-dungeon');
@@ -85,6 +94,11 @@ function renderWorldDungeonSchedule() {
     });
   });
 }
+
+document.getElementById('worldDungeonMonthInput').addEventListener('change', (e) => {
+  worldDungeonState.month = e.target.value;
+  loadWorldDungeonScheduleData().catch((err) => toast(err.message));
+});
 
 // ---------- Manage Guilds modal (shares cave_schedule_servers with Cave Schedule) ----------
 
@@ -109,7 +123,7 @@ function renderWorldDungeonGuildList() {
         await api(`/api/cave-schedule-servers/${id}`, { method: 'DELETE' });
         worldDungeonState.guilds = worldDungeonState.guilds.filter((g) => g.id !== id);
         renderWorldDungeonGuildList();
-        renderWorldDungeonSchedule();
+        renderWorldDungeonCalendar();
         toast('Guild removed');
       } catch (err) {
         toast(err.message);
@@ -130,7 +144,7 @@ document.getElementById('addWorldDungeonGuildForm').addEventListener('submit', a
     const guild = await api('/api/cave-schedule-servers', { method: 'POST', body: JSON.stringify({ name: fd.get('name') }) });
     worldDungeonState.guilds.push(guild);
     renderWorldDungeonGuildList();
-    renderWorldDungeonSchedule();
+    renderWorldDungeonCalendar();
     e.target.reset();
     toast(`${guild.name} added`);
   } catch (err) {

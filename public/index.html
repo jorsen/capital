@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=71">
+  <link rel="stylesheet" href="styles.css?v=72">
 </head>
 <body>
   <div class="app viz-root">
@@ -451,23 +451,18 @@
     <div id="view-world-dungeon" class="view hidden">
       <div class="view-header space-between">
         <p style="color:var(--text-muted); font-size:13px; margin:0; flex:1;" data-i18n="worldDungeon.hint">Every Thursday and Sunday, assign which guild is taking on each boss.</p>
-        <button id="manageWorldDungeonGuildsBtn" class="btn small admin-only" data-i18n="worldDungeon.manageGuilds">Manage Guilds</button>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+          <button id="manageWorldDungeonGuildsBtn" class="btn small admin-only" data-i18n="worldDungeon.manageGuilds">Manage Guilds</button>
+          <input type="month" id="worldDungeonMonthInput" aria-label="Month">
+        </div>
       </div>
 
       <section class="panel">
-        <h2 data-i18n="worldDungeon.heading">World Dungeon Schedule</h2>
-        <div class="table-scroll">
-          <table class="members-table">
-            <thead>
-              <tr>
-                <th data-i18n="worldDungeon.thDate">Date</th>
-                <th>Hisharat</th>
-                <th>Chantarat</th>
-              </tr>
-            </thead>
-            <tbody id="worldDungeonScheduleBody"></tbody>
-          </table>
+        <div class="schedule-calendar-header">
+          <h2 id="worldDungeonMonthHeading" class="schedule-month-heading"></h2>
         </div>
+        <div id="worldDungeonWeekdayRow" class="schedule-weekdays"></div>
+        <div id="worldDungeonCalendarGrid" class="schedule-calendar"></div>
         <p id="worldDungeonNoGuildsState" class="empty-state hidden" data-i18n="worldDungeon.noGuilds">No guilds added yet — click "Manage Guilds" to add one.</p>
       </section>
     </div>
@@ -822,7 +817,7 @@
   <script src="item-report-view.js?v=30"></script>
   <script src="boss-timer-view.js?v=33"></script>
   <script src="boss-history-view.js?v=33"></script>
-  <script src="world-dungeon-view.js?v=1"></script>
+  <script src="world-dungeon-view.js?v=2"></script>
   <script src="users-view.js?v=3"></script>
   <script src="activity-log-view.js?v=5"></script>
   <script src="auth.js?v=29"></script>

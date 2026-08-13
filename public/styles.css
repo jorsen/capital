@@ -668,6 +668,33 @@ select:focus, input:focus, textarea:focus {
   .schedule-day-select, .schedule-day-badge { font-size: 13px; }
 }
 
+/* World Dungeon Schedule's calendar: each Thursday/Sunday cell holds two
+   compact selects (one per boss) instead of Cave Schedule's one big one, so
+   it needs more height and much smaller controls. Other weekdays don't
+   apply -- just the day number, dimmed. */
+.world-dungeon-day { min-height: 118px; gap: 4px; }
+.world-dungeon-day-inactive .schedule-day-number { opacity: 0.35; }
+.world-dungeon-day-row { display: flex; align-items: center; gap: 4px; }
+.world-dungeon-day-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  width: 12px;
+  flex-shrink: 0;
+  text-align: center;
+}
+.world-dungeon-select {
+  font-size: 11px;
+  padding: 2px 3px;
+  width: 100%;
+  min-width: 0;
+  height: auto;
+}
+@media (max-width: 720px) {
+  .world-dungeon-day { min-height: 90px; }
+  .world-dungeon-select { font-size: 10px; padding: 1px 2px; }
+}
+
 /* ---------- Sovereign / Crusade ---------- */
 
 .sovereign-header .brand { align-items: center; }
