@@ -1443,7 +1443,7 @@ document.getElementById('raffleDrawBtn').addEventListener('click', async () => {
     renderRafflePool();
     renderRaffleWinners();
     refreshRaffleActivity();
-    toast(`🎲 ${winnerName} wins!`);
+    toast(`🎲 ${winnerName} takes ${ordinal(sovereignState.raffleWinners.length)} place!`);
   } catch (err) {
     toast(err.message);
     updateRafflePoolCount(); // POST failed, so renderRafflePool() never ran to reset the button itself
@@ -1468,17 +1468,39 @@ document.getElementById('clearRaffleWinnersBtn').addEventListener('click', async
   }
 });
 
+// 1 -> "1st", 2 -> "2nd", 3 -> "3rd", 4 -> "4th", 11 -> "11th", 21 -> "21st"...
+function ordinal(n) {
+  const v = n % 100;
+  if (v >= 11 && v <= 13) return `${n}th`;
+  switch (n % 10) {
+    case 1: return `${n}st`;
+    case 2: return `${n}nd`;
+    case 3: return `${n}rd`;
+    default: return `${n}th`;
+  }
+}
+
+const RAFFLE_PLACE_MEDAL = { 1: '🥇', 2: '🥈', 3: '🥉' };
+
 function renderRaffleWinners() {
-  const winners = sovereignState.raffleWinners;
+  const winners = sovereignState.raffleWinners; // newest draw first
   document.getElementById('raffleWinnersEmptyState').classList.toggle('hidden', winners.length !== 0);
+
+  // Placement is draw order, not recency -- whoever was drawn first holds
+  // 1st place regardless of how many more have been drawn since.
+  const chronological = [...winners].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+  const placeById = new Map(chronological.map((w, i) => [w.id, i + 1]));
 
   const list = document.getElementById('raffleWinnersList');
   list.innerHTML = winners
     .map((w) => {
       const color = crusadeGuildColor(w.guildName) || 'var(--text-muted)';
       const time = new Date(w.createdAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      const place = placeById.get(w.id);
+      const placeLabel = `${RAFFLE_PLACE_MEDAL[place] || '🎗️'} ${ordinal(place)}`;
       return `
       <div class="crusade-guild-summary-row" data-winner-id="${w.id}">
+        <span style="font-weight:700; white-space:nowrap; min-width:56px;">${placeLabel}</span>
         <span class="schedule-dot" style="background:${color}"></span>
         <span style="flex:1; font-weight:600; white-space:nowrap;">${escapeHtml(w.guildName || w.memberName)}</span>
         <input type="text" class="raffle-item-input admin-disable" data-winner-id="${w.id}" value="${escapeHtml(w.item || '')}" placeholder="What did they win?" style="max-width:200px; flex:1;">
