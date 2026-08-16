@@ -995,6 +995,7 @@ document.getElementById('crusadeBulkAddForm').addEventListener('submit', async (
         body: JSON.stringify({
           name,
           guildName: member?.guildName || null,
+          position: member?.position || null,
           partyNumber: teamNumber,
           partySlot,
           goldBid,
