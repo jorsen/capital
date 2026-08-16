@@ -301,7 +301,7 @@ function renderCrusadeDefaultFeeList() {
     .map(
       (fee) => `
       <li style="display:flex; gap:8px; align-items:center;" data-default-fee-id="${fee.id}">
-        <span style="flex:1;">${escapeHtml(fee.name)}</span>
+        <span style="flex:1; font-weight:600;">${escapeHtml(fee.name)}</span>
         ${crusadeGuildBadge(fee.guildName)}
         <span style="color:var(--text-muted);">${fee.percent}%</span>
         <button type="button" class="icon-btn" data-delete-default-fee="${fee.id}" title="Remove default fee">✕</button>
@@ -1345,7 +1345,7 @@ function renderCrusadeFeeList(n) {
     .map(
       (fee) => `
     <li style="display:flex; gap:8px; align-items:center;" data-fee-id="${fee.id}">
-      <span style="flex:1;">${escapeHtml(fee.name)}</span>
+      <span style="flex:1; font-weight:600;">${escapeHtml(fee.name)}</span>
       ${crusadeGuildBadge(fee.guildName)}
       <span style="color:var(--text-muted);">${fee.percent}% → ${crusadeFormatDiamonds(crusadeFeeAmount(fee, team))}</span>
       <button type="button" class="icon-btn admin-only" data-delete-fee="${fee.id}" title="Remove fee">✕</button>
