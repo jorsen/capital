@@ -814,6 +814,18 @@ select:focus, input:focus, textarea:focus {
   .crusade-bidders-grid { grid-template-columns: 1fr; }
 }
 
+/* Within a single bidders card, split one long list into two side-by-side
+   mini-tables (numbered continuously) instead of leaving half the card
+   empty when there's only one card in the outer grid above. */
+.crusade-bidders-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+@media (max-width: 480px) {
+  .crusade-bidders-columns { grid-template-columns: 1fr; }
+}
+
 /* Crusade Salary's per-guild cards stack one per row instead of side by
    side -- each one is a wide table (IGN through every item column), so two
    across just squeezes both into horizontal scrolling. */

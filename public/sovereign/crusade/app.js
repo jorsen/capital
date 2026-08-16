@@ -836,19 +836,35 @@ function renderLastCrusadeBidders() {
       const lastTeam = team.lastTeam;
       const sourceDateText = lastTeam?.eventDate ? formatLongDate(String(lastTeam.eventDate).slice(0, 10)) : 'No date set';
 
-      const rows = bidders
-        .map(
-          (b, i) => `
+      // A single team's bidder list can run long with only one card ever
+      // showing (every other team either isn't a Defense win or inherited
+      // from the same source), leaving the second grid slot empty -- split
+      // it into two side-by-side mini-tables within this one card instead,
+      // numbered continuously across both halves.
+      const buildRows = (list, offset) =>
+        list
+          .map(
+            (b, i) => `
         <tr>
-          <td>${i + 1}</td>
+          <td>${offset + i + 1}</td>
           <td style="font-weight:600; white-space:nowrap;">${escapeHtml(b.name)}</td>
           <td>${crusadeGuildBadge(b.guildName)}</td>
           <td>${crusadeFormatGold(b.goldBid)}</td>
           <td>${crusadeFormatDiamonds(perBidder)}</td>
         </tr>`
-        )
-        .join('');
-      const totalRow = `<tr class="crusade-table-total-row"><td></td><td>Total</td><td></td><td></td><td>${crusadeFormatDiamonds(perBidder * bidders.length)}</td></tr>`;
+          )
+          .join('');
+      const buildTable = (list, offset) => `
+        <div class="table-scroll">
+          <table class="members-table">
+            <thead><tr><th>#</th><th>IGN</th><th>Guild</th><th>Gold Bid</th><th>Bonus Share</th></tr></thead>
+            <tbody>${buildRows(list, offset)}</tbody>
+          </table>
+        </div>`;
+
+      const half = Math.ceil(bidders.length / 2);
+      const firstHalf = bidders.slice(0, half);
+      const secondHalf = bidders.slice(half);
 
       return `
       <div class="crusade-party-card">
@@ -856,12 +872,11 @@ function renderLastCrusadeBidders() {
           <h3>Team ${teamNumber}'s bonus</h3>
         </div>
         <p style="color:var(--text-muted); font-size:12px; margin:-4px 0 10px;">Source crusade: ${escapeHtml(lastTeam.crusadeName)} — <strong style="color:var(--text);">${sourceDateText}</strong></p>
-        <div class="table-scroll">
-          <table class="members-table">
-            <thead><tr><th>#</th><th>IGN</th><th>Guild</th><th>Gold Bid</th><th>Bonus Share</th></tr></thead>
-            <tbody>${rows}${totalRow}</tbody>
-          </table>
+        <div class="crusade-bidders-columns">
+          ${buildTable(firstHalf, 0)}
+          ${secondHalf.length ? buildTable(secondHalf, half) : ''}
         </div>
+        <div class="crusade-table-total-row" style="text-align:right; padding:8px 4px 0;">Total — ${crusadeFormatDiamonds(perBidder * bidders.length)}</div>
       </div>`;
     })
     .filter(Boolean);
