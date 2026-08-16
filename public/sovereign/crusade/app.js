@@ -968,7 +968,10 @@ function openCrusadeParticipantModal(participantId, presetPartyNumber, presetPar
   form.elements.partyNumber.value = teamNumber;
   form.elements.partySlot.value = participant ? participant.partySlot : presetPartySlot || nextAvailablePartySlot(teamNumber);
   const noBidding = isDefenseStance(getTeamData(teamNumber));
-  form.elements.goldBid.value = noBidding ? 0 : participant ? participant.goldBid : 30000000;
+  // Defaults to 0, not a placeholder bid amount -- only someone who actually
+  // bid gold should end up with a nonzero value, since that's what marks
+  // them as a bidder everywhere else (Last Crusade's Bidders, Max Bid, etc).
+  form.elements.goldBid.value = noBidding ? 0 : participant ? participant.goldBid : 0;
   form.querySelector('.crusade-goldbid-field').classList.toggle('hidden', noBidding);
   form.elements.attended.checked = participant ? participant.attended : true;
   document.getElementById('crusadeParticipantModal').classList.remove('hidden');
@@ -1034,7 +1037,10 @@ function openCrusadeBulkAddModal(presetPartyNumber) {
   form.elements.partyNumber.value = teamNumber;
   form.elements.partySlot.value = nextAvailablePartySlot(teamNumber);
   const noBidding = isDefenseStance(getTeamData(teamNumber));
-  form.elements.goldBid.value = noBidding ? 0 : 30000000;
+  // Defaults to 0 -- a shared bulk-add batch usually mixes bidders and
+  // non-bidders, so presuming everyone bid would misrepresent whoever
+  // didn't as a bidder (see the single-add modal for the same reasoning).
+  form.elements.goldBid.value = 0;
   form.querySelector('.crusade-goldbid-field').classList.toggle('hidden', noBidding);
   renderCrusadeBulkResults();
   renderCrusadeBulkSelected();
