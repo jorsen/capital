@@ -37,12 +37,21 @@ const CRUSADE_PARTY_MAX_MEMBERS = 5;
 // column for, regardless of which of them any given team actually used.
 const CRUSADE_SUMMARY_ITEM_NAMES = ['Morions', 'Guild Coins', 'Alluvial Gold Pouch'];
 
+// Item names are stored/keyed in English (matching the DB and the Add Item
+// dropdown's option values) but displayed translated -- this maps the raw
+// name to its translation key without changing the underlying data key.
+const CRUSADE_ITEM_I18N_KEYS = { Morions: 'sovereign.item.morions', 'Guild Coins': 'sovereign.item.guildCoins', 'Alluvial Gold Pouch': 'sovereign.item.alluvialGoldPouch' };
+function crusadeItemLabel(name) {
+  const key = CRUSADE_ITEM_I18N_KEYS[name];
+  return key ? t(key) : name;
+}
+
 // pending/win/lose/draw -> a small colored pill, reused on the Team List
 // overview (one per row) and each team's own page (next to its heading), so
 // the outcome is visible at a glance without opening Team Details.
 function crusadeStatusLabel(result) {
   const value = result || 'pending';
-  return { value, label: value.charAt(0).toUpperCase() + value.slice(1) };
+  return { value, label: t(`sovereign.result.${value}`) };
 }
 
 function crusadeStatusBadge(result) {
@@ -192,7 +201,7 @@ function renderCrusadeList() {
       (c, i) => `
     <tr>
       <td>${i + 1}</td>
-      <td><a href="#crusade/${c.id}" style="font-weight:600;">${c.eventDate ? escapeHtml(formatLongDate(String(c.eventDate).slice(0, 10))) : 'No date set'}</a></td>
+      <td><a href="#crusade/${c.id}" style="font-weight:600;">${c.eventDate ? escapeHtml(formatLongDate(String(c.eventDate).slice(0, 10))) : t('sovereign.common.noDateSet')}</a></td>
       <td>${c.participantCount}</td>
       <td>${crusadeFormatDiamonds(c.feeDiamonds)}</td>
       <td>${crusadeFormatDiamonds(c.netDiamondReward)}</td>
@@ -598,9 +607,9 @@ function renderTeamList() {
       return `
       <tr>
         <td>${i + 1}</td>
-        <td><a href="#crusade/${sovereignState.crusadeId}/team/${n}" style="font-weight:600;">Team ${n}</a></td>
+        <td><a href="#crusade/${sovereignState.crusadeId}/team/${n}" style="font-weight:600;">${t('sovereign.common.team')} ${n}</a></td>
         <td>${crusadeStatusBadge(team.result)}</td>
-        <td>${team.stance ? escapeHtml(team.stance) : '–'}</td>
+        <td>${team.stance ? t(`sovereign.stance.${team.stance.toLowerCase()}`) : '–'}</td>
         <td>${count}</td>
         <td>${crusadeFormatDiamonds(diamonds)}</td>
       </tr>`;
@@ -720,7 +729,7 @@ function renderPlayerSalaryCard(g) {
     .map((e, i) => {
       const itemCells = CRUSADE_SUMMARY_ITEM_NAMES.map((name) => `<td>${crusadeFormatItemQty(e.itemTotals[name])}</td>`).join('');
       const presentCell = e.isParticipant ? `${e.present}/${e.teamsCount}` : '–';
-      const maxBidCell = !e.isParticipant ? '–' : !e.hasAttackTeam ? 'DEF' : crusadeFormatGold(e.maxBid);
+      const maxBidCell = !e.isParticipant ? '–' : !e.hasAttackTeam ? t('sovereign.common.def') : crusadeFormatGold(e.maxBid);
       const feePercentCell = e.feePercent > 0 ? `${e.feePercent}%` : '–';
       return `
     <tr>
@@ -737,7 +746,7 @@ function renderPlayerSalaryCard(g) {
     </tr>`;
     })
     .join('');
-  const totalRow = `<tr class="crusade-table-total-row"><td></td><td>Total</td><td></td><td></td><td>${crusadeFormatDiamonds(
+  const totalRow = `<tr class="crusade-table-total-row"><td></td><td>${t('sovereign.common.total')}</td><td></td><td></td><td>${crusadeFormatDiamonds(
     g.entries.reduce((sum, e) => sum + e.salary, 0)
   )}</td><td></td><td>${crusadeFormatDiamonds(g.entries.reduce((sum, e) => sum + e.feeAmount, 0))}</td><td>${crusadeFormatDiamonds(
     g.entries.reduce((sum, e) => sum + e.bonusShare, 0)
@@ -747,11 +756,11 @@ function renderPlayerSalaryCard(g) {
   return `
   <div class="crusade-party-card">
     <div class="crusade-party-card-header">
-      <h3>${g.name === 'Unassigned' ? 'Unassigned' : escapeHtml(g.name)} — ${crusadeFormatDiamonds(g.total)} (${g.memberCount} member${g.memberCount === 1 ? '' : 's'})</h3>
+      <h3>${g.name === 'Unassigned' ? t('sovereign.common.unassigned') : escapeHtml(g.name)} — ${crusadeFormatDiamonds(g.total)} (${g.memberCount} ${g.memberCount === 1 ? t('sovereign.common.member') : t('sovereign.common.members')})</h3>
     </div>
     <div class="table-scroll">
       <table class="members-table">
-        <thead><tr><th>#</th><th>IGN</th><th>Max Bid</th><th>Present</th><th>Salary</th><th>Fee %</th><th>Fee Amount</th><th>Bonus Share</th><th>Total Salary</th>${CRUSADE_SUMMARY_ITEM_NAMES.map((name) => `<th>${escapeHtml(name)}</th>`).join('')}</tr></thead>
+        <thead><tr><th>#</th><th>${t('sovereign.common.ign')}</th><th>${t('sovereign.salary.thMaxBid')}</th><th>${t('sovereign.salary.thPresent')}</th><th>${t('sovereign.common.salary')}</th><th>${t('sovereign.salary.thFeePercent')}</th><th>${t('sovereign.common.feeAmount')}</th><th>${t('sovereign.common.bonusShare')}</th><th>${t('sovereign.salary.thTotalSalary')}</th>${CRUSADE_SUMMARY_ITEM_NAMES.map((name) => `<th>${escapeHtml(crusadeItemLabel(name))}</th>`).join('')}</tr></thead>
         <tbody>${rows}${totalRow}</tbody>
       </table>
     </div>
@@ -764,7 +773,7 @@ function renderPlayerSalaryCard(g) {
 // repeated once per team.
 function renderCrusadeGuildSalary() {
   const c = sovereignState.crusade;
-  const dateText = c && c.eventDate ? formatLongDate(String(c.eventDate).slice(0, 10)) : 'No date set';
+  const dateText = c && c.eventDate ? formatLongDate(String(c.eventDate).slice(0, 10)) : t('sovereign.common.noDateSet');
   document.getElementById('crusadeGuildSalaryMeta').textContent = `${c ? c.name : ''} — ${dateText}`;
 
   const guilds = computeCrusadeGuildSalaryDetail();
@@ -790,7 +799,7 @@ function renderCrusadeGuildTotals(guilds) {
     return `
     <tr>
       <td>${i + 1}</td>
-      <td style="font-weight:600;">${g.name === 'Unassigned' ? 'Unassigned' : crusadeGuildBadge(g.name)}</td>
+      <td style="font-weight:600;">${g.name === 'Unassigned' ? t('sovereign.common.unassigned') : crusadeGuildBadge(g.name)}</td>
       <td>${crusadeFormatDiamonds(salary)}</td>
       <td>${crusadeFormatDiamonds(feeAmount)}</td>
       <td>${crusadeFormatDiamonds(bonusShare)}</td>
@@ -806,7 +815,7 @@ function renderCrusadeGuildTotals(guilds) {
   const grandBonusShare = allEntries.reduce((sum, e) => sum + e.bonusShare, 0);
   const grandTotal = guilds.reduce((sum, g) => sum + g.total, 0);
   const totalRow = guilds.length
-    ? `<tr class="crusade-table-total-row"><td></td><td>Total</td><td>${crusadeFormatDiamonds(grandSalary)}</td><td>${crusadeFormatDiamonds(
+    ? `<tr class="crusade-table-total-row"><td></td><td>${t('sovereign.common.total')}</td><td>${crusadeFormatDiamonds(grandSalary)}</td><td>${crusadeFormatDiamonds(
         grandFeeAmount
       )}</td><td>${crusadeFormatDiamonds(grandBonusShare)}</td><td>${crusadeFormatDiamonds(grandTotal)}</td>${CRUSADE_SUMMARY_ITEM_NAMES.map(
         (name) => `<td>${crusadeFormatItemQty(allEntries.reduce((sum, e) => sum + e.itemTotals[name], 0))}</td>`
@@ -834,7 +843,7 @@ function renderLastCrusadeBidders() {
       // rather than showing a table full of 0s.
       if (!bidders.length || perBidder <= 0) return null;
       const lastTeam = team.lastTeam;
-      const sourceDateText = lastTeam?.eventDate ? formatLongDate(String(lastTeam.eventDate).slice(0, 10)) : 'No date set';
+      const sourceDateText = lastTeam?.eventDate ? formatLongDate(String(lastTeam.eventDate).slice(0, 10)) : t('sovereign.common.noDateSet');
 
       // A single team's bidder list can run long with only one card ever
       // showing (every other team either isn't a Defense win or inherited
@@ -857,7 +866,7 @@ function renderLastCrusadeBidders() {
       const buildTable = (list, offset) => `
         <div class="table-scroll">
           <table class="members-table">
-            <thead><tr><th>#</th><th>IGN</th><th>Guild</th><th>Gold Bid</th><th>Bonus Share</th></tr></thead>
+            <thead><tr><th>#</th><th>${t('sovereign.common.ign')}</th><th>${t('sovereign.common.guild')}</th><th>${t('sovereign.modal.goldBidLabel')}</th><th>${t('sovereign.common.bonusShare')}</th></tr></thead>
             <tbody>${buildRows(list, offset)}</tbody>
           </table>
         </div>`;
@@ -869,14 +878,14 @@ function renderLastCrusadeBidders() {
       return `
       <div class="crusade-party-card">
         <div class="crusade-party-card-header">
-          <h3>Team ${teamNumber}'s bonus</h3>
+          <h3>${t('sovereign.salary.teamBonusHeading').replace('{n}', teamNumber)}</h3>
         </div>
-        <p style="color:var(--text-muted); font-size:12px; margin:-4px 0 10px;">Source crusade: ${escapeHtml(lastTeam.crusadeName)} — <strong style="color:var(--text);">${sourceDateText}</strong></p>
+        <p style="color:var(--text-muted); font-size:12px; margin:-4px 0 10px;">${t('sovereign.salary.sourceCrusade')}: ${escapeHtml(lastTeam.crusadeName)} — <strong style="color:var(--text);">${sourceDateText}</strong></p>
         <div class="crusade-bidders-columns">
           ${buildTable(firstHalf, 0)}
           ${secondHalf.length ? buildTable(secondHalf, half) : ''}
         </div>
-        <div class="crusade-table-total-row" style="text-align:right; padding:8px 4px 0;">Total — ${crusadeFormatDiamonds(perBidder * bidders.length)}</div>
+        <div class="crusade-table-total-row" style="text-align:right; padding:8px 4px 0;">${t('sovereign.common.total')} — ${crusadeFormatDiamonds(perBidder * bidders.length)}</div>
       </div>`;
     })
     .filter(Boolean);
@@ -889,7 +898,7 @@ function renderLastCrusadeBidders() {
 // fields plus each person's diamond earnings (computed from this team's own
 // attendance/bid pool) and a guild breakdown scoped to this team.
 function renderTeamDetail(n) {
-  document.getElementById('crusadeTeamHeading').textContent = `Team ${n}`;
+  document.getElementById('crusadeTeamHeading').textContent = `${t('sovereign.common.team')} ${n}`;
   document.title = `Sovereign — ${sovereignState.crusade.name} — Team ${n}`;
 
   const team = getTeamData(n);
@@ -943,20 +952,20 @@ function renderTeamDetail(n) {
       return `
       <div class="crusade-party-card">
         <div class="crusade-party-card-header">
-          <h3>Party ${slot} — ${rowsInParty.length}/${CRUSADE_PARTY_MAX_MEMBERS}</h3>
+          <h3>${t('sovereign.common.party')} ${slot} — ${rowsInParty.length}/${CRUSADE_PARTY_MAX_MEMBERS}</h3>
           <button type="button" class="icon-btn admin-only" data-add-to-party-slot="${slot}" title="Add to Party ${slot}" ${full ? 'disabled' : ''}>+</button>
         </div>
         <div class="table-scroll">
           <table class="members-table crusade-roster-table">
             <thead>
               <tr>
-                <th style="width:4%;">#</th><th style="width:20%;">Name</th><th>Guild</th><th class="crusade-roster-position-col">Position</th>
-                ${isDefense ? '' : '<th>Bid</th>'}
-                <th style="width:6%;">Enter</th>
-                <th>Attend</th>
-                ${isDefense ? '' : '<th>Share</th>'}
-                <th>Total</th>
-                <th class="admin-only" style="width:6%;">Paid</th><th class="admin-only" style="width:8%;"></th>
+                <th style="width:4%;">#</th><th style="width:20%;">${t('sovereign.common.name')}</th><th>${t('sovereign.common.guild')}</th><th class="crusade-roster-position-col">${t('sovereign.modal.positionLabel')}</th>
+                ${isDefense ? '' : `<th>${t('sovereign.roster.thBid')}</th>`}
+                <th style="width:6%;">${t('sovereign.roster.thEnter')}</th>
+                <th>${t('sovereign.roster.thAttend')}</th>
+                ${isDefense ? '' : `<th>${t('sovereign.roster.thShare')}</th>`}
+                <th>${t('sovereign.common.total')}</th>
+                <th class="admin-only" style="width:6%;">${t('sovereign.roster.thPaid')}</th><th class="admin-only" style="width:8%;"></th>
               </tr>
             </thead>
             <tbody>${memberRows}</tbody>
@@ -1026,7 +1035,7 @@ function openCrusadeParticipantModal(participantId, presetPartyNumber, presetPar
   const form = document.getElementById('crusadeParticipantForm');
   form.reset();
   const participant = participantId ? sovereignState.participants.find((p) => p.id === participantId) : null;
-  document.getElementById('crusadeParticipantModalTitle').textContent = participant ? 'Edit Participant' : 'Add Participant';
+  document.getElementById('crusadeParticipantModalTitle').textContent = participant ? t('sovereign.modal.editParticipantHeading') : t('sovereign.modal.addParticipantHeading');
   form.elements.participantId.value = participant ? participant.id : '';
   form.elements.name.value = participant ? participant.name : '';
   form.elements.guildName.value = participant ? participant.guildName || '' : '';
@@ -1334,7 +1343,7 @@ function renderTeamItemTable(n) {
   });
 
   document.getElementById('crusadeTeamItemTableHead').innerHTML =
-    `<th>#</th><th>Guild</th>${items.map((it) => `<th>${escapeHtml(it.name)}</th>`).join('')}<th>Members</th>`;
+    `<th>#</th><th>${t('sovereign.common.guild')}</th>${items.map((it) => `<th>${escapeHtml(crusadeItemLabel(it.name))}</th>`).join('')}<th>${t('sovereign.itemTable.members')}</th>`;
 
   const memberCountByGuild = new Map();
   teamParticipants.forEach((p) => {
@@ -1347,7 +1356,7 @@ function renderTeamItemTable(n) {
     const cells = shareByGuildPerItem.map((byGuild) => `<td>${crusadeFormatItemQty(byGuild.get(guildName) || 0)}</td>`).join('');
     return `<tr>
       <td>${i + 1}</td>
-      <td style="font-weight:600; ${color ? `color:${color};` : ''}">${escapeHtml(guildName)}</td>
+      <td style="font-weight:600; ${color ? `color:${color};` : ''}">${guildName === 'Unassigned' ? t('sovereign.common.unassigned') : escapeHtml(guildName)}</td>
       ${cells}
       <td>${memberCountByGuild.get(guildName)}</td>
     </tr>`;
@@ -1356,7 +1365,7 @@ function renderTeamItemTable(n) {
   const totalCells = shareByGuildPerItem
     .map((byGuild) => `<td>${crusadeFormatItemQty(Array.from(byGuild.values()).reduce((sum, v) => sum + v, 0))}</td>`)
     .join('');
-  rows.push(`<tr class="crusade-table-total-row"><td></td><td>Total</td>${totalCells}<td>${teamParticipants.length}</td></tr>`);
+  rows.push(`<tr class="crusade-table-total-row"><td></td><td>${t('sovereign.common.total')}</td>${totalCells}<td>${teamParticipants.length}</td></tr>`);
 
   document.getElementById('crusadeTeamItemTableBody').innerHTML = rows.join('');
 }
@@ -1370,7 +1379,7 @@ function renderCrusadeItemList(n) {
     .map(
       (item) => `
     <li style="display:flex; gap:8px; align-items:center;" data-item-id="${item.id}">
-      <span style="flex:1;">${escapeHtml(item.name)}</span>
+      <span style="flex:1;">${escapeHtml(crusadeItemLabel(item.name))}</span>
       <span style="color:var(--text-muted);">${crusadeFormatItemQty(item.quantity)}</span>
       <button type="button" class="icon-btn admin-only" data-delete-item="${item.id}" title="Remove item">✕</button>
     </li>`
@@ -1581,16 +1590,17 @@ function renderCrusadeGuildSummary(rows, containerId, formatFn, extraByGuild) {
     .sort((a, b) => b[1].total - a[1].total)
     .map(([name, g]) => {
       const color = crusadeGuildColor(name) || 'var(--text-muted)';
+      const label = name === 'Unassigned' ? t('sovereign.common.unassigned') : escapeHtml(name);
       return `<div class="crusade-guild-summary-row">
         <span class="schedule-dot" style="background:${color}"></span>
-        <span style="flex:1;">${escapeHtml(name)}</span>
+        <span style="flex:1;">${label}</span>
         <span>${format(g.total)}</span>
-        <span style="color:var(--text-muted);">${g.count} member${g.count === 1 ? '' : 's'}</span>
+        <span style="color:var(--text-muted);">${g.count} ${g.count === 1 ? t('sovereign.common.member') : t('sovereign.common.members')}</span>
       </div>`;
     })
     .join('');
 
-  el.innerHTML = `${items}<div class="crusade-guild-summary-row crusade-guild-summary-total"><span style="flex:1;">Total</span><span>${format(grandTotal)}</span><span></span></div>`;
+  el.innerHTML = `${items}<div class="crusade-guild-summary-row crusade-guild-summary-total"><span style="flex:1;">${t('sovereign.common.total')}</span><span>${format(grandTotal)}</span><span></span></div>`;
 }
 
 // ---------- Member list (master roster, grouped by guild column) ----------
@@ -1635,7 +1645,8 @@ function renderMemberList() {
     guildKeys
       .map((g) => {
         const color = g === 'Unassigned' ? null : crusadeGuildColor(g);
-        return `<th style="${color ? `color:${color};` : ''}">${escapeHtml(g)} <span style="color:var(--text-muted); font-weight:400;">(${groups.get(g).length})</span></th>`;
+        const label = g === 'Unassigned' ? t('sovereign.common.unassigned') : escapeHtml(g);
+        return `<th style="${color ? `color:${color};` : ''}">${label} <span style="color:var(--text-muted); font-weight:400;">(${groups.get(g).length})</span></th>`;
       })
       .join('');
 
