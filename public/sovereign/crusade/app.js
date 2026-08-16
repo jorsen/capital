@@ -385,13 +385,15 @@ function populateSovereignMemberSuggestions() {
 }
 
 // Picking (or typing) a name that matches a known member auto-fills their
-// last-known guild -- only when Guild is still blank, so it never clobbers
-// a guild the admin already chose on purpose.
+// last-known guild and position -- only when each field is still blank, so
+// it never clobbers a guild/position the admin already chose on purpose.
 document.querySelector('#crusadeParticipantForm input[name="name"]').addEventListener('input', (e) => {
   const guildSelect = document.getElementById('crusadeParticipantGuildSelect');
-  if (guildSelect.value) return;
+  const positionInput = document.querySelector('#crusadeParticipantForm input[name="position"]');
   const match = sovereignState.memberList.find((m) => m.name.trim().toLowerCase() === e.target.value.trim().toLowerCase());
-  if (match && match.guildName) guildSelect.value = match.guildName;
+  if (!match) return;
+  if (!guildSelect.value && match.guildName) guildSelect.value = match.guildName;
+  if (!positionInput.value && match.position) positionInput.value = match.position;
 });
 
 // Same search-and-auto-fill-guild behavior for the Management Fee IGN field.
