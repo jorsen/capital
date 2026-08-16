@@ -833,9 +833,11 @@ select:focus, input:focus, textarea:focus {
    forced to fit its card's width with no horizontal scroll, even at ~10
    columns -- table-layout:fixed splits width evenly regardless of content,
    and cells wrap instead of forcing the table wider. */
-.crusade-roster-table { font-size: 11px !important; table-layout: fixed; width: 100%; }
+.crusade-roster-table { font-size: 13px !important; table-layout: fixed; width: 100%; }
 .crusade-roster-table th, .crusade-roster-table td { padding: 5px 4px !important; overflow-wrap: break-word; }
 .crusade-roster-table td { white-space: normal !important; }
+.crusade-roster-table .crusade-roster-name-cell { white-space: nowrap !important; overflow: hidden; text-overflow: ellipsis; }
+.crusade-roster-table .crusade-roster-actions-cell { white-space: nowrap !important; }
 .crusade-roster-table input[type="checkbox"] { width: 13px; height: 13px; }
 .crusade-roster-table .icon-btn { padding: 2px 4px; font-size: 11px; }
 .crusade-party-card-header .icon-btn:disabled { opacity: 0.35; cursor: not-allowed; }

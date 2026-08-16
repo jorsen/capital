@@ -773,7 +773,7 @@ function renderTeamDetail(n) {
         .map(
           ({ participant: p, attendanceAmount, bidShare, total }) => `
       <tr>
-        <td style="font-weight:600; white-space:nowrap;">${escapeHtml(p.name)}</td>
+        <td class="crusade-roster-name-cell" style="font-weight:600;">${escapeHtml(p.name)}</td>
         <td>${crusadeGuildBadge(p.guildName)}</td>
         <td>${p.position ? escapeHtml(p.position) : '–'}</td>
         <td>${crusadeFormatGold(p.goldBid)}</td>
@@ -782,7 +782,7 @@ function renderTeamDetail(n) {
         <td>${crusadeFormatDiamonds(bidShare)}</td>
         <td style="font-weight:600;">${crusadeFormatDiamonds(total)}</td>
         <td class="admin-only"><input type="checkbox" class="crusade-paid-check admin-disable" data-participant-id="${p.id}" ${p.paid ? 'checked' : ''}></td>
-        <td class="admin-only" style="white-space:nowrap;">
+        <td class="admin-only crusade-roster-actions-cell">
           <button type="button" class="icon-btn" data-edit-participant="${p.id}" title="Edit">✎</button>
           <button type="button" class="icon-btn" data-delete-participant="${p.id}" title="Remove">✕</button>
         </td>
