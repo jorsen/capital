@@ -783,7 +783,7 @@ function renderTeamDetail(n) {
         .map(
           ({ participant: p, attendanceAmount, bidShare, total }) => `
       <tr>
-        <td class="crusade-roster-name-cell" style="font-weight:600;">${escapeHtml(p.name)}</td>
+        <td class="crusade-roster-name-cell" style="font-weight:600;"><span class="crusade-roster-name-click" data-edit-participant="${p.id}" title="Click to edit">${escapeHtml(p.name)}</span></td>
         <td>${crusadeGuildBadge(p.guildName)}</td>
         <td>${p.position ? escapeHtml(p.position) : '–'}</td>
         <td>${crusadeFormatGold(p.goldBid)}</td>
