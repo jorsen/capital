@@ -783,15 +783,21 @@ function renderCrusadeGuildTotals(guilds) {
   document.getElementById('crusadeGuildTotalsEmptyState').classList.toggle('hidden', guilds.length !== 0);
 
   document.getElementById('crusadeGuildTotalsBody').innerHTML = guilds
-    .map(
-      (g, i) => `
+    .map((g, i) => {
+      const salary = g.entries.reduce((sum, e) => sum + e.salary, 0);
+      const feeAmount = g.entries.reduce((sum, e) => sum + e.feeAmount, 0);
+      const bonusShare = g.entries.reduce((sum, e) => sum + e.bonusShare, 0);
+      return `
     <tr>
       <td>${i + 1}</td>
       <td style="font-weight:600;">${g.name === 'Unassigned' ? 'Unassigned' : crusadeGuildBadge(g.name)}</td>
-      <td>${crusadeFormatDiamonds(g.total)}</td>
+      <td>${crusadeFormatDiamonds(salary)}</td>
+      <td>${crusadeFormatDiamonds(feeAmount)}</td>
+      <td>${crusadeFormatDiamonds(bonusShare)}</td>
+      <td style="font-weight:600;">${crusadeFormatDiamonds(g.total)}</td>
       ${CRUSADE_SUMMARY_ITEM_NAMES.map((name) => `<td>${crusadeFormatItemQty(g.entries.reduce((sum, e) => sum + e.itemTotals[name], 0))}</td>`).join('')}
-    </tr>`
-    )
+    </tr>`;
+    })
     .join('');
 }
 
