@@ -802,21 +802,10 @@ select:focus, input:focus, textarea:focus {
   .crusade-party-grid { grid-template-columns: 1fr; }
 }
 
-/* Last Crusade's Bidders: same side-by-side idea as .crusade-party-grid,
-   but each card only holds a narrow 5-column table (IGN/Guild/Bid/Bonus),
-   so it stays 2-up down to a much narrower width before stacking. */
-.crusade-bidders-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-}
-@media (max-width: 640px) {
-  .crusade-bidders-grid { grid-template-columns: 1fr; }
-}
-
-/* Within a single bidders card, split one long list into two side-by-side
-   mini-tables (numbered continuously) instead of leaving half the card
-   empty when there's only one card in the outer grid above. */
+/* Each bidders card is full width (its container is .crusade-team-salary-
+   list, a plain stacked flex column), with its own list split into two
+   side-by-side mini-tables (numbered continuously) instead of one long
+   column with the rest of the card's width sitting empty. */
 .crusade-bidders-columns {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
