@@ -438,7 +438,19 @@ function populateTeamDetailsForm(teamNumber) {
   form.elements.diamondReward.value = t.diamondReward || 0;
   form.elements.attendancePct.value = t.attendancePct ?? 50;
   form.elements.notes.value = t.notes || '';
+  updateTeamDetailsStanceUI(form.elements.stance.value);
 }
+
+// No bidding while defending, so the Attendance Share % field (which only
+// exists to split a pool between attendance and bid) is meaningless for a
+// Defense team -- hide it rather than leave a control that does nothing.
+function updateTeamDetailsStanceUI(stance) {
+  document.querySelector('.crusade-attendance-pct-field').classList.toggle('hidden', stance === 'Defense');
+}
+
+document.querySelector('#teamDetailsForm select[name="stance"]').addEventListener('change', (e) => {
+  updateTeamDetailsStanceUI(e.target.value);
+});
 
 function populateCrusadeGuildSelect() {
   const options = '<option value="">—</option>' + sovereignState.guilds.map((g) => `<option value="${escapeHtml(g.name)}">${escapeHtml(g.name)}</option>`).join('');
@@ -681,6 +693,7 @@ function computeTeamGuildSalaryDetail(teamNumber) {
     });
   }
 
+  const isDefense = isDefenseStance(team);
   return Array.from(byGuild.entries())
     .map(([name, entries]) => ({
       name,
@@ -688,6 +701,7 @@ function computeTeamGuildSalaryDetail(teamNumber) {
       memberCount: entries.filter((e) => !e.isFee && !e.isBonus).length,
       total: entries.reduce((sum, e) => sum + e.salary, 0),
       itemTotals: items.map((_, i) => entries.reduce((sum, e) => sum + (e.itemShares[i] || 0), 0)),
+      isDefense,
     }))
     .sort((a, b) => b.total - a.total);
 }
@@ -711,7 +725,7 @@ function renderTeamGuildSalaryCard(g, itemNames) {
       return `
     <tr>
       <td style="font-weight:600;"><div style="white-space:nowrap;">${escapeHtml(e.name)}</div>${tagLabel}</td>
-      <td>${e.goldBid === null ? '–' : crusadeFormatGold(e.goldBid)}</td>
+      ${g.isDefense ? '' : `<td>${e.goldBid === null ? '–' : crusadeFormatGold(e.goldBid)}</td>`}
       <td>${e.attended === null ? '–' : e.attended ? '✓' : '✗'}</td>
       <td>${crusadeFormatDiamonds(e.salary)}</td>
       ${itemCells}
@@ -719,7 +733,7 @@ function renderTeamGuildSalaryCard(g, itemNames) {
     })
     .join('');
   const totalRow = itemNames.length
-    ? `<tr class="crusade-table-total-row"><td>Total</td><td></td><td></td><td>${crusadeFormatDiamonds(g.total)}</td>${itemNames
+    ? `<tr class="crusade-table-total-row"><td>Total</td>${g.isDefense ? '' : '<td></td>'}<td></td><td>${crusadeFormatDiamonds(g.total)}</td>${itemNames
         .map((_, i) => `<td>${crusadeFormatItemQty(g.itemTotals[i])}</td>`)
         .join('')}</tr>`
     : '';
@@ -730,7 +744,7 @@ function renderTeamGuildSalaryCard(g, itemNames) {
     </div>
     <div class="table-scroll">
       <table class="members-table">
-        <thead><tr><th>IGN</th><th>Max Bid</th><th>Present</th><th>Salary</th>${itemNames.map((name) => `<th>${escapeHtml(name)}</th>`).join('')}</tr></thead>
+        <thead><tr><th>IGN</th>${g.isDefense ? '' : '<th>Max Bid</th>'}<th>Present</th><th>Salary</th>${itemNames.map((name) => `<th>${escapeHtml(name)}</th>`).join('')}</tr></thead>
         <tbody>${rows}${totalRow}</tbody>
       </table>
     </div>
@@ -830,6 +844,7 @@ function renderTeamDetail(n) {
   document.title = `Sovereign — ${sovereignState.crusade.name} — Team ${n}`;
 
   const team = getTeamData(n);
+  const isDefense = isDefenseStance(team); // no bidding while defending, so the roster skips Bid/Share entirely
   const { value: statusValue, label: statusLabel } = crusadeStatusLabel(team.result);
   const statusBadge = document.getElementById('crusadeTeamStatusBadge');
   statusBadge.className = `crusade-status-badge ${statusValue}`;
@@ -862,10 +877,10 @@ function renderTeamDetail(n) {
         <td class="crusade-roster-name-cell" style="font-weight:600;"><span class="crusade-roster-name-click" data-edit-participant="${p.id}" title="Click to edit">${escapeHtml(p.name)}</span></td>
         <td>${crusadeGuildBadge(p.guildName)}</td>
         <td class="crusade-roster-position-col">${p.position ? escapeHtml(p.position) : '–'}</td>
-        <td>${crusadeFormatGold(p.goldBid)}</td>
+        ${isDefense ? '' : `<td>${crusadeFormatGold(p.goldBid)}</td>`}
         <td><input type="checkbox" class="crusade-attended-check admin-disable" data-participant-id="${p.id}" ${p.attended ? 'checked' : ''}></td>
         <td>${crusadeFormatDiamonds(attendanceAmount)}</td>
-        <td>${crusadeFormatDiamonds(bidShare)}</td>
+        ${isDefense ? '' : `<td>${crusadeFormatDiamonds(bidShare)}</td>`}
         <td style="font-weight:600;">${crusadeFormatDiamonds(total)}</td>
         <td class="admin-only"><input type="checkbox" class="crusade-paid-check admin-disable" data-participant-id="${p.id}" ${p.paid ? 'checked' : ''}></td>
         <td class="admin-only crusade-roster-actions-cell">
@@ -885,8 +900,12 @@ function renderTeamDetail(n) {
           <table class="members-table crusade-roster-table">
             <thead>
               <tr>
-                <th style="width:20%;">Name</th><th>Guild</th><th class="crusade-roster-position-col">Position</th><th>Bid</th><th style="width:6%;">Enter</th>
-                <th>Attend</th><th>Share</th><th>Total</th>
+                <th style="width:20%;">Name</th><th>Guild</th><th class="crusade-roster-position-col">Position</th>
+                ${isDefense ? '' : '<th>Bid</th>'}
+                <th style="width:6%;">Enter</th>
+                <th>Attend</th>
+                ${isDefense ? '' : '<th>Share</th>'}
+                <th>Total</th>
                 <th class="admin-only" style="width:6%;">Paid</th><th class="admin-only" style="width:8%;"></th>
               </tr>
             </thead>
@@ -965,7 +984,9 @@ function openCrusadeParticipantModal(participantId, presetPartyNumber, presetPar
   const teamNumber = participant ? participant.partyNumber : presetPartyNumber || nextTeamNumber();
   form.elements.partyNumber.value = teamNumber;
   form.elements.partySlot.value = participant ? participant.partySlot : presetPartySlot || nextAvailablePartySlot(teamNumber);
-  form.elements.goldBid.value = participant ? participant.goldBid : 30000000;
+  const noBidding = isDefenseStance(getTeamData(teamNumber));
+  form.elements.goldBid.value = noBidding ? 0 : participant ? participant.goldBid : 30000000;
+  form.querySelector('.crusade-goldbid-field').classList.toggle('hidden', noBidding);
   form.elements.attended.checked = participant ? participant.attended : true;
   document.getElementById('crusadeParticipantModal').classList.remove('hidden');
 }
@@ -1029,7 +1050,9 @@ function openCrusadeBulkAddModal(presetPartyNumber) {
   const teamNumber = presetPartyNumber || nextTeamNumber();
   form.elements.partyNumber.value = teamNumber;
   form.elements.partySlot.value = nextAvailablePartySlot(teamNumber);
-  form.elements.goldBid.value = 30000000;
+  const noBidding = isDefenseStance(getTeamData(teamNumber));
+  form.elements.goldBid.value = noBidding ? 0 : 30000000;
+  form.querySelector('.crusade-goldbid-field').classList.toggle('hidden', noBidding);
   renderCrusadeBulkResults();
   renderCrusadeBulkSelected();
   document.getElementById('crusadeBulkAddModal').classList.remove('hidden');
@@ -1155,11 +1178,19 @@ function isTeamDefenseWin(team) {
   return !!(team && team.stance === 'Defense' && team.result === 'win');
 }
 
+// Defending doesn't involve gold bids at all -- there's no attack roll to
+// buy a spot on, so a Defense team's own-roster pool is 100% attendance,
+// regardless of whatever Attendance Share % happens to be saved.
+function isDefenseStance(team) {
+  return !!(team && team.stance === 'Defense');
+}
+
 // Half a team's (post-fee, post-defense-split) reward splits evenly across
 // everyone on that team who attended; the other half splits across that
 // team's gold bidders in proportion to their bid — this collapses to an
 // equal split when every bidder bids the same amount (the common case), and
-// scales fairly when bids differ.
+// scales fairly when bids differ. Defense teams skip the bid split entirely
+// (see isDefenseStance) since there's no bidding to divide.
 function computeTeamDistribution(teamNumber) {
   const team = getTeamData(teamNumber);
   const participants = sovereignState.participants.filter((p) => p.partyNumber === teamNumber);
@@ -1169,8 +1200,9 @@ function computeTeamDistribution(teamNumber) {
 
   const netReward = Math.max(0, team.diamondReward - totalTeamFeeAmount(team));
   const ownPool = isTeamDefenseWin(team) ? netReward * 0.6 : netReward;
-  const attendancePool = ownPool * (team.attendancePct / 100);
-  const bidPool = ownPool - attendancePool;
+  const noBidding = isDefenseStance(team);
+  const attendancePool = noBidding ? ownPool : ownPool * (team.attendancePct / 100);
+  const bidPool = noBidding ? 0 : ownPool - attendancePool;
 
   const attendees = participants.filter((p) => p.attended);
   const attendanceShare = attendees.length ? attendancePool / attendees.length : 0;
@@ -1178,7 +1210,7 @@ function computeTeamDistribution(teamNumber) {
 
   return participants.map((p) => {
     const attendanceAmount = p.attended ? attendanceShare : 0;
-    const bidShare = p.goldBid > 0 && totalBid > 0 ? bidPool * (p.goldBid / totalBid) : 0;
+    const bidShare = !noBidding && p.goldBid > 0 && totalBid > 0 ? bidPool * (p.goldBid / totalBid) : 0;
     return { participant: p, attendanceAmount, bidShare, total: attendanceAmount + bidShare };
   });
 }
