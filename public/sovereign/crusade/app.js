@@ -196,9 +196,8 @@ function renderCrusadeList() {
   const crusades = sovereignState.crusades;
   empty.classList.toggle('hidden', crusades.length !== 0);
 
-  body.innerHTML = crusades
-    .map(
-      (c, i) => `
+  const rows = crusades.map(
+    (c, i) => `
     <tr>
       <td>${i + 1}</td>
       <td><a href="#crusade/${c.id}" style="font-weight:600;">${c.eventDate ? escapeHtml(formatLongDate(String(c.eventDate).slice(0, 10))) : t('sovereign.common.noDateSet')}</a></td>
@@ -207,8 +206,19 @@ function renderCrusadeList() {
       <td>${crusadeFormatDiamonds(c.netDiamondReward)}</td>
       <td class="admin-only"><button type="button" class="icon-btn" data-delete-crusade="${c.id}" title="Delete crusade">✕</button></td>
     </tr>`
-    )
-    .join('');
+  );
+
+  // Grand total across every crusade -- same columns, no per-row actions.
+  const totalRow = crusades.length
+    ? `<tr class="crusade-table-total-row"><td></td><td>${t('sovereign.common.total')}</td><td>${crusades.reduce(
+        (sum, c) => sum + c.participantCount,
+        0
+      )}</td><td>${crusadeFormatDiamonds(crusades.reduce((sum, c) => sum + c.feeDiamonds, 0))}</td><td>${crusadeFormatDiamonds(
+        crusades.reduce((sum, c) => sum + c.netDiamondReward, 0)
+      )}</td><td class="admin-only"></td></tr>`
+    : '';
+
+  body.innerHTML = rows.join('') + totalRow;
 
   body.querySelectorAll('[data-delete-crusade]').forEach((btn) => {
     btn.addEventListener('click', async () => {
