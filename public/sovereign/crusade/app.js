@@ -768,8 +768,11 @@ function renderLastCrusadeBidders() {
     .map((teamNumber) => {
       const team = getTeamData(teamNumber);
       const bidders = team.lastTeamBidders || [];
-      if (!bidders.length) return null;
       const { perBidder } = computeTeamBonusShares(teamNumber);
+      // No bonus share at all (this team isn't a Defense win, or it lost)
+      // means there's nothing to actually pay out -- skip the card entirely
+      // rather than showing a table full of 0s.
+      if (!bidders.length || perBidder <= 0) return null;
       const lastTeam = team.lastTeam;
       const sourceText = lastTeam
         ? `${lastTeam.crusadeName} Team ${lastTeam.teamNumber} — ${lastTeam.eventDate ? formatLongDate(String(lastTeam.eventDate).slice(0, 10)) : 'No date set'}`
