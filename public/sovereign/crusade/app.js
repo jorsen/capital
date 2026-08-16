@@ -580,6 +580,7 @@ function renderTeamList() {
       <tr>
         <td><a href="#crusade/${sovereignState.crusadeId}/team/${n}" style="font-weight:600;">Team ${n}</a></td>
         <td>${crusadeStatusBadge(team.result)}</td>
+        <td>${team.stance ? escapeHtml(team.stance) : '–'}</td>
         <td>${count}</td>
         <td>${crusadeFormatDiamonds(diamonds)}</td>
       </tr>`;
