@@ -782,12 +782,11 @@ function renderCrusadeGuildSalary() {
 function renderCrusadeGuildTotals(guilds) {
   document.getElementById('crusadeGuildTotalsEmptyState').classList.toggle('hidden', guilds.length !== 0);
 
-  document.getElementById('crusadeGuildTotalsBody').innerHTML = guilds
-    .map((g, i) => {
-      const salary = g.entries.reduce((sum, e) => sum + e.salary, 0);
-      const feeAmount = g.entries.reduce((sum, e) => sum + e.feeAmount, 0);
-      const bonusShare = g.entries.reduce((sum, e) => sum + e.bonusShare, 0);
-      return `
+  const rows = guilds.map((g, i) => {
+    const salary = g.entries.reduce((sum, e) => sum + e.salary, 0);
+    const feeAmount = g.entries.reduce((sum, e) => sum + e.feeAmount, 0);
+    const bonusShare = g.entries.reduce((sum, e) => sum + e.bonusShare, 0);
+    return `
     <tr>
       <td>${i + 1}</td>
       <td style="font-weight:600;">${g.name === 'Unassigned' ? 'Unassigned' : crusadeGuildBadge(g.name)}</td>
@@ -797,8 +796,23 @@ function renderCrusadeGuildTotals(guilds) {
       <td style="font-weight:600;">${crusadeFormatDiamonds(g.total)}</td>
       ${CRUSADE_SUMMARY_ITEM_NAMES.map((name) => `<td>${crusadeFormatItemQty(g.entries.reduce((sum, e) => sum + e.itemTotals[name], 0))}</td>`).join('')}
     </tr>`;
-    })
-    .join('');
+  });
+
+  // Grand total across every guild -- same columns, no guild badge.
+  const allEntries = guilds.flatMap((g) => g.entries);
+  const grandSalary = allEntries.reduce((sum, e) => sum + e.salary, 0);
+  const grandFeeAmount = allEntries.reduce((sum, e) => sum + e.feeAmount, 0);
+  const grandBonusShare = allEntries.reduce((sum, e) => sum + e.bonusShare, 0);
+  const grandTotal = guilds.reduce((sum, g) => sum + g.total, 0);
+  const totalRow = guilds.length
+    ? `<tr class="crusade-table-total-row"><td></td><td>Total</td><td>${crusadeFormatDiamonds(grandSalary)}</td><td>${crusadeFormatDiamonds(
+        grandFeeAmount
+      )}</td><td>${crusadeFormatDiamonds(grandBonusShare)}</td><td>${crusadeFormatDiamonds(grandTotal)}</td>${CRUSADE_SUMMARY_ITEM_NAMES.map(
+        (name) => `<td>${crusadeFormatItemQty(allEntries.reduce((sum, e) => sum + e.itemTotals[name], 0))}</td>`
+      ).join('')}</tr>`
+    : '';
+
+  document.getElementById('crusadeGuildTotalsBody').innerHTML = rows.join('') + totalRow;
 }
 
 // Every team is its own independent battle now, so each team's Defense
