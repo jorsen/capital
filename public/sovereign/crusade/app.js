@@ -782,7 +782,7 @@ function renderLastCrusadeBidders() {
       if (!bidders.length || perBidder <= 0) return null;
       const lastTeam = team.lastTeam;
       const sourceText = lastTeam
-        ? `${lastTeam.crusadeName} Team ${lastTeam.teamNumber} — ${lastTeam.eventDate ? formatLongDate(String(lastTeam.eventDate).slice(0, 10)) : 'No date set'}`
+        ? `${lastTeam.crusadeName} — ${lastTeam.eventDate ? formatLongDate(String(lastTeam.eventDate).slice(0, 10)) : 'No date set'}`
         : '';
 
       const rows = bidders
