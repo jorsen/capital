@@ -1426,6 +1426,41 @@ document.getElementById('applyCrusadeDefaultFeesBtn').addEventListener('click', 
   }
 });
 
+// Same as Apply Defaults, but for every team on this crusade at once --
+// makes sure no team gets left out just because it existed before a
+// default fee was added. Each team is applied independently (skipping IGNs
+// it already has), so it's safe to run again even if some teams already
+// have everything.
+document.getElementById('applyCrusadeDefaultFeesAllTeamsBtn').addEventListener('click', async () => {
+  const teamNumbers = visibleTeamNumbers();
+  if (!confirm(`Apply the standing default fees to all ${teamNumbers.length} team${teamNumbers.length === 1 ? '' : 's'} on this crusade?`)) return;
+
+  let totalAdded = 0;
+  let teamsChanged = 0;
+  try {
+    for (const n of teamNumbers) {
+      const added = await api(`/api/crusades/${sovereignState.crusadeId}/teams/${n}/apply-default-fees`, { method: 'POST' });
+      if (!added.length) continue;
+      let team = sovereignState.teams.find((t) => t.teamNumber === n);
+      if (!team) {
+        team = { ...defaultTeamData(n), id: added[0].teamId };
+        sovereignState.teams.push(team);
+      }
+      team.fees.push(...added);
+      totalAdded += added.length;
+      teamsChanged += 1;
+    }
+    refreshAfterRosterChange(); // fees change each affected team's pool, so recompute whatever's currently visible
+    toast(
+      totalAdded
+        ? `Applied ${totalAdded} default fee${totalAdded === 1 ? '' : 's'} across ${teamsChanged} team${teamsChanged === 1 ? '' : 's'}`
+        : 'Nothing to apply — every team already has every standing default fee'
+    );
+  } catch (err) {
+    toast(err.message);
+  }
+});
+
 // extraByGuild optionally adds a flat amount to a guild's total without
 // counting as a member — used to fold management fees into the guild that
 // the fee's IGN belongs to, even though the fee isn't itself a participant.
