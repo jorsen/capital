@@ -1398,6 +1398,30 @@ document.getElementById('addCrusadeFeeForm').addEventListener('submit', async (e
   }
 });
 
+// Copies the standing default fees onto THIS team -- for teams that already
+// existed before a default was added (ensureCrusadeTeam only auto-seeds
+// brand-new teams). Skips any default already on this team's fee list.
+document.getElementById('applyCrusadeDefaultFeesBtn').addEventListener('click', async () => {
+  const n = sovereignState.activeTeam;
+  try {
+    const added = await api(`/api/crusades/${sovereignState.crusadeId}/teams/${n}/apply-default-fees`, { method: 'POST' });
+    if (!added.length) {
+      toast('Nothing to apply — this team already has every standing default fee');
+      return;
+    }
+    let team = sovereignState.teams.find((t) => t.teamNumber === n);
+    if (!team) {
+      team = { ...defaultTeamData(n), id: added[0].teamId };
+      sovereignState.teams.push(team);
+    }
+    team.fees.push(...added);
+    renderTeamDetail(n); // new fees change this team's pool, so recompute (also re-renders this list)
+    toast(`Applied ${added.length} default fee${added.length === 1 ? '' : 's'}`);
+  } catch (err) {
+    toast(err.message);
+  }
+});
+
 // extraByGuild optionally adds a flat amount to a guild's total without
 // counting as a member — used to fold management fees into the guild that
 // the fee's IGN belongs to, even though the fee isn't itself a participant.

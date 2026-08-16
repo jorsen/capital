@@ -212,7 +212,10 @@
       <section class="panel">
         <div class="view-header space-between" style="margin-bottom:6px;">
           <h2 style="margin:0;">Management Fees</h2>
-          <button id="manageCrusadeDefaultFeesBtn" type="button" class="btn small admin-only">Manage Default Fees</button>
+          <div style="display:flex; gap:8px;">
+            <button id="applyCrusadeDefaultFeesBtn" type="button" class="btn small admin-only">Apply Defaults</button>
+            <button id="manageCrusadeDefaultFeesBtn" type="button" class="btn small admin-only">Manage Default Fees</button>
+          </div>
         </div>
         <p style="color:var(--text-muted); font-size:13px; margin:0 0 10px;">Each fee takes a percentage of this team's diamond reward off the top, before the rest is split by attendance/bid.</p>
         <ul id="crusadeFeeList" style="list-style:none; padding:0; margin:0 0 12px; display:flex; flex-direction:column; gap:8px;"></ul>
@@ -454,6 +457,6 @@
   <div id="toast" class="toast hidden"></div>
 
   <script src="/common.js?v=35"></script>
-  <script src="/sovereign/crusade/app.js?v=57"></script>
+  <script src="/sovereign/crusade/app.js?v=58"></script>
 </body>
 </html>
