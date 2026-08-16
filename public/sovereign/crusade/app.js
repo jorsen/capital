@@ -394,6 +394,14 @@ document.querySelector('#crusadeParticipantForm input[name="name"]').addEventLis
   if (match && match.guildName) guildSelect.value = match.guildName;
 });
 
+// Same search-and-auto-fill-guild behavior for the Management Fee IGN field.
+document.querySelector('#addCrusadeFeeForm input[name="name"]').addEventListener('input', (e) => {
+  const guildSelect = document.getElementById('crusadeFeeGuildSelect');
+  if (guildSelect.value) return;
+  const match = sovereignState.memberList.find((m) => m.name.trim().toLowerCase() === e.target.value.trim().toLowerCase());
+  if (match && match.guildName) guildSelect.value = match.guildName;
+});
+
 document.getElementById('crusadeInfoForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const form = e.target;

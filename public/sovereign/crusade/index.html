@@ -213,7 +213,7 @@
         <p id="crusadeFeeListEmptyState" class="empty-state hidden">No management fees added yet.</p>
         <form id="addCrusadeFeeForm" class="admin-only" style="display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end;">
           <label style="flex:1; min-width:140px;"><span>IGN</span>
-            <input type="text" name="name" maxlength="40" placeholder="e.g. GuildLeaderIGN" required>
+            <input type="text" name="name" maxlength="40" placeholder="Search the member list…" list="sovereignMemberSuggestions" autocomplete="off" required>
           </label>
           <label style="flex:1; min-width:120px;"><span>Guild</span>
             <select name="guildName" id="crusadeFeeGuildSelect">
@@ -424,6 +424,6 @@
   <div id="toast" class="toast hidden"></div>
 
   <script src="/common.js?v=35"></script>
-  <script src="/sovereign/crusade/app.js?v=50"></script>
+  <script src="/sovereign/crusade/app.js?v=51"></script>
 </body>
 </html>
