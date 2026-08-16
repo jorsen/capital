@@ -195,7 +195,12 @@
         <p id="crusadeItemListEmptyState" class="empty-state hidden">No items added yet.</p>
         <form id="addCrusadeItemForm" class="admin-only" style="display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end;">
           <label style="flex:1; min-width:140px;"><span>Item Name</span>
-            <input type="text" name="name" maxlength="40" placeholder="e.g. Morion" required>
+            <select name="name" required>
+              <option value="" disabled selected>—</option>
+              <option value="Alluvial Gold Pouch">Alluvial Gold Pouch</option>
+              <option value="Guild Coins">Guild Coins</option>
+              <option value="Morions">Morions</option>
+            </select>
           </label>
           <label style="flex:1; min-width:120px;"><span>Quantity</span>
             <input type="number" name="quantity" min="0" step="1" placeholder="e.g. 215" required>
