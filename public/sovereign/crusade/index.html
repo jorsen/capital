@@ -133,6 +133,27 @@
       </div>
 
       <section class="panel">
+        <h2>Guild Totals</h2>
+        <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;">Every guild's grand total for this crusade — diamonds plus each known item, summed across every one of that guild's players.</p>
+        <div class="table-scroll">
+          <table class="members-table">
+            <thead>
+              <tr>
+                <th style="width:6%;">#</th>
+                <th>Guild</th>
+                <th>Total Diamonds</th>
+                <th>Morions</th>
+                <th>Guild Coins</th>
+                <th>Alluvial Gold Pouch</th>
+              </tr>
+            </thead>
+            <tbody id="crusadeGuildTotalsBody"></tbody>
+          </table>
+        </div>
+        <p id="crusadeGuildTotalsEmptyState" class="empty-state hidden">No participants on this crusade yet.</p>
+      </section>
+
+      <section class="panel">
         <h2>Crusade Salary</h2>
         <p id="crusadeGuildSalaryMeta" style="color:var(--text-muted); font-size:13px; margin-top:-8px;"></p>
         <p style="color:var(--text-muted); font-size:13px;">Every player's accumulated totals across every team on this crusade, grouped by guild — one row per player, not one per team.</p>
@@ -461,6 +482,6 @@
   <div id="toast" class="toast hidden"></div>
 
   <script src="/common.js?v=35"></script>
-  <script src="/sovereign/crusade/app.js?v=71"></script>
+  <script src="/sovereign/crusade/app.js?v=72"></script>
 </body>
 </html>

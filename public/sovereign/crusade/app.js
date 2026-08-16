@@ -632,8 +632,7 @@ function computeCrusadeGuildSalaryDetail() {
         present: 0,
         teamsCount: 0,
         salary: 0,
-        feePercent: 0,
-        feeAmount: 0,
+        hasFee: false,
         bonusShare: 0,
         itemTotals: Object.fromEntries(CRUSADE_SUMMARY_ITEM_NAMES.map((name) => [name, 0])),
       });
@@ -666,19 +665,15 @@ function computeCrusadeGuildSalaryDetail() {
     });
 
     // Management fees fold into a matching roster row by name (case-
-    // insensitive), kept in their own Fee %/Fee Amount columns rather than
-    // mixed into Salary -- a recurring 2.5% fee applied across 3 fights
-    // this crusade shows as a combined 7.5% and its total diamond amount,
-    // not three separate lines. A fee with no guild picked falls back to
-    // "Unassigned" (same as participants/bonus bidders below) instead of
-    // being silently dropped from the total. If there's no matching roster
-    // row (on any team), the fee just gets its own fee-only entry
-    // (isParticipant stays false, decided once every team has been
-    // processed).
+    // insensitive) -- if there's no matching row (on any team), the fee
+    // just gets its own fee-only entry (isParticipant stays false, decided
+    // once every team has been processed). A fee with no guild picked
+    // falls back to "Unassigned" (same as participants/bonus bidders
+    // below) instead of being silently dropped from the total.
     (team.fees || []).forEach((fee) => {
       const entry = ensureEntry(fee.guildName || 'Unassigned', fee.name.trim().toLowerCase(), fee.name);
-      entry.feePercent += Number(fee.percent) || 0;
-      entry.feeAmount += crusadeFeeAmount(fee, team);
+      entry.salary += crusadeFeeAmount(fee, team);
+      entry.hasFee = true;
     });
 
     // Defense-win bonus, credited by name/guild to whoever bid gold on the
@@ -696,7 +691,7 @@ function computeCrusadeGuildSalaryDetail() {
   return Array.from(byGuild.entries())
     .map(([name, players]) => {
       const entries = Array.from(players.values())
-        .map((e) => ({ ...e, total: e.salary + e.feeAmount + e.bonusShare }))
+        .map((e) => ({ ...e, total: e.salary + e.bonusShare }))
         .sort((a, b) => b.total - a.total);
       return {
         name,
@@ -708,28 +703,24 @@ function computeCrusadeGuildSalaryDetail() {
     .sort((a, b) => b.total - a.total);
 }
 
-// One row per player: IGN / Max Bid / Present / Salary / Fee % / Fee Amount /
-// Bonus Share / Total Salary / one column per known item (see
-// CRUSADE_SUMMARY_ITEM_NAMES). Fee % and Fee Amount are each summed across
-// every fee applied to that player on any team this crusade -- a recurring
-// 2.5% fee applied to 3 fights shows as a combined 7.5% and its total
-// diamond amount, not three separate numbers.
+// One row per player: IGN / Max Bid / Present / Salary / Bonus Share /
+// Total Salary / one column per known item (see CRUSADE_SUMMARY_ITEM_NAMES).
 function renderPlayerSalaryCard(g) {
   const rows = g.entries
     .map((e, i) => {
       const itemCells = CRUSADE_SUMMARY_ITEM_NAMES.map((name) => `<td>${crusadeFormatItemQty(e.itemTotals[name])}</td>`).join('');
+      const tagLabel = e.hasFee
+        ? `<div style="font-weight:400; font-size:11px; color:var(--text-muted); white-space:nowrap;">${e.isParticipant ? '(+ management fee)' : '(management fee)'}</div>`
+        : '';
       const presentCell = e.isParticipant ? `${e.present}/${e.teamsCount}` : '–';
       const maxBidCell = !e.isParticipant ? '–' : !e.hasAttackTeam ? 'DEF' : crusadeFormatGold(e.maxBid);
-      const feePercentCell = e.feePercent > 0 ? `${e.feePercent}%` : '–';
       return `
     <tr>
       <td>${i + 1}</td>
-      <td style="font-weight:600;"><div style="white-space:nowrap;">${escapeHtml(e.name)}</div></td>
+      <td style="font-weight:600;"><div style="white-space:nowrap;">${escapeHtml(e.name)}</div>${tagLabel}</td>
       <td>${maxBidCell}</td>
       <td>${presentCell}</td>
       <td>${crusadeFormatDiamonds(e.salary)}</td>
-      <td>${feePercentCell}</td>
-      <td>${crusadeFormatDiamonds(e.feeAmount)}</td>
       <td>${crusadeFormatDiamonds(e.bonusShare)}</td>
       <td style="font-weight:600;">${crusadeFormatDiamonds(e.total)}</td>
       ${itemCells}
@@ -738,9 +729,7 @@ function renderPlayerSalaryCard(g) {
     .join('');
   const totalRow = `<tr class="crusade-table-total-row"><td></td><td>Total</td><td></td><td></td><td>${crusadeFormatDiamonds(
     g.entries.reduce((sum, e) => sum + e.salary, 0)
-  )}</td><td></td><td>${crusadeFormatDiamonds(g.entries.reduce((sum, e) => sum + e.feeAmount, 0))}</td><td>${crusadeFormatDiamonds(
-    g.entries.reduce((sum, e) => sum + e.bonusShare, 0)
-  )}</td><td>${crusadeFormatDiamonds(g.total)}</td>${CRUSADE_SUMMARY_ITEM_NAMES.map(
+  )}</td><td>${crusadeFormatDiamonds(g.entries.reduce((sum, e) => sum + e.bonusShare, 0))}</td><td>${crusadeFormatDiamonds(g.total)}</td>${CRUSADE_SUMMARY_ITEM_NAMES.map(
     (name) => `<td>${crusadeFormatItemQty(g.entries.reduce((sum, e) => sum + e.itemTotals[name], 0))}</td>`
   ).join('')}</tr>`;
   return `
@@ -750,7 +739,7 @@ function renderPlayerSalaryCard(g) {
     </div>
     <div class="table-scroll">
       <table class="members-table">
-        <thead><tr><th>#</th><th>IGN</th><th>Max Bid</th><th>Present</th><th>Salary</th><th>Fee %</th><th>Fee Amount</th><th>Bonus Share</th><th>Total Salary</th>${CRUSADE_SUMMARY_ITEM_NAMES.map((name) => `<th>${escapeHtml(name)}</th>`).join('')}</tr></thead>
+        <thead><tr><th>#</th><th>IGN</th><th>Max Bid</th><th>Present</th><th>Salary</th><th>Bonus Share</th><th>Total Salary</th>${CRUSADE_SUMMARY_ITEM_NAMES.map((name) => `<th>${escapeHtml(name)}</th>`).join('')}</tr></thead>
         <tbody>${rows}${totalRow}</tbody>
       </table>
     </div>
@@ -772,7 +761,27 @@ function renderCrusadeGuildSalary() {
     ? `<div class="crusade-salary-list">${guilds.map((g) => renderPlayerSalaryCard(g)).join('')}</div>`
     : '<p class="empty-state">No participants on this crusade yet.</p>';
 
+  renderCrusadeGuildTotals(guilds);
   renderLastCrusadeBidders();
+}
+
+// One row per guild: its grand total (diamonds) plus each known item,
+// summed across every one of that guild's players -- a quick top-level
+// overview above the full player-by-player breakdown.
+function renderCrusadeGuildTotals(guilds) {
+  document.getElementById('crusadeGuildTotalsEmptyState').classList.toggle('hidden', guilds.length !== 0);
+
+  document.getElementById('crusadeGuildTotalsBody').innerHTML = guilds
+    .map(
+      (g, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td style="font-weight:600;">${g.name === 'Unassigned' ? 'Unassigned' : crusadeGuildBadge(g.name)}</td>
+      <td>${crusadeFormatDiamonds(g.total)}</td>
+      ${CRUSADE_SUMMARY_ITEM_NAMES.map((name) => `<td>${crusadeFormatItemQty(g.entries.reduce((sum, e) => sum + e.itemTotals[name], 0))}</td>`).join('')}
+    </tr>`
+    )
+    .join('');
 }
 
 // Every team is its own independent battle now, so each team's Defense
