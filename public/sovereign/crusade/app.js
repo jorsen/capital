@@ -750,7 +750,7 @@ function renderCrusadeGuildSalary() {
   const guilds = computeCrusadeGuildSalaryDetail();
   const el = document.getElementById('crusadeGuildSalaryDetail');
   el.innerHTML = guilds.length
-    ? `<div class="crusade-party-grid">${guilds.map((g) => renderPlayerSalaryCard(g)).join('')}</div>`
+    ? `<div class="crusade-salary-list">${guilds.map((g) => renderPlayerSalaryCard(g)).join('')}</div>`
     : '<p class="empty-state">No participants on this crusade yet.</p>';
 
   renderLastCrusadeBidders();

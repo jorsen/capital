@@ -801,6 +801,16 @@ select:focus, input:focus, textarea:focus {
 @media (max-width: 960px) {
   .crusade-party-grid { grid-template-columns: 1fr; }
 }
+
+/* Crusade Salary's per-guild cards stack one per row instead of side by
+   side -- each one is a wide table (IGN through every item column), so two
+   across just squeezes both into horizontal scrolling. */
+.crusade-salary-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .crusade-party-card {
   /* Grid items default to a content-based min-width, so a wide table inside
      would otherwise stretch the card (and its column) past the track
@@ -902,8 +912,9 @@ select:focus, input:focus, textarea:focus {
 }
 .crusade-bulk-chip button:hover { color: var(--bad); }
 
-/* Guild Salary page: every player's crusade-wide totals, one card per guild
-   -- cards wrap side by side via .crusade-party-grid. */
+/* Guild Salary page's outer wrapper -- holds the .crusade-salary-list of
+   per-guild cards (see above), kept separate in case other content ever
+   sits alongside it. */
 .crusade-team-salary-list { display: flex; flex-direction: column; gap: 20px; }
 
 /* Read-only "viewer" role (see common.js isAdmin/loadSession): the real
