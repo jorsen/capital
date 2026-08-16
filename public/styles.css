@@ -846,6 +846,41 @@ select:focus, input:focus, textarea:focus {
 .crusade-status-badge.draw { color: var(--gold); border-color: var(--gold); background: rgba(212,175,55,0.12); }
 .crusade-status-badge.pending { color: var(--text-muted); }
 
+/* Add Multiple Participants modal: click-to-toggle search results, plus
+   removable chips for whatever's currently selected. */
+.crusade-bulk-result-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--gridline);
+  font-size: 13px;
+}
+.crusade-bulk-result-row:last-child { border-bottom: none; }
+.crusade-bulk-result-row:hover { background: var(--surface-2); }
+.crusade-bulk-result-row.selected { background: rgba(74,222,128,0.14); }
+.crusade-bulk-result-check { width: 14px; flex-shrink: 0; color: var(--good); font-weight: 700; }
+.crusade-bulk-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 6px 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 12px;
+}
+.crusade-bulk-chip button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1;
+  padding: 2px;
+}
+.crusade-bulk-chip button:hover { color: var(--bad); }
+
 /* Guild Salary page: one collapsible <details> section per team, each
    holding that team's own guild-card grid -- sections stack vertically,
    cards within a section still wrap side by side via .crusade-party-grid. */

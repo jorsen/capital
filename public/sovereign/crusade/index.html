@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/styles.css?v=76">
+  <link rel="stylesheet" href="/styles.css?v=77">
 </head>
 <body>
   <div class="app viz-root">
@@ -90,6 +90,7 @@
         <p style="color:var(--text-muted); font-size:13px; margin:0; flex:1;">Click a team to see its roster.</p>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
           <button id="addCrusadeParticipantBtn" type="button" class="btn small admin-only">+ Add Participant</button>
+          <button id="addCrusadeBulkBtn" type="button" class="btn small admin-only">+ Add Multiple</button>
           <button id="addCrusadeTeamBtn" type="button" class="btn primary admin-only">+ New Team</button>
         </div>
       </div>
@@ -164,7 +165,10 @@
             <h2 id="crusadeTeamHeading" style="margin:0;">Team</h2>
             <span id="crusadeTeamStatusBadge" class="crusade-status-badge"></span>
           </div>
-          <button id="addTeamParticipantBtn" type="button" class="btn small primary admin-only">+ Add Participant</button>
+          <div style="display:flex; gap:8px;">
+            <button id="addTeamParticipantBtn" type="button" class="btn small primary admin-only">+ Add Participant</button>
+            <button id="addTeamBulkBtn" type="button" class="btn small admin-only">+ Add Multiple</button>
+          </div>
         </div>
         <p style="color:var(--text-muted); font-size:13px; margin-top:-4px;">
           Half this team's reward splits evenly across everyone marked "Attended"; the other half splits across gold bidders in proportion to their bid. If this team's Result is Lose, no rewards go out at all.
@@ -390,9 +394,36 @@
     </div>
   </div>
 
+  <div id="crusadeBulkAddModal" class="modal-overlay hidden">
+    <div class="modal">
+      <button class="modal-close" data-close="crusadeBulkAddModal" aria-label="Close">×</button>
+      <h2>Add Multiple Participants</h2>
+      <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;">Search the member list and click as many names as you need — they'll all be added with the settings below.</p>
+      <input type="text" id="crusadeBulkSearchInput" placeholder="Search members…" autocomplete="off" style="margin-bottom:8px;">
+      <div id="crusadeBulkResultsList" style="max-height:180px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; margin-bottom:10px;"></div>
+      <p style="font-size:12px; color:var(--text-muted); margin:-4px 0 8px;">Selected (<span id="crusadeBulkSelectedCount">0</span>)</p>
+      <div id="crusadeBulkSelectedList" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px;"></div>
+
+      <form id="crusadeBulkAddForm">
+        <input type="hidden" name="partyNumber" value="1">
+        <label><span>Party</span>
+          <input name="partySlot" type="number" min="1" max="20" value="1">
+        </label>
+        <label><span>Gold Bid</span>
+          <input name="goldBid" type="number" min="0" step="1" placeholder="e.g. 30000000">
+        </label>
+        <label style="display:flex; align-items:center; gap:8px; flex-direction:row;">
+          <input name="attended" type="checkbox" checked style="width:auto;">
+          <span>Attended / Entered</span>
+        </label>
+        <button type="submit" class="btn primary">Add Selected</button>
+      </form>
+    </div>
+  </div>
+
   <div id="toast" class="toast hidden"></div>
 
   <script src="/common.js?v=35"></script>
-  <script src="/sovereign/crusade/app.js?v=47"></script>
+  <script src="/sovereign/crusade/app.js?v=48"></script>
 </body>
 </html>

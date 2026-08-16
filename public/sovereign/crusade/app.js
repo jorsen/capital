@@ -887,6 +887,122 @@ function openCrusadeParticipantModal(participantId, presetPartyNumber, presetPar
 document.getElementById('addCrusadeParticipantBtn').addEventListener('click', () => openCrusadeParticipantModal(null));
 document.getElementById('addTeamParticipantBtn').addEventListener('click', () => openCrusadeParticipantModal(null, sovereignState.activeTeam));
 
+// ---------- Add Multiple Participants (search the Member List, click many) ----------
+
+const crusadeBulkAddState = { selectedNames: [] };
+
+function renderCrusadeBulkResults() {
+  const query = document.getElementById('crusadeBulkSearchInput').value.trim().toLowerCase();
+  const results = query ? sovereignState.memberList.filter((m) => m.name.toLowerCase().includes(query)) : sovereignState.memberList;
+
+  document.getElementById('crusadeBulkResultsList').innerHTML = results
+    .map((m) => {
+      const selected = crusadeBulkAddState.selectedNames.includes(m.name);
+      return `
+      <div class="crusade-bulk-result-row ${selected ? 'selected' : ''}" data-name="${escapeHtml(m.name)}">
+        <span class="crusade-bulk-result-check">${selected ? '✓' : ''}</span>
+        <span style="flex:1;">${escapeHtml(m.name)}</span>
+        ${crusadeGuildBadge(m.guildName)}
+      </div>`;
+    })
+    .join('');
+
+  document.querySelectorAll('.crusade-bulk-result-row').forEach((row) => {
+    row.addEventListener('click', () => {
+      const name = row.getAttribute('data-name');
+      const idx = crusadeBulkAddState.selectedNames.indexOf(name);
+      if (idx === -1) crusadeBulkAddState.selectedNames.push(name);
+      else crusadeBulkAddState.selectedNames.splice(idx, 1);
+      renderCrusadeBulkResults();
+      renderCrusadeBulkSelected();
+    });
+  });
+}
+
+function renderCrusadeBulkSelected() {
+  document.getElementById('crusadeBulkSelectedCount').textContent = crusadeBulkAddState.selectedNames.length;
+  document.getElementById('crusadeBulkSelectedList').innerHTML = crusadeBulkAddState.selectedNames
+    .map((name) => `<span class="crusade-bulk-chip">${escapeHtml(name)} <button type="button" data-remove-chip="${escapeHtml(name)}">✕</button></span>`)
+    .join('');
+
+  document.querySelectorAll('[data-remove-chip]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const name = btn.getAttribute('data-remove-chip');
+      crusadeBulkAddState.selectedNames = crusadeBulkAddState.selectedNames.filter((n) => n !== name);
+      renderCrusadeBulkResults();
+      renderCrusadeBulkSelected();
+    });
+  });
+}
+
+function openCrusadeBulkAddModal(presetPartyNumber) {
+  crusadeBulkAddState.selectedNames = [];
+  document.getElementById('crusadeBulkSearchInput').value = '';
+  const form = document.getElementById('crusadeBulkAddForm');
+  form.reset();
+  const teamNumber = presetPartyNumber || nextTeamNumber();
+  form.elements.partyNumber.value = teamNumber;
+  form.elements.partySlot.value = nextAvailablePartySlot(teamNumber);
+  form.elements.goldBid.value = 30000000;
+  renderCrusadeBulkResults();
+  renderCrusadeBulkSelected();
+  document.getElementById('crusadeBulkAddModal').classList.remove('hidden');
+}
+
+document.getElementById('addCrusadeBulkBtn').addEventListener('click', () => openCrusadeBulkAddModal(null));
+document.getElementById('addTeamBulkBtn').addEventListener('click', () => openCrusadeBulkAddModal(sovereignState.activeTeam));
+document.getElementById('crusadeBulkSearchInput').addEventListener('input', renderCrusadeBulkResults);
+
+document.getElementById('crusadeBulkAddForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const names = crusadeBulkAddState.selectedNames;
+  if (!names.length) {
+    toast('Select at least one member first');
+    return;
+  }
+
+  const teamNumber = Number(form.elements.partyNumber.value) || 1;
+  let partySlot = Number(form.elements.partySlot.value) || 1;
+  const goldBid = Number(form.elements.goldBid.value) || 0;
+  const attended = form.elements.attended.checked;
+
+  let added = 0;
+  for (const name of names) {
+    const member = sovereignState.memberList.find((m) => m.name === name);
+    // Respect the 5-per-party cap by advancing to the next slot whenever the
+    // current one fills up (including from participants just added in this
+    // same batch, since sovereignState.participants is updated as we go).
+    while (
+      sovereignState.participants.filter((p) => p.partyNumber === teamNumber && p.partySlot === partySlot).length >=
+      CRUSADE_PARTY_MAX_MEMBERS
+    ) {
+      partySlot++;
+    }
+    try {
+      const created = await api(`/api/crusades/${sovereignState.crusadeId}/participants`, {
+        method: 'POST',
+        body: JSON.stringify({
+          name,
+          guildName: member?.guildName || null,
+          partyNumber: teamNumber,
+          partySlot,
+          goldBid,
+          attended,
+        }),
+      });
+      sovereignState.participants.push(created);
+      added++;
+    } catch (err) {
+      toast(`${name}: ${err.message}`);
+    }
+  }
+
+  document.getElementById('crusadeBulkAddModal').classList.add('hidden');
+  refreshAfterRosterChange();
+  toast(`${added} participant${added === 1 ? '' : 's'} added`);
+});
+
 // Jumps straight to the next team past whatever's already visible in the
 // list (the 1-3 baseline, or higher if teams already exist beyond that) —
 // landing on its (empty) roster page ready for "+ Add Participant".
