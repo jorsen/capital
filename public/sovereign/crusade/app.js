@@ -796,11 +796,11 @@ function renderTeamDetail(n) {
           <button type="button" class="icon-btn admin-only" data-add-to-party-slot="${slot}" title="Add to Party ${slot}" ${full ? 'disabled' : ''}>+</button>
         </div>
         <div class="table-scroll">
-          <table class="members-table">
+          <table class="members-table crusade-roster-table">
             <thead>
               <tr>
-                <th>Name</th><th>Guild</th><th>Position</th><th>Gold Bid</th><th>Enter</th>
-                <th>Attendance</th><th>Bid Share</th><th>Total Diamonds</th>
+                <th>Name</th><th>Guild</th><th>Position</th><th>Bid</th><th>Enter</th>
+                <th>Attend</th><th>Share</th><th>Total</th>
                 <th class="admin-only">Paid</th><th class="admin-only"></th>
               </tr>
             </thead>

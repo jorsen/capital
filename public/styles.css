@@ -827,6 +827,17 @@ select:focus, input:focus, textarea:focus {
 }
 .crusade-party-card .members-table { font-size: 12px; }
 .crusade-party-card .members-table th, .crusade-party-card .members-table td { padding: 6px 7px; white-space: nowrap; }
+
+/* The per-party roster table specifically (not Guild Salary's cards, which
+   share .crusade-party-card but have far fewer columns and fit fine as-is):
+   forced to fit its card's width with no horizontal scroll, even at ~10
+   columns -- table-layout:fixed splits width evenly regardless of content,
+   and cells wrap instead of forcing the table wider. */
+.crusade-roster-table { font-size: 11px !important; table-layout: fixed; width: 100%; }
+.crusade-roster-table th, .crusade-roster-table td { padding: 5px 4px !important; overflow-wrap: break-word; }
+.crusade-roster-table td { white-space: normal !important; }
+.crusade-roster-table input[type="checkbox"] { width: 13px; height: 13px; }
+.crusade-roster-table .icon-btn { padding: 2px 4px; font-size: 11px; }
 .crusade-party-card-header .icon-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 .crusade-party-card-header .icon-btn:disabled:hover { background: none; color: inherit; }
 
