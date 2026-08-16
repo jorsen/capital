@@ -189,8 +189,9 @@ function renderCrusadeList() {
 
   body.innerHTML = crusades
     .map(
-      (c) => `
+      (c, i) => `
     <tr>
+      <td>${i + 1}</td>
       <td><a href="#crusade/${c.id}" style="font-weight:600;">${c.eventDate ? escapeHtml(formatLongDate(String(c.eventDate).slice(0, 10))) : 'No date set'}</a></td>
       <td>${c.participantCount}</td>
       <td>${crusadeFormatDiamonds(c.netDiamondReward)}</td>
@@ -588,13 +589,14 @@ function renderTeamList() {
   const body = document.getElementById('crusadeTeamListBody');
 
   body.innerHTML = visibleTeamNumbers()
-    .map((n) => {
+    .map((n, i) => {
       const team = getTeamData(n);
       const rows = computeTeamDistribution(n);
       const count = sovereignState.participants.filter((p) => p.partyNumber === n).length;
       const diamonds = rows.reduce((sum, r) => sum + r.total, 0);
       return `
       <tr>
+        <td>${i + 1}</td>
         <td><a href="#crusade/${sovereignState.crusadeId}/team/${n}" style="font-weight:600;">Team ${n}</a></td>
         <td>${crusadeStatusBadge(team.result)}</td>
         <td>${team.stance ? escapeHtml(team.stance) : '–'}</td>
@@ -700,7 +702,7 @@ function computeCrusadeGuildSalaryDetail() {
 // Total Salary / one column per known item (see CRUSADE_SUMMARY_ITEM_NAMES).
 function renderPlayerSalaryCard(g) {
   const rows = g.entries
-    .map((e) => {
+    .map((e, i) => {
       const itemCells = CRUSADE_SUMMARY_ITEM_NAMES.map((name) => `<td>${crusadeFormatItemQty(e.itemTotals[name])}</td>`).join('');
       const tagLabel = e.hasFee
         ? `<div style="font-weight:400; font-size:11px; color:var(--text-muted); white-space:nowrap;">${e.isParticipant ? '(+ management fee)' : '(management fee)'}</div>`
@@ -709,6 +711,7 @@ function renderPlayerSalaryCard(g) {
       const maxBidCell = e.isParticipant ? crusadeFormatGold(e.maxBid) : '–';
       return `
     <tr>
+      <td>${i + 1}</td>
       <td style="font-weight:600;"><div style="white-space:nowrap;">${escapeHtml(e.name)}</div>${tagLabel}</td>
       <td>${maxBidCell}</td>
       <td>${presentCell}</td>
@@ -719,7 +722,7 @@ function renderPlayerSalaryCard(g) {
     </tr>`;
     })
     .join('');
-  const totalRow = `<tr class="crusade-table-total-row"><td>Total</td><td></td><td></td><td>${crusadeFormatDiamonds(
+  const totalRow = `<tr class="crusade-table-total-row"><td></td><td>Total</td><td></td><td></td><td>${crusadeFormatDiamonds(
     g.entries.reduce((sum, e) => sum + e.salary, 0)
   )}</td><td>${crusadeFormatDiamonds(g.entries.reduce((sum, e) => sum + e.bonusShare, 0))}</td><td>${crusadeFormatDiamonds(g.total)}</td>${CRUSADE_SUMMARY_ITEM_NAMES.map(
     (name) => `<td>${crusadeFormatItemQty(g.entries.reduce((sum, e) => sum + e.itemTotals[name], 0))}</td>`
@@ -731,7 +734,7 @@ function renderPlayerSalaryCard(g) {
     </div>
     <div class="table-scroll">
       <table class="members-table">
-        <thead><tr><th>IGN</th><th>Max Bid</th><th>Present</th><th>Salary</th><th>Bonus Share</th><th>Total Salary</th>${CRUSADE_SUMMARY_ITEM_NAMES.map((name) => `<th>${escapeHtml(name)}</th>`).join('')}</tr></thead>
+        <thead><tr><th>#</th><th>IGN</th><th>Max Bid</th><th>Present</th><th>Salary</th><th>Bonus Share</th><th>Total Salary</th>${CRUSADE_SUMMARY_ITEM_NAMES.map((name) => `<th>${escapeHtml(name)}</th>`).join('')}</tr></thead>
         <tbody>${rows}${totalRow}</tbody>
       </table>
     </div>
@@ -780,8 +783,9 @@ function renderLastCrusadeBidders() {
 
       const rows = bidders
         .map(
-          (b) => `
+          (b, i) => `
         <tr>
+          <td>${i + 1}</td>
           <td style="font-weight:600; white-space:nowrap;">${escapeHtml(b.name)}</td>
           <td>${crusadeGuildBadge(b.guildName)}</td>
           <td>${crusadeFormatGold(b.goldBid)}</td>
@@ -789,7 +793,7 @@ function renderLastCrusadeBidders() {
         </tr>`
         )
         .join('');
-      const totalRow = `<tr class="crusade-table-total-row"><td>Total</td><td></td><td></td><td>${crusadeFormatDiamonds(perBidder * bidders.length)}</td></tr>`;
+      const totalRow = `<tr class="crusade-table-total-row"><td></td><td>Total</td><td></td><td></td><td>${crusadeFormatDiamonds(perBidder * bidders.length)}</td></tr>`;
 
       return `
       <div class="crusade-party-card">
@@ -798,7 +802,7 @@ function renderLastCrusadeBidders() {
         </div>
         <div class="table-scroll">
           <table class="members-table">
-            <thead><tr><th>IGN</th><th>Guild</th><th>Gold Bid</th><th>Bonus Share</th></tr></thead>
+            <thead><tr><th>#</th><th>IGN</th><th>Guild</th><th>Gold Bid</th><th>Bonus Share</th></tr></thead>
             <tbody>${rows}${totalRow}</tbody>
           </table>
         </div>
@@ -846,8 +850,9 @@ function renderTeamDetail(n) {
       const full = rowsInParty.length >= CRUSADE_PARTY_MAX_MEMBERS;
       const memberRows = rowsInParty
         .map(
-          ({ participant: p, attendanceAmount, bidShare, total }) => `
+          ({ participant: p, attendanceAmount, bidShare, total }, i) => `
       <tr>
+        <td>${i + 1}</td>
         <td class="crusade-roster-name-cell" style="font-weight:600;"><span class="crusade-roster-name-click" data-edit-participant="${p.id}" title="Click to edit">${escapeHtml(p.name)}</span></td>
         <td>${crusadeGuildBadge(p.guildName)}</td>
         <td class="crusade-roster-position-col">${p.position ? escapeHtml(p.position) : '–'}</td>
@@ -874,7 +879,7 @@ function renderTeamDetail(n) {
           <table class="members-table crusade-roster-table">
             <thead>
               <tr>
-                <th style="width:20%;">Name</th><th>Guild</th><th class="crusade-roster-position-col">Position</th>
+                <th style="width:4%;">#</th><th style="width:20%;">Name</th><th>Guild</th><th class="crusade-roster-position-col">Position</th>
                 ${isDefense ? '' : '<th>Bid</th>'}
                 <th style="width:6%;">Enter</th>
                 <th>Attend</th>
@@ -1252,7 +1257,7 @@ function renderTeamItemTable(n) {
   });
 
   document.getElementById('crusadeTeamItemTableHead').innerHTML =
-    `<th>Guild</th>${items.map((it) => `<th>${escapeHtml(it.name)}</th>`).join('')}<th>Members</th>`;
+    `<th>#</th><th>Guild</th>${items.map((it) => `<th>${escapeHtml(it.name)}</th>`).join('')}<th>Members</th>`;
 
   const memberCountByGuild = new Map();
   teamParticipants.forEach((p) => {
@@ -1260,10 +1265,11 @@ function renderTeamItemTable(n) {
     memberCountByGuild.set(key, (memberCountByGuild.get(key) || 0) + 1);
   });
 
-  const rows = guildNames.map((guildName) => {
+  const rows = guildNames.map((guildName, i) => {
     const color = guildName === 'Unassigned' ? null : crusadeGuildColor(guildName);
     const cells = shareByGuildPerItem.map((byGuild) => `<td>${crusadeFormatItemQty(byGuild.get(guildName) || 0)}</td>`).join('');
     return `<tr>
+      <td>${i + 1}</td>
       <td style="font-weight:600; ${color ? `color:${color};` : ''}">${escapeHtml(guildName)}</td>
       ${cells}
       <td>${memberCountByGuild.get(guildName)}</td>
@@ -1273,7 +1279,7 @@ function renderTeamItemTable(n) {
   const totalCells = shareByGuildPerItem
     .map((byGuild) => `<td>${crusadeFormatItemQty(Array.from(byGuild.values()).reduce((sum, v) => sum + v, 0))}</td>`)
     .join('');
-  rows.push(`<tr class="crusade-table-total-row"><td>Total</td>${totalCells}<td>${teamParticipants.length}</td></tr>`);
+  rows.push(`<tr class="crusade-table-total-row"><td></td><td>Total</td>${totalCells}<td>${teamParticipants.length}</td></tr>`);
 
   document.getElementById('crusadeTeamItemTableBody').innerHTML = rows.join('');
 }
@@ -1547,12 +1553,14 @@ function renderMemberList() {
   if (groups.has('Unassigned')) guildKeys.push('Unassigned');
 
   const head = document.getElementById('sovereignMemberListHead');
-  head.innerHTML = guildKeys
-    .map((g) => {
-      const color = g === 'Unassigned' ? null : crusadeGuildColor(g);
-      return `<th style="${color ? `color:${color};` : ''}">${escapeHtml(g)} <span style="color:var(--text-muted); font-weight:400;">(${groups.get(g).length})</span></th>`;
-    })
-    .join('');
+  head.innerHTML =
+    `<th style="width:4%;">#</th>` +
+    guildKeys
+      .map((g) => {
+        const color = g === 'Unassigned' ? null : crusadeGuildColor(g);
+        return `<th style="${color ? `color:${color};` : ''}">${escapeHtml(g)} <span style="color:var(--text-muted); font-weight:400;">(${groups.get(g).length})</span></th>`;
+      })
+      .join('');
 
   const maxRows = guildKeys.reduce((max, g) => Math.max(max, groups.get(g).length), 0);
   const rowsHtml = [];
@@ -1564,7 +1572,7 @@ function renderMemberList() {
         return `<td style="white-space:nowrap;">${escapeHtml(m.name)} <button type="button" class="icon-btn admin-only" data-delete-member="${m.id}" title="Remove from member list">✕</button></td>`;
       })
       .join('');
-    rowsHtml.push(`<tr>${cells}</tr>`);
+    rowsHtml.push(`<tr><td>${i + 1}</td>${cells}</tr>`);
   }
 
   const body = document.getElementById('sovereignMemberListBody');
