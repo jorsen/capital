@@ -781,9 +781,7 @@ function renderLastCrusadeBidders() {
       // rather than showing a table full of 0s.
       if (!bidders.length || perBidder <= 0) return null;
       const lastTeam = team.lastTeam;
-      const sourceText = lastTeam
-        ? `${lastTeam.crusadeName} — ${lastTeam.eventDate ? formatLongDate(String(lastTeam.eventDate).slice(0, 10)) : 'No date set'}`
-        : '';
+      const sourceDateText = lastTeam?.eventDate ? formatLongDate(String(lastTeam.eventDate).slice(0, 10)) : 'No date set';
 
       const rows = bidders
         .map(
@@ -802,8 +800,9 @@ function renderLastCrusadeBidders() {
       return `
       <div class="crusade-party-card">
         <div class="crusade-party-card-header">
-          <h3>Team ${teamNumber}'s bonus — from ${sourceText}</h3>
+          <h3>Team ${teamNumber}'s bonus</h3>
         </div>
+        <p style="color:var(--text-muted); font-size:12px; margin:-4px 0 10px;">Source crusade: ${escapeHtml(lastTeam.crusadeName)} — <strong style="color:var(--text);">${sourceDateText}</strong></p>
         <div class="table-scroll">
           <table class="members-table">
             <thead><tr><th>#</th><th>IGN</th><th>Guild</th><th>Gold Bid</th><th>Bonus Share</th></tr></thead>
