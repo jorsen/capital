@@ -802,6 +802,18 @@ select:focus, input:focus, textarea:focus {
   .crusade-party-grid { grid-template-columns: 1fr; }
 }
 
+/* Last Crusade's Bidders: same side-by-side idea as .crusade-party-grid,
+   but each card only holds a narrow 5-column table (IGN/Guild/Bid/Bonus),
+   so it stays 2-up down to a much narrower width before stacking. */
+.crusade-bidders-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+@media (max-width: 640px) {
+  .crusade-bidders-grid { grid-template-columns: 1fr; }
+}
+
 /* Crusade Salary's per-guild cards stack one per row instead of side by
    side -- each one is a wide table (IGN through every item column), so two
    across just squeezes both into horizontal scrolling. */
