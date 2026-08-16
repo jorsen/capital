@@ -628,6 +628,7 @@ function computeCrusadeGuildSalaryDetail() {
         name: displayName,
         isParticipant: false, // true once seen on an actual roster (controls Max Bid/Present display)
         maxBid: 0,
+        hasAttackTeam: false, // true once seen on a non-Defense team -- distinguishes "never bid" (0) from "never had the option" (all Defense)
         present: 0,
         teamsCount: 0,
         salary: 0,
@@ -648,7 +649,10 @@ function computeCrusadeGuildSalaryDetail() {
       entry.isParticipant = true;
       entry.teamsCount += 1;
       entry.present += p.attended ? 1 : 0;
-      if (!isDefense && p.goldBid > 0) entry.maxBid = Math.max(entry.maxBid, p.goldBid);
+      if (!isDefense) {
+        entry.hasAttackTeam = true;
+        if (p.goldBid > 0) entry.maxBid = Math.max(entry.maxBid, p.goldBid);
+      }
       entry.salary += total;
     });
 
@@ -708,7 +712,7 @@ function renderPlayerSalaryCard(g) {
         ? `<div style="font-weight:400; font-size:11px; color:var(--text-muted); white-space:nowrap;">${e.isParticipant ? '(+ management fee)' : '(management fee)'}</div>`
         : '';
       const presentCell = e.isParticipant ? `${e.present}/${e.teamsCount}` : '–';
-      const maxBidCell = e.isParticipant ? crusadeFormatGold(e.maxBid) : '–';
+      const maxBidCell = !e.isParticipant ? '–' : !e.hasAttackTeam ? 'DEF' : crusadeFormatGold(e.maxBid);
       return `
     <tr>
       <td>${i + 1}</td>
