@@ -669,12 +669,14 @@ function computeCrusadeGuildSalaryDetail() {
     // insensitive), kept in their own Fee %/Fee Amount columns rather than
     // mixed into Salary -- a recurring 2.5% fee applied across 3 fights
     // this crusade shows as a combined 7.5% and its total diamond amount,
-    // not three separate lines. If there's no matching roster row (on any
-    // team), the fee just gets its own fee-only entry (isParticipant stays
-    // false, decided once every team has been processed).
+    // not three separate lines. A fee with no guild picked falls back to
+    // "Unassigned" (same as participants/bonus bidders below) instead of
+    // being silently dropped from the total. If there's no matching roster
+    // row (on any team), the fee just gets its own fee-only entry
+    // (isParticipant stays false, decided once every team has been
+    // processed).
     (team.fees || []).forEach((fee) => {
-      if (!fee.guildName) return;
-      const entry = ensureEntry(fee.guildName, fee.name.trim().toLowerCase(), fee.name);
+      const entry = ensureEntry(fee.guildName || 'Unassigned', fee.name.trim().toLowerCase(), fee.name);
       entry.feePercent += Number(fee.percent) || 0;
       entry.feeAmount += crusadeFeeAmount(fee, team);
     });
@@ -926,8 +928,8 @@ function renderTeamDetail(n) {
 
   const feeCreditsByGuild = new Map();
   (team.fees || []).forEach((fee) => {
-    if (!fee.guildName) return;
-    feeCreditsByGuild.set(fee.guildName, (feeCreditsByGuild.get(fee.guildName) || 0) + crusadeFeeAmount(fee, team));
+    const guildKey = fee.guildName || 'Unassigned';
+    feeCreditsByGuild.set(guildKey, (feeCreditsByGuild.get(guildKey) || 0) + crusadeFeeAmount(fee, team));
   });
   renderCrusadeGuildSummary(teamRows, 'crusadeTeamGuildSummary', undefined, feeCreditsByGuild);
   renderTeamItemTable(n);
