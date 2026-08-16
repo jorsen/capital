@@ -359,7 +359,8 @@
       <form id="crusadeParticipantForm">
         <input type="hidden" name="participantId">
         <label><span>Name</span>
-          <input required name="name" type="text" maxlength="40">
+          <input required name="name" type="text" maxlength="40" list="sovereignMemberSuggestions" placeholder="Search the member list…" autocomplete="off">
+          <datalist id="sovereignMemberSuggestions"></datalist>
         </label>
         <label><span>Guild</span>
           <select name="guildName" id="crusadeParticipantGuildSelect">
@@ -392,6 +393,6 @@
   <div id="toast" class="toast hidden"></div>
 
   <script src="/common.js?v=35"></script>
-  <script src="/sovereign/crusade/app.js?v=46"></script>
+  <script src="/sovereign/crusade/app.js?v=47"></script>
 </body>
 </html>

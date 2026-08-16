@@ -289,12 +289,18 @@ document.getElementById('addCrusadeGuildForm').addEventListener('submit', async 
 // ---------- Crusade detail ----------
 
 async function loadCrusadeDetail(id) {
-  const [crusade, guilds] = await Promise.all([api(`/api/crusades/${id}`), api('/api/crusade-guilds')]);
+  const [crusade, guilds, memberList] = await Promise.all([
+    api(`/api/crusades/${id}`),
+    api('/api/crusade-guilds'),
+    api('/api/sovereign-members'),
+  ]);
   sovereignState.crusade = crusade;
   sovereignState.participants = crusade.participants;
   sovereignState.teams = crusade.teams;
   sovereignState.guilds = guilds;
+  sovereignState.memberList = memberList;
   populateCrusadeGuildSelect(); // shared by the add/edit-participant modal regardless of which page opened it
+  populateSovereignMemberSuggestions(); // lets the participant modal's Name field search the master member list
   populateCrusadeInfoForm();
 
   if (sovereignState.mode === 'team') {
@@ -368,6 +374,25 @@ function populateCrusadeGuildSelect() {
     select.value = current;
   });
 }
+
+// Lets the Add/Edit Participant modal's Name field search everyone ever
+// saved into a crusade roster (the master Member List), instead of typing a
+// fresh name every time.
+function populateSovereignMemberSuggestions() {
+  document.getElementById('sovereignMemberSuggestions').innerHTML = sovereignState.memberList
+    .map((m) => `<option value="${escapeHtml(m.name)}">`)
+    .join('');
+}
+
+// Picking (or typing) a name that matches a known member auto-fills their
+// last-known guild -- only when Guild is still blank, so it never clobbers
+// a guild the admin already chose on purpose.
+document.querySelector('#crusadeParticipantForm input[name="name"]').addEventListener('input', (e) => {
+  const guildSelect = document.getElementById('crusadeParticipantGuildSelect');
+  if (guildSelect.value) return;
+  const match = sovereignState.memberList.find((m) => m.name.trim().toLowerCase() === e.target.value.trim().toLowerCase());
+  if (match && match.guildName) guildSelect.value = match.guildName;
+});
 
 document.getElementById('crusadeInfoForm').addEventListener('submit', async (e) => {
   e.preventDefault();
