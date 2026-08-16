@@ -785,7 +785,7 @@ function renderTeamDetail(n) {
       <tr>
         <td class="crusade-roster-name-cell" style="font-weight:600;"><span class="crusade-roster-name-click" data-edit-participant="${p.id}" title="Click to edit">${escapeHtml(p.name)}</span></td>
         <td>${crusadeGuildBadge(p.guildName)}</td>
-        <td>${p.position ? escapeHtml(p.position) : '–'}</td>
+        <td class="crusade-roster-position-col">${p.position ? escapeHtml(p.position) : '–'}</td>
         <td>${crusadeFormatGold(p.goldBid)}</td>
         <td><input type="checkbox" class="crusade-attended-check admin-disable" data-participant-id="${p.id}" ${p.attended ? 'checked' : ''}></td>
         <td>${crusadeFormatDiamonds(attendanceAmount)}</td>
@@ -809,9 +809,9 @@ function renderTeamDetail(n) {
           <table class="members-table crusade-roster-table">
             <thead>
               <tr>
-                <th>Name</th><th>Guild</th><th>Position</th><th>Bid</th><th>Enter</th>
+                <th style="width:20%;">Name</th><th>Guild</th><th class="crusade-roster-position-col">Position</th><th>Bid</th><th style="width:6%;">Enter</th>
                 <th>Attend</th><th>Share</th><th>Total</th>
-                <th class="admin-only">Paid</th><th class="admin-only"></th>
+                <th class="admin-only" style="width:6%;">Paid</th><th class="admin-only" style="width:8%;"></th>
               </tr>
             </thead>
             <tbody>${memberRows}</tbody>

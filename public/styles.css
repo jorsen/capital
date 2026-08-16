@@ -836,7 +836,12 @@ select:focus, input:focus, textarea:focus {
 .crusade-roster-table { font-size: 13px !important; table-layout: fixed; width: 100%; }
 .crusade-roster-table th, .crusade-roster-table td { padding: 5px 4px !important; overflow-wrap: break-word; }
 .crusade-roster-table td { white-space: normal !important; }
+.crusade-roster-table .crusade-roster-name-cell { white-space: nowrap !important; overflow: hidden; }
+.crusade-roster-table .crusade-roster-name-cell .crusade-roster-name-click { overflow: hidden; text-overflow: ellipsis; display: inline-block; max-width: 100%; vertical-align: bottom; }
 .crusade-roster-table .crusade-roster-actions-cell { white-space: nowrap !important; }
+/* Hidden for now (frees up width for the Name column too) -- delete this
+   rule to bring Position back. */
+.crusade-roster-table .crusade-roster-position-col { display: none; }
 .crusade-roster-table input[type="checkbox"] { width: 13px; height: 13px; }
 .crusade-roster-name-click { cursor: pointer; }
 .crusade-roster-name-click:hover { text-decoration: underline; color: var(--gold); }
