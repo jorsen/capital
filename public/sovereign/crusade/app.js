@@ -194,6 +194,7 @@ function renderCrusadeList() {
       <td>${i + 1}</td>
       <td><a href="#crusade/${c.id}" style="font-weight:600;">${c.eventDate ? escapeHtml(formatLongDate(String(c.eventDate).slice(0, 10))) : 'No date set'}</a></td>
       <td>${c.participantCount}</td>
+      <td>${crusadeFormatDiamonds(c.feeDiamonds)}</td>
       <td>${crusadeFormatDiamonds(c.netDiamondReward)}</td>
       <td class="admin-only"><button type="button" class="icon-btn" data-delete-crusade="${c.id}" title="Delete crusade">✕</button></td>
     </tr>`
