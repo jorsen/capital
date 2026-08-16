@@ -212,6 +212,7 @@
       <section class="panel">
         <div class="view-header space-between" style="margin-bottom:6px;">
           <h2 style="margin:0;">Management Fees</h2>
+          <button id="manageCrusadeDefaultFeesBtn" type="button" class="btn small admin-only">Manage Default Fees</button>
         </div>
         <p style="color:var(--text-muted); font-size:13px; margin:0 0 10px;">Each fee takes a percentage of this team's diamond reward off the top, before the rest is split by attendance/bid.</p>
         <ul id="crusadeFeeList" style="list-style:none; padding:0; margin:0 0 12px; display:flex; flex-direction:column; gap:8px;"></ul>
@@ -344,6 +345,30 @@
     </div>
   </div>
 
+  <div id="manageCrusadeDefaultFeesModal" class="modal-overlay hidden">
+    <div class="modal">
+      <button class="modal-close" data-close="manageCrusadeDefaultFeesModal" aria-label="Close">×</button>
+      <h2>Manage Default Fees</h2>
+      <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;">These fees are automatically added to every new team going forward. Editing this list never changes teams that already exist.</p>
+      <ul id="crusadeDefaultFeeList" style="list-style:none; padding:0; margin:14px 0; display:flex; flex-direction:column; gap:8px;"></ul>
+      <p id="crusadeDefaultFeeListEmptyState" class="empty-state hidden">No default fees added yet.</p>
+      <form id="addCrusadeDefaultFeeForm" style="display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end;">
+        <label style="flex:1; min-width:140px;"><span>IGN</span>
+          <input type="text" name="name" maxlength="40" placeholder="Search the member list…" list="sovereignMemberSuggestions" autocomplete="off" required>
+        </label>
+        <label style="flex:1; min-width:120px;"><span>Guild</span>
+          <select name="guildName" id="crusadeDefaultFeeGuildSelect">
+            <option value="">—</option>
+          </select>
+        </label>
+        <label style="flex:1; min-width:120px;"><span>Percent %</span>
+          <input type="number" name="percent" min="0" max="100" step="0.1" placeholder="e.g. 5" required>
+        </label>
+        <button type="submit" class="btn primary small">+ Add</button>
+      </form>
+    </div>
+  </div>
+
   <div id="addCrusadeModal" class="modal-overlay hidden">
     <div class="modal">
       <button class="modal-close" data-close="addCrusadeModal" aria-label="Close">×</button>
@@ -429,6 +454,6 @@
   <div id="toast" class="toast hidden"></div>
 
   <script src="/common.js?v=35"></script>
-  <script src="/sovereign/crusade/app.js?v=55"></script>
+  <script src="/sovereign/crusade/app.js?v=56"></script>
 </body>
 </html>

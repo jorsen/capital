@@ -8,7 +8,7 @@
 // result, diamond reward, attendance %, notes, items and fees -- so two
 // teams sharing a crusade's date can have completely different outcomes.
 // mode tracks which crusade-scoped page is active: 'overview' | 'team' | 'guildSalary'.
-const sovereignState = { crusades: [], guilds: [], crusadeId: null, crusade: null, participants: [], teams: [], memberList: [], raffleWinners: [], raffleActivity: [], activeTeam: null, mode: null };
+const sovereignState = { crusades: [], guilds: [], crusadeId: null, crusade: null, participants: [], teams: [], memberList: [], defaultFees: [], raffleWinners: [], raffleActivity: [], activeTeam: null, mode: null };
 
 function crusadeFormatDiamonds(amount) {
   return `${Math.round(amount || 0).toLocaleString()} 💎`;
@@ -286,19 +286,94 @@ document.getElementById('addCrusadeGuildForm').addEventListener('submit', async 
   }
 });
 
+// ---------- Manage Default Fees modal ----------
+// A standing list of fee recipients (independent of any one crusade/team)
+// that gets copied onto crusade_fees automatically the first time a brand
+// new team is saved (see ensureCrusadeTeam server-side) -- editing this list
+// only ever affects teams created afterward.
+
+function renderCrusadeDefaultFeeList() {
+  const list = document.getElementById('crusadeDefaultFeeList');
+  const fees = sovereignState.defaultFees;
+  document.getElementById('crusadeDefaultFeeListEmptyState').classList.toggle('hidden', fees.length !== 0);
+
+  list.innerHTML = fees
+    .map(
+      (fee) => `
+      <li style="display:flex; gap:8px; align-items:center;" data-default-fee-id="${fee.id}">
+        <span style="flex:1;">${escapeHtml(fee.name)}</span>
+        ${crusadeGuildBadge(fee.guildName)}
+        <span style="color:var(--text-muted);">${fee.percent}%</span>
+        <button type="button" class="icon-btn" data-delete-default-fee="${fee.id}" title="Remove default fee">✕</button>
+      </li>`
+    )
+    .join('');
+
+  list.querySelectorAll('[data-delete-default-fee]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-delete-default-fee');
+      const fee = fees.find((f) => f.id === id);
+      if (!confirm(`Remove the standing ${fee?.percent}% default fee for "${fee?.name}"? New teams created from now on won't include it.`)) return;
+      try {
+        await api(`/api/crusade-default-fees/${id}`, { method: 'DELETE' });
+        sovereignState.defaultFees = sovereignState.defaultFees.filter((f) => f.id !== id);
+        renderCrusadeDefaultFeeList();
+        toast('Default fee removed');
+      } catch (err) {
+        toast(err.message);
+      }
+    });
+  });
+}
+
+document.getElementById('manageCrusadeDefaultFeesBtn').addEventListener('click', () => {
+  renderCrusadeDefaultFeeList();
+  document.getElementById('manageCrusadeDefaultFeesModal').classList.remove('hidden');
+});
+
+document.querySelector('#addCrusadeDefaultFeeForm input[name="name"]').addEventListener('input', (e) => {
+  const guildSelect = document.getElementById('crusadeDefaultFeeGuildSelect');
+  if (guildSelect.value) return;
+  const match = sovereignState.memberList.find((m) => m.name.trim().toLowerCase() === e.target.value.trim().toLowerCase());
+  if (match && match.guildName) guildSelect.value = match.guildName;
+});
+
+document.getElementById('addCrusadeDefaultFeeForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  try {
+    const fee = await api('/api/crusade-default-fees', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: form.elements.name.value,
+        guildName: form.elements.guildName.value || null,
+        percent: Number(form.elements.percent.value) || 0,
+      }),
+    });
+    sovereignState.defaultFees.push(fee);
+    renderCrusadeDefaultFeeList();
+    form.reset();
+    toast(`${fee.name}'s default fee added`);
+  } catch (err) {
+    toast(err.message);
+  }
+});
+
 // ---------- Crusade detail ----------
 
 async function loadCrusadeDetail(id) {
-  const [crusade, guilds, memberList] = await Promise.all([
+  const [crusade, guilds, memberList, defaultFees] = await Promise.all([
     api(`/api/crusades/${id}`),
     api('/api/crusade-guilds'),
     api('/api/sovereign-members'),
+    api('/api/crusade-default-fees'),
   ]);
   sovereignState.crusade = crusade;
   sovereignState.participants = crusade.participants;
   sovereignState.teams = crusade.teams;
   sovereignState.guilds = guilds;
   sovereignState.memberList = memberList;
+  sovereignState.defaultFees = defaultFees;
   populateCrusadeGuildSelect(); // shared by the add/edit-participant modal regardless of which page opened it
   populateSovereignMemberSuggestions(); // lets the participant modal's Name field search the master member list
   populateCrusadeInfoForm();
@@ -367,7 +442,7 @@ function populateTeamDetailsForm(teamNumber) {
 
 function populateCrusadeGuildSelect() {
   const options = '<option value="">—</option>' + sovereignState.guilds.map((g) => `<option value="${escapeHtml(g.name)}">${escapeHtml(g.name)}</option>`).join('');
-  ['crusadeParticipantGuildSelect', 'crusadeFeeGuildSelect'].forEach((id) => {
+  ['crusadeParticipantGuildSelect', 'crusadeFeeGuildSelect', 'crusadeDefaultFeeGuildSelect'].forEach((id) => {
     const select = document.getElementById(id);
     const current = select.value;
     select.innerHTML = options;
