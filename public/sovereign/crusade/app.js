@@ -32,6 +32,11 @@ function crusadeGuildColor(guildName) {
 // server is what actually enforces the cap.
 const CRUSADE_PARTY_MAX_MEMBERS = 5;
 
+// Kept in sync with the Item Name dropdown in the Add Item form (index.html)
+// -- the fixed set of items the Crusade Salary summary always shows one
+// column for, regardless of which of them any given team actually used.
+const CRUSADE_SUMMARY_ITEM_NAMES = ['Morions', 'Guild Coins', 'Alluvial Gold Pouch'];
+
 // pending/win/lose/draw -> a small colored pill, reused on the Team List
 // overview (one per row) and each team's own page (next to its heading), so
 // the outcome is visible at a glance without opening Team Details.
@@ -606,137 +611,119 @@ function allKnownTeamNumbers() {
   return visibleTeamNumbers();
 }
 
-// One team's own roster, categorized by guild: each guild's entry list is
-// every participant's own IGN + their individual salary (from that team's
-// own pool), plus a line for any management fee or Defense-bonus payout
-// credited to that guild. Scoped to a single team -- unlike the old
-// crusade-wide version, nothing here is merged across teams.
-function computeTeamGuildSalaryDetail(teamNumber) {
-  const team = getTeamData(teamNumber);
-  const items = team.items || [];
-  const itemSharesByParticipantId = items.map((item) => {
-    const map = new Map();
-    computeTeamItemShares(teamNumber, item).forEach(({ participant: p, total }) => map.set(p.id, total));
-    return map;
-  });
+// Every player's accumulated totals across EVERY team on this crusade,
+// categorized by guild -- one row per player (matched case-insensitively by
+// name), not one row per team, so someone who fought on three teams shows
+// up once with everything summed instead of three near-identical rows.
+function computeCrusadeGuildSalaryDetail() {
+  const byGuild = new Map(); // guildName -> Map(nameKey -> entry)
 
-  const byGuild = new Map();
-  computeTeamDistribution(teamNumber).forEach(({ participant: p, total }) => {
-    const key = p.guildName || 'Unassigned';
-    if (!byGuild.has(key)) byGuild.set(key, []);
-    byGuild.get(key).push({
-      name: p.name,
-      goldBid: p.goldBid,
-      attended: p.attended,
-      salary: total,
-      itemShares: itemSharesByParticipantId.map((m) => m.get(p.id) || 0),
-      isFee: false,
-      hasFee: false,
-      isBonus: false,
-      hasBonus: false,
-    });
-  });
-
-  // If a fee's IGN matches an existing participant in the same guild
-  // (case-insensitive), fold the fee into that one row instead of listing
-  // them twice — just flag it so the row can note "+ management fee".
-  (team.fees || []).forEach((fee) => {
-    if (!fee.guildName) return;
-    if (!byGuild.has(fee.guildName)) byGuild.set(fee.guildName, []);
-    const entries = byGuild.get(fee.guildName);
-    const feeAmount = crusadeFeeAmount(fee, team);
-    const match = entries.find((e) => !e.isFee && e.name.trim().toLowerCase() === fee.name.trim().toLowerCase());
-    if (match) {
-      match.salary += feeAmount;
-      match.hasFee = true;
-    } else {
-      entries.push({
-        name: fee.name,
-        goldBid: null,
-        attended: null,
-        salary: feeAmount,
-        itemShares: items.map(() => 0),
-        isFee: true,
+  function ensureEntry(guildKey, nameKey, displayName) {
+    if (!byGuild.has(guildKey)) byGuild.set(guildKey, new Map());
+    const players = byGuild.get(guildKey);
+    if (!players.has(nameKey)) {
+      players.set(nameKey, {
+        name: displayName,
+        isParticipant: false, // true once seen on an actual roster (controls Max Bid/Present display)
+        maxBid: 0,
+        present: 0,
+        teamsCount: 0,
+        salary: 0,
         hasFee: false,
-        isBonus: false,
-        hasBonus: false,
+        bonusShare: 0,
+        itemTotals: Object.fromEntries(CRUSADE_SUMMARY_ITEM_NAMES.map((name) => [name, 0])),
+      });
+    }
+    return players.get(nameKey);
+  }
+
+  allKnownTeamNumbers().forEach((n) => {
+    const team = getTeamData(n);
+    const isDefense = isDefenseStance(team);
+
+    computeTeamDistribution(n).forEach(({ participant: p, total }) => {
+      const entry = ensureEntry(p.guildName || 'Unassigned', p.name.trim().toLowerCase(), p.name);
+      entry.isParticipant = true;
+      entry.teamsCount += 1;
+      entry.present += p.attended ? 1 : 0;
+      if (!isDefense && p.goldBid > 0) entry.maxBid = Math.max(entry.maxBid, p.goldBid);
+      entry.salary += total;
+    });
+
+    (team.items || []).forEach((item) => {
+      if (!CRUSADE_SUMMARY_ITEM_NAMES.includes(item.name)) return; // custom/unknown item name -- no fixed column for it
+      computeTeamItemShares(n, item).forEach(({ participant: p, total }) => {
+        const entry = ensureEntry(p.guildName || 'Unassigned', p.name.trim().toLowerCase(), p.name);
+        entry.itemTotals[item.name] += total;
+      });
+    });
+
+    // Management fees fold into a matching roster row by name (case-
+    // insensitive), same as before -- if there's no matching row (on any
+    // team), the fee just gets its own fee-only entry (isParticipant stays
+    // false, decided once every team has been processed).
+    (team.fees || []).forEach((fee) => {
+      if (!fee.guildName) return;
+      const entry = ensureEntry(fee.guildName, fee.name.trim().toLowerCase(), fee.name);
+      entry.salary += crusadeFeeAmount(fee, team);
+      entry.hasFee = true;
+    });
+
+    // Defense-win bonus, credited by name/guild to whoever bid gold on the
+    // team this one inherited its bonus from -- regardless of whether
+    // they're on THIS team's (or any team's) roster at all.
+    const { perBidder } = computeTeamBonusShares(n);
+    if (perBidder > 0) {
+      (team.lastTeamBidders || []).forEach((bidder) => {
+        const entry = ensureEntry(bidder.guildName || 'Unassigned', bidder.name.trim().toLowerCase(), bidder.name);
+        entry.bonusShare += perBidder;
       });
     }
   });
 
-  // Defense-win bonus: same name-match merge as management fees, so a
-  // last-team bidder who's also on this team's roster gets one row with the
-  // bonus folded in, instead of a duplicate line.
-  const { perBidder } = computeTeamBonusShares(teamNumber);
-  if (perBidder > 0) {
-    (team.lastTeamBidders || []).forEach((bidder) => {
-      const guildKey = bidder.guildName || 'Unassigned';
-      if (!byGuild.has(guildKey)) byGuild.set(guildKey, []);
-      const entries = byGuild.get(guildKey);
-      const match = entries.find((e) => !e.isFee && e.name.trim().toLowerCase() === bidder.name.trim().toLowerCase());
-      if (match) {
-        match.salary += perBidder;
-        match.hasBonus = true;
-      } else {
-        entries.push({
-          name: bidder.name,
-          goldBid: null,
-          attended: null,
-          salary: perBidder,
-          itemShares: items.map(() => 0),
-          isFee: false,
-          hasFee: false,
-          isBonus: true,
-          hasBonus: false,
-        });
-      }
-    });
-  }
-
-  const isDefense = isDefenseStance(team);
   return Array.from(byGuild.entries())
-    .map(([name, entries]) => ({
-      name,
-      entries: entries.sort((a, b) => b.salary - a.salary),
-      memberCount: entries.filter((e) => !e.isFee && !e.isBonus).length,
-      total: entries.reduce((sum, e) => sum + e.salary, 0),
-      itemTotals: items.map((_, i) => entries.reduce((sum, e) => sum + (e.itemShares[i] || 0), 0)),
-      isDefense,
-    }))
+    .map(([name, players]) => {
+      const entries = Array.from(players.values())
+        .map((e) => ({ ...e, total: e.salary + e.bonusShare }))
+        .sort((a, b) => b.total - a.total);
+      return {
+        name,
+        entries,
+        memberCount: entries.filter((e) => e.isParticipant).length,
+        total: entries.reduce((sum, e) => sum + e.total, 0),
+      };
+    })
     .sort((a, b) => b.total - a.total);
 }
 
-// Back to a table (IGN / Max Bid / Present / Salary / one column per item)
-// instead of the stacked list -- with several items per person, cramming
-// "Max Bid X · Present Y · Item Z pcs · Item2 W pcs" onto one line read
-// worse than aligned columns.
-function renderTeamGuildSalaryCard(g, itemNames) {
+// One row per player: IGN / Max Bid / Present / Salary / Bonus Share /
+// Total Salary / one column per known item (see CRUSADE_SUMMARY_ITEM_NAMES).
+function renderPlayerSalaryCard(g) {
   const rows = g.entries
     .map((e) => {
-      const itemCells = itemNames.map((_, i) => `<td>${crusadeFormatItemQty(e.itemShares[i])}</td>`).join('');
-      const tagLines = [];
-      if (e.isFee) tagLines.push('(management fee)');
-      else if (e.hasFee) tagLines.push('(+ management fee)');
-      if (e.isBonus) tagLines.push('(defense bonus)');
-      else if (e.hasBonus) tagLines.push('(+ defense bonus)');
-      const tagLabel = tagLines
-        .map((t) => `<div style="font-weight:400; font-size:11px; color:var(--text-muted); white-space:nowrap;">${t}</div>`)
-        .join('');
+      const itemCells = CRUSADE_SUMMARY_ITEM_NAMES.map((name) => `<td>${crusadeFormatItemQty(e.itemTotals[name])}</td>`).join('');
+      const tagLabel = e.hasFee
+        ? `<div style="font-weight:400; font-size:11px; color:var(--text-muted); white-space:nowrap;">${e.isParticipant ? '(+ management fee)' : '(management fee)'}</div>`
+        : '';
+      const presentCell = e.isParticipant ? `${e.present}/${e.teamsCount}` : '–';
+      const maxBidCell = e.isParticipant ? crusadeFormatGold(e.maxBid) : '–';
       return `
     <tr>
       <td style="font-weight:600;"><div style="white-space:nowrap;">${escapeHtml(e.name)}</div>${tagLabel}</td>
-      ${g.isDefense ? '' : `<td>${e.goldBid === null ? '–' : crusadeFormatGold(e.goldBid)}</td>`}
-      <td>${e.attended === null ? '–' : e.attended ? '✓' : '✗'}</td>
+      <td>${maxBidCell}</td>
+      <td>${presentCell}</td>
       <td>${crusadeFormatDiamonds(e.salary)}</td>
+      <td>${crusadeFormatDiamonds(e.bonusShare)}</td>
+      <td style="font-weight:600;">${crusadeFormatDiamonds(e.total)}</td>
       ${itemCells}
     </tr>`;
     })
     .join('');
-  const totalRow = itemNames.length
-    ? `<tr class="crusade-table-total-row"><td>Total</td>${g.isDefense ? '' : '<td></td>'}<td></td><td>${crusadeFormatDiamonds(g.total)}</td>${itemNames
-        .map((_, i) => `<td>${crusadeFormatItemQty(g.itemTotals[i])}</td>`)
-        .join('')}</tr>`
-    : '';
+  const totalRow = `<tr class="crusade-table-total-row"><td>Total</td><td></td><td></td><td>${crusadeFormatDiamonds(
+    g.entries.reduce((sum, e) => sum + e.salary, 0)
+  )}</td><td>${crusadeFormatDiamonds(g.entries.reduce((sum, e) => sum + e.bonusShare, 0))}</td><td>${crusadeFormatDiamonds(g.total)}</td>${CRUSADE_SUMMARY_ITEM_NAMES.map(
+    (name) => `<td>${crusadeFormatItemQty(g.entries.reduce((sum, e) => sum + e.itemTotals[name], 0))}</td>`
+  ).join('')}</tr>`;
   return `
   <div class="crusade-party-card">
     <div class="crusade-party-card-header">
@@ -744,43 +731,27 @@ function renderTeamGuildSalaryCard(g, itemNames) {
     </div>
     <div class="table-scroll">
       <table class="members-table">
-        <thead><tr><th>IGN</th>${g.isDefense ? '' : '<th>Max Bid</th>'}<th>Present</th><th>Salary</th>${itemNames.map((name) => `<th>${escapeHtml(name)}</th>`).join('')}</tr></thead>
+        <thead><tr><th>IGN</th><th>Max Bid</th><th>Present</th><th>Salary</th><th>Bonus Share</th><th>Total Salary</th>${CRUSADE_SUMMARY_ITEM_NAMES.map((name) => `<th>${escapeHtml(name)}</th>`).join('')}</tr></thead>
         <tbody>${rows}${totalRow}</tbody>
       </table>
     </div>
   </div>`;
 }
 
-// One collapsible section per team (Team 1, Team 2, ...), each holding that
-// team's own guild-card breakdown -- every team is its own independent
-// battle with its own reward, so nothing here is merged across teams.
+// Every player's accumulated totals across every team on this crusade,
+// grouped by guild -- one card per guild instead of one section per team,
+// so the same player fighting on multiple teams shows up once, not
+// repeated once per team.
 function renderCrusadeGuildSalary() {
   const c = sovereignState.crusade;
   const dateText = c && c.eventDate ? formatLongDate(String(c.eventDate).slice(0, 10)) : 'No date set';
   document.getElementById('crusadeGuildSalaryMeta').textContent = `${c ? c.name : ''} — ${dateText}`;
 
+  const guilds = computeCrusadeGuildSalaryDetail();
   const el = document.getElementById('crusadeGuildSalaryDetail');
-  el.innerHTML = allKnownTeamNumbers()
-    .map((teamNumber) => {
-      const team = getTeamData(teamNumber);
-      const guilds = computeTeamGuildSalaryDetail(teamNumber);
-      const itemNames = (team.items || []).map((i) => i.name);
-      const teamTotal = guilds.reduce((sum, g) => sum + g.total, 0);
-      const cards = guilds.length
-        ? guilds.map((g) => renderTeamGuildSalaryCard(g, itemNames)).join('')
-        : '<p class="empty-state">No participants in this team yet.</p>';
-
-      return `
-      <details class="crusade-team-salary-section" open>
-        <summary class="crusade-team-salary-header">
-          <h3>Team ${teamNumber}</h3>
-          ${crusadeStatusBadge(team.result)}
-          <span style="color:var(--text-muted); font-size:13px;">${crusadeFormatDiamonds(teamTotal)}</span>
-        </summary>
-        <div class="crusade-party-grid">${cards}</div>
-      </details>`;
-    })
-    .join('');
+  el.innerHTML = guilds.length
+    ? `<div class="crusade-party-grid">${guilds.map((g) => renderPlayerSalaryCard(g)).join('')}</div>`
+    : '<p class="empty-state">No participants on this crusade yet.</p>';
 
   renderLastCrusadeBidders();
 }

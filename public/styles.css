@@ -902,34 +902,9 @@ select:focus, input:focus, textarea:focus {
 }
 .crusade-bulk-chip button:hover { color: var(--bad); }
 
-/* Guild Salary page: one collapsible <details> section per team, each
-   holding that team's own guild-card grid -- sections stack vertically,
-   cards within a section still wrap side by side via .crusade-party-grid. */
+/* Guild Salary page: every player's crusade-wide totals, one card per guild
+   -- cards wrap side by side via .crusade-party-grid. */
 .crusade-team-salary-list { display: flex; flex-direction: column; gap: 20px; }
-.crusade-team-salary-section {
-  border-top: 1px solid var(--gridline);
-  padding-top: 14px;
-}
-.crusade-team-salary-section:first-child { border-top: none; padding-top: 0; }
-.crusade-team-salary-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-  cursor: pointer;
-  list-style: none;
-  user-select: none;
-}
-.crusade-team-salary-header::-webkit-details-marker { display: none; }
-.crusade-team-salary-header::before {
-  content: '▸';
-  display: inline-block;
-  color: var(--text-muted);
-  font-size: 11px;
-  transition: transform 0.15s;
-}
-.crusade-team-salary-section[open] > .crusade-team-salary-header::before { transform: rotate(90deg); }
-.crusade-team-salary-header h3 { margin: 0; font-size: 15px; }
 
 /* Read-only "viewer" role (see common.js isAdmin/loadSession): the real
    enforcement is server-side (non-GET /api/* requires the admin role) — this
