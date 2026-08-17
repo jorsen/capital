@@ -41,6 +41,11 @@ function parseRoute() {
   showView(activeView);
   document.title = VIEW_TITLES[activeView] || 'Capital Records';
 
+  // Boss Timers polls the server every 5s while its view is open; stop that
+  // the moment we navigate anywhere else, or it keeps hitting the database
+  // in the background for as long as the tab stays open.
+  if (activeView !== 'bosses' && typeof stopBossTimerPolling === 'function') stopBossTimerPolling();
+
   if (activeView === 'members') loadMembersData().catch((err) => toast(err.message));
   if (activeView === 'queue') loadQueueData().catch((err) => toast(err.message));
   if (activeView === 'loot') loadLootData().catch((err) => toast(err.message));

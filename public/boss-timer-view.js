@@ -73,6 +73,16 @@ async function loadBossTimerData() {
   bossTimerState.pollHandle = setInterval(pollBossTimers, 5000);
 }
 
+// Called from the router whenever the active view changes away from
+// 'bosses' -- otherwise these intervals (especially the 5s server poll)
+// keep running for as long as the tab stays open, no matter what page is
+// actually showing, continuously hitting the database in the background.
+function stopBossTimerPolling() {
+  clearInterval(bossTimerState.tickHandle);
+  clearInterval(bossTimerState.refreshHandle);
+  clearInterval(bossTimerState.pollHandle);
+}
+
 async function pollBossTimers() {
   try {
     const bosses = await api('/api/boss-timers');
