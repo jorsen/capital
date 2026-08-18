@@ -64,7 +64,14 @@ function renderDiscordSyncResults(result) {
               .map(
                 (r) => `
           <tr>
-            <td colspan="6" style="color:var(--text-muted);">Skipped${r.boss ? ` (${escapeHtml(r.boss)}${r.date ? ` ${escapeHtml(r.date)}` : ''})` : ''}: ${escapeHtml(r.reason)}</td>
+            <td colspan="6" style="color:var(--text-muted);">
+              Skipped${r.boss ? ` (${escapeHtml(r.boss)}${r.date ? ` ${escapeHtml(r.date)}` : ''})` : ''}: ${escapeHtml(r.reason)}
+              ${
+                r.attempted && r.attempted.length
+                  ? `<div style="margin-top:2px;">Found but didn't match anyone: ${r.attempted.map((t) => escapeHtml(t)).join(', ')}</div>`
+                  : ''
+              }
+            </td>
           </tr>`
               )
               .join('')
