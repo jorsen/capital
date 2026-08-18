@@ -181,6 +181,7 @@
         <a href="#/cave-schedule" class="btn small" data-i18n="common.scheduleBtn">📅 Schedule</a>
         <button id="manageItemsBtnCave" class="btn small admin-only" data-i18n="common.manageItems">Manage Items</button>
         <button id="discordSyncBtn" class="btn small admin-only" data-i18n="caves.syncFromDiscord">🔗 Sync from Discord</button>
+        <button id="unmergeAttendanceBtn" class="btn small admin-only" title="One-time cleanup: splits attendance records that got wrongly combined before each message tracked its own session">🩹 Fix Merged Attendance</button>
         <button id="addCaveBtn" class="btn primary admin-only" data-i18n="common.logADate">+ Log a Date</button>
       </div>
 
@@ -728,6 +729,21 @@
     </div>
   </div>
 
+  <div id="unmergeAttendanceModal" class="modal-overlay hidden">
+    <div class="modal modal-wide">
+      <button class="modal-close" data-close="unmergeAttendanceModal" aria-label="Close">×</button>
+      <h2>Fix Merged Attendance</h2>
+      <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;">
+        One-time cleanup for attendance records logged before each Discord message tracked its own session — those got wrongly combined whenever the same boss was killed more than once on the same day. This re-fetches each affected message, splits it back into one record per kill (moving any existing loot onto the earliest one), and never touches anything already logged correctly. Safe to run more than once.
+      </p>
+      <div style="display:flex; gap:8px; margin:14px 0;">
+        <button id="unmergePreviewBtn" type="button" class="btn small">Preview</button>
+        <button id="unmergeApplyBtn" type="button" class="btn primary small hidden">Apply This Split</button>
+      </div>
+      <div id="unmergeResults"></div>
+    </div>
+  </div>
+
   <div id="manageItemsModal" class="modal-overlay hidden">
     <div class="modal modal-wide">
       <button class="modal-close" data-close="manageItemsModal" aria-label="Close">×</button>
@@ -820,7 +836,7 @@
   <script src="loot-view.js?v=30"></script>
   <script src="loot-session-view.js?v=33"></script>
   <script src="cave-view.js?v=9"></script>
-  <script src="cave-discord-sync.js?v=3"></script>
+  <script src="cave-discord-sync.js?v=4"></script>
   <script src="cave-date-view.js?v=4"></script>
   <script src="cave-session-view.js?v=11"></script>
   <script src="cave-report-view.js?v=3"></script>
