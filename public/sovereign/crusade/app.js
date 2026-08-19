@@ -949,7 +949,7 @@ function renderTeamDetail(n) {
         <td class="crusade-roster-name-cell" style="font-weight:600;"><span class="crusade-roster-name-click" data-edit-participant="${p.id}" title="Click to edit">${escapeHtml(p.name)}</span></td>
         <td>${crusadeGuildBadge(p.guildName)}</td>
         <td class="crusade-roster-position-col">${p.position ? escapeHtml(p.position) : '–'}</td>
-        ${isDefense ? '' : `<td>${crusadeFormatGold(p.goldBid)}</td>`}
+        <td>${isDefense ? t('sovereign.common.def') : crusadeFormatGold(p.goldBid)}</td>
         <td><input type="checkbox" class="crusade-attended-check admin-disable" data-participant-id="${p.id}" ${p.attended ? 'checked' : ''}></td>
         <td>${crusadeFormatDiamonds(attendanceAmount)}</td>
         ${isDefense ? '' : `<td>${crusadeFormatDiamonds(bidShare)}</td>`}
@@ -973,7 +973,7 @@ function renderTeamDetail(n) {
             <thead>
               <tr>
                 <th style="width:4%;">#</th><th style="width:20%;">${t('sovereign.common.name')}</th><th>${t('sovereign.common.guild')}</th><th class="crusade-roster-position-col">${t('sovereign.modal.positionLabel')}</th>
-                ${isDefense ? '' : `<th>${t('sovereign.roster.thBid')}</th>`}
+                <th>${t('sovereign.roster.thBid')}</th>
                 <th style="width:6%;">${t('sovereign.roster.thEnter')}</th>
                 <th>${t('sovereign.roster.thAttend')}</th>
                 ${isDefense ? '' : `<th>${t('sovereign.roster.thShare')}</th>`}
