@@ -845,73 +845,80 @@ function renderCrusadeGuildTotals(guilds) {
   document.getElementById('crusadeGuildTotalsBody').innerHTML = rows.join('') + totalRow;
 }
 
-// Every team is its own independent battle now, so each team's Defense
-// bonus (if it has one) pulls from its own "last team" -- this renders one
-// card per team that actually has bidders to track, rather than one shared
-// table for the whole crusade.
+// The "last crusade" bonus source is computed once per crusade on the
+// server (see getLastTeamBidders in lib/app.js), not per team -- every
+// Defense-win team on this crusade shares the exact same bidder list and
+// source crusade. Rendering one card per team used to show identical-
+// looking duplicate tables whenever more than one team won on Defense;
+// instead, every contributing team's per-bidder rate is summed into one
+// shared card, labeled with which teams paid into it.
 function renderLastCrusadeBidders() {
   const emptyState = document.getElementById('crusadeLastBiddersEmptyState');
   const container = document.getElementById('crusadeLastBiddersDetail');
 
-  const cards = allKnownTeamNumbers()
-    .map((teamNumber) => {
-      const team = getTeamData(teamNumber);
-      const bidders = team.lastTeamBidders || [];
-      const { perBidder } = computeTeamBonusShares(teamNumber);
-      // No bonus share at all (this team isn't a Defense win, or it lost)
-      // means there's nothing to actually pay out -- skip the card entirely
-      // rather than showing a table full of 0s.
-      if (!bidders.length || perBidder <= 0) return null;
-      const lastTeam = team.lastTeam;
-      const sourceDateText = lastTeam?.eventDate ? formatLongDate(String(lastTeam.eventDate).slice(0, 10)) : t('sovereign.common.noDateSet');
+  // No bonus share at all (this team isn't a Defense win, or it lost)
+  // means there's nothing to actually pay out -- skip it entirely rather
+  // than counting it toward the combined total.
+  const contributingTeams = allKnownTeamNumbers().filter((n) => {
+    const team = getTeamData(n);
+    const { perBidder } = computeTeamBonusShares(n);
+    return (team.lastTeamBidders || []).length && perBidder > 0;
+  });
 
-      // A single team's bidder list can run long with only one card ever
-      // showing (every other team either isn't a Defense win or inherited
-      // from the same source), leaving the second grid slot empty -- split
-      // it into two side-by-side mini-tables within this one card instead,
-      // numbered continuously across both halves.
-      const buildRows = (list, offset) =>
-        list
-          .map(
-            (b, i) => `
-        <tr>
-          <td>${offset + i + 1}</td>
-          <td style="font-weight:600; white-space:nowrap;">${escapeHtml(b.name)}</td>
-          <td>${crusadeGuildBadge(b.guildName)}</td>
-          <td>${crusadeFormatGold(b.goldBid)}</td>
-          <td>${crusadeFormatDiamonds(perBidder)}</td>
-        </tr>`
-          )
-          .join('');
-      const buildTable = (list, offset) => `
-        <div class="table-scroll">
-          <table class="members-table">
-            <thead><tr><th>#</th><th>${t('sovereign.common.ign')}</th><th>${t('sovereign.common.guild')}</th><th>${t('sovereign.modal.goldBidLabel')}</th><th>${t('sovereign.common.bonusShare')}</th></tr></thead>
-            <tbody>${buildRows(list, offset)}</tbody>
-          </table>
-        </div>`;
+  if (!contributingTeams.length) {
+    emptyState.classList.remove('hidden');
+    container.innerHTML = '';
+    return;
+  }
 
-      const half = Math.ceil(bidders.length / 2);
-      const firstHalf = bidders.slice(0, half);
-      const secondHalf = bidders.slice(half);
+  const bidders = getTeamData(contributingTeams[0]).lastTeamBidders || [];
+  const lastTeam = getTeamData(contributingTeams[0]).lastTeam;
+  const sourceDateText = lastTeam?.eventDate ? formatLongDate(String(lastTeam.eventDate).slice(0, 10)) : t('sovereign.common.noDateSet');
+  const combinedPerBidder = contributingTeams.reduce((sum, n) => sum + computeTeamBonusShares(n).perBidder, 0);
+  const teamListText = contributingTeams.map((n) => n).join(' & ');
 
-      return `
-      <div class="crusade-party-card">
-        <div class="crusade-party-card-header">
-          <h3>${t('sovereign.salary.teamBonusHeading').replace('{n}', teamNumber)}</h3>
-        </div>
-        <p style="color:var(--text-muted); font-size:12px; margin:-4px 0 10px;">${t('sovereign.salary.sourceCrusade')}: ${escapeHtml(lastTeam.crusadeName)} — <strong style="color:var(--text);">${sourceDateText}</strong></p>
-        <div class="crusade-bidders-columns">
-          ${buildTable(firstHalf, 0)}
-          ${secondHalf.length ? buildTable(secondHalf, half) : ''}
-        </div>
-        <div class="crusade-table-total-row" style="text-align:right; padding:8px 4px 0;">${t('sovereign.common.total')} — ${crusadeFormatDiamonds(perBidder * bidders.length)}</div>
-      </div>`;
-    })
-    .filter(Boolean);
+  // A single team's bidder list can run long with only one card ever
+  // showing, leaving the second grid slot empty -- split it into two
+  // side-by-side mini-tables within this one card instead, numbered
+  // continuously across both halves.
+  const buildRows = (list, offset) =>
+    list
+      .map(
+        (b, i) => `
+    <tr>
+      <td>${offset + i + 1}</td>
+      <td style="font-weight:600; white-space:nowrap;">${escapeHtml(b.name)}</td>
+      <td>${crusadeGuildBadge(b.guildName)}</td>
+      <td>${crusadeFormatGold(b.goldBid)}</td>
+      <td>${crusadeFormatDiamonds(combinedPerBidder)}</td>
+    </tr>`
+      )
+      .join('');
+  const buildTable = (list, offset) => `
+    <div class="table-scroll">
+      <table class="members-table">
+        <thead><tr><th>#</th><th>${t('sovereign.common.ign')}</th><th>${t('sovereign.common.guild')}</th><th>${t('sovereign.modal.goldBidLabel')}</th><th>${t('sovereign.common.bonusShare')}</th></tr></thead>
+        <tbody>${buildRows(list, offset)}</tbody>
+      </table>
+    </div>`;
 
-  emptyState.classList.toggle('hidden', cards.length !== 0);
-  container.innerHTML = cards.join('');
+  const half = Math.ceil(bidders.length / 2);
+  const firstHalf = bidders.slice(0, half);
+  const secondHalf = bidders.slice(half);
+
+  container.innerHTML = `
+  <div class="crusade-party-card">
+    <div class="crusade-party-card-header">
+      <h3>${t('sovereign.salary.teamBonusHeading').replace('{n}', teamListText)}</h3>
+    </div>
+    <p style="color:var(--text-muted); font-size:12px; margin:-4px 0 10px;">${t('sovereign.salary.sourceCrusade')}: ${escapeHtml(lastTeam.crusadeName)} — <strong style="color:var(--text);">${sourceDateText}</strong></p>
+    <div class="crusade-bidders-columns">
+      ${buildTable(firstHalf, 0)}
+      ${secondHalf.length ? buildTable(secondHalf, half) : ''}
+    </div>
+    <div class="crusade-table-total-row" style="text-align:right; padding:8px 4px 0;">${t('sovereign.common.total')} — ${crusadeFormatDiamonds(combinedPerBidder * bidders.length)}</div>
+  </div>`;
+  emptyState.classList.add('hidden');
 }
 
 // The team's own page shows *all* of its records in one place: roster
