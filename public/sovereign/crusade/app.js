@@ -655,6 +655,7 @@ function computeCrusadeGuildSalaryDetail() {
         feePercent: 0,
         feeAmount: 0,
         bonusShare: 0,
+        bonusSources: [], // crusade names this player's bonusShare was paid out from (see below)
         itemTotals: Object.fromEntries(CRUSADE_SUMMARY_ITEM_NAMES.map((name) => [name, 0])),
       });
     }
@@ -709,6 +710,9 @@ function computeCrusadeGuildSalaryDetail() {
       (team.lastTeamBidders || []).forEach((bidder) => {
         const entry = ensureEntry(bidder.guildName || 'Unassigned', bidder.name.trim().toLowerCase(), bidder.name);
         entry.bonusShare += perBidder;
+        if (team.lastTeam && !entry.bonusSources.some((s) => s.crusadeName === team.lastTeam.crusadeName)) {
+          entry.bonusSources.push({ crusadeName: team.lastTeam.crusadeName, eventDate: team.lastTeam.eventDate });
+        }
       });
     }
   });
@@ -741,6 +745,12 @@ function renderPlayerSalaryCard(g) {
       const presentCell = e.isParticipant ? `${e.present}/${e.teamsCount}` : '–';
       const maxBidCell = !e.isParticipant ? '–' : !e.hasAttackTeam ? t('sovereign.common.def') : crusadeFormatGold(e.maxBid);
       const feePercentCell = e.feePercent > 0 ? `${e.feePercent}%` : '–';
+      const bonusSourceText = e.bonusSources
+        .map((s) => `${s.crusadeName}${s.eventDate ? ` (${formatLongDate(String(s.eventDate).slice(0, 10))})` : ''}`)
+        .join('; ');
+      const bonusShareCell = e.bonusSources.length
+        ? `<span title="${escapeHtml(`${t('sovereign.salary.sourceCrusade')}: ${bonusSourceText}`)}" style="border-bottom:1px dotted var(--text-muted); cursor:help;">${crusadeFormatDiamonds(e.bonusShare)}</span>`
+        : crusadeFormatDiamonds(e.bonusShare);
       return `
     <tr>
       <td>${i + 1}</td>
@@ -750,7 +760,7 @@ function renderPlayerSalaryCard(g) {
       <td>${crusadeFormatDiamonds(e.salary)}</td>
       <td>${feePercentCell}</td>
       <td>${crusadeFormatDiamonds(e.feeAmount)}</td>
-      <td>${crusadeFormatDiamonds(e.bonusShare)}</td>
+      <td>${bonusShareCell}</td>
       <td style="font-weight:600;">${crusadeFormatDiamonds(e.total)}</td>
       ${itemCells}
     </tr>`;
