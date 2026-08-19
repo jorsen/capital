@@ -936,7 +936,10 @@ function renderTeamDetail(n) {
   const body = document.getElementById('crusadeTeamRosterBody');
   body.innerHTML = partySlots
     .map((slot) => {
-      const rowsInParty = byParty.get(slot) || [];
+      // Checked-in (attended) members float to the top of their party, so a
+      // glance at the card shows who's actually present first -- stable sort
+      // keeps everyone's relative order within each of the two groups.
+      const rowsInParty = (byParty.get(slot) || []).slice().sort((a, b) => (b.participant.attended ? 1 : 0) - (a.participant.attended ? 1 : 0));
       const full = rowsInParty.length >= CRUSADE_PARTY_MAX_MEMBERS;
       const memberRows = rowsInParty
         .map(
