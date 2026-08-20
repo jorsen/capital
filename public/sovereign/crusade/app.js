@@ -96,6 +96,33 @@ function getTeamData(teamNumber) {
 // '' -> crusade list, '#members' -> master member list, '#crusade/<id>' ->
 // crusade overview (details + team list), '#crusade/<id>/team/<n>' -> one
 // team's full records.
+//
+// The '<id>' segment is really 'slug--<uuid>' (see crusadeSlugSegment) --
+// a readable name/date prefix for anyone glancing at or sharing the URL,
+// with the real UUID always the part after the last '--' so the route
+// still resolves correctly. A bare UUID (no '--') works too, so every link
+// shared before this existed keeps working unchanged.
+
+// A readable stand-in for a crusade's UUID in the URL -- name and date
+// slugified, with the real id appended after '--' so the link still
+// resolves (and stays unique even if two crusades slugify to the same
+// text). Falls back to the bare id if there's nothing to slugify.
+function crusadeSlugSegment(crusade) {
+  if (!crusade || !crusade.id) return '';
+  const label = [crusade.name, crusade.eventDate ? String(crusade.eventDate).slice(0, 10) : null].filter(Boolean).join('-');
+  const slug = label
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return slug ? `${slug}--${crusade.id}` : crusade.id;
+}
+
+// Reverses crusadeSlugSegment -- everything after the last '--' is the
+// real id; a segment with no '--' (an old bare-UUID link) is used as-is.
+function crusadeIdFromHashSegment(segment) {
+  const idx = segment.lastIndexOf('--');
+  return idx === -1 ? segment : segment.slice(idx + 2);
+}
 
 function route() {
   const hash = window.location.hash.slice(1);
@@ -116,15 +143,15 @@ function route() {
     return;
   }
   if (teamMatch) {
-    sovereignState.crusadeId = teamMatch[1];
+    sovereignState.crusadeId = crusadeIdFromHashSegment(teamMatch[1]);
     sovereignState.activeTeam = Number(teamMatch[2]);
     sovereignState.mode = 'team';
   } else if (guildSalaryMatch) {
-    sovereignState.crusadeId = guildSalaryMatch[1];
+    sovereignState.crusadeId = crusadeIdFromHashSegment(guildSalaryMatch[1]);
     sovereignState.activeTeam = null;
     sovereignState.mode = 'guildSalary';
   } else if (crusadeMatch) {
-    sovereignState.crusadeId = crusadeMatch[1];
+    sovereignState.crusadeId = crusadeIdFromHashSegment(crusadeMatch[1]);
     sovereignState.activeTeam = null;
     sovereignState.mode = 'overview';
   } else {
@@ -156,17 +183,17 @@ document.getElementById('sovereignBackLink').addEventListener('click', (e) => {
 
 document.getElementById('viewGuildSalaryLink').addEventListener('click', (e) => {
   e.preventDefault();
-  window.location.hash = `crusade/${sovereignState.crusadeId}/guild-salary`;
+  window.location.hash = `crusade/${crusadeSlugSegment(sovereignState.crusade)}/guild-salary`;
 });
 
 document.getElementById('sovereignGuildSalaryBackLink').addEventListener('click', (e) => {
   e.preventDefault();
-  window.location.hash = `crusade/${sovereignState.crusadeId}`;
+  window.location.hash = `crusade/${crusadeSlugSegment(sovereignState.crusade)}`;
 });
 
 document.getElementById('sovereignTeamBackLink').addEventListener('click', (e) => {
   e.preventDefault();
-  window.location.hash = `crusade/${sovereignState.crusadeId}`;
+  window.location.hash = `crusade/${crusadeSlugSegment(sovereignState.crusade)}`;
 });
 
 window.addEventListener('hashchange', route);
@@ -200,7 +227,7 @@ function renderCrusadeList() {
     (c, i) => `
     <tr>
       <td>${i + 1}</td>
-      <td><a href="#crusade/${c.id}" style="font-weight:600;">${c.eventDate ? escapeHtml(formatLongDate(String(c.eventDate).slice(0, 10))) : t('sovereign.common.noDateSet')}</a></td>
+      <td><a href="#crusade/${crusadeSlugSegment(c)}" style="font-weight:600;">${c.eventDate ? escapeHtml(formatLongDate(String(c.eventDate).slice(0, 10))) : t('sovereign.common.noDateSet')}</a></td>
       <td>${c.participantCount}</td>
       <td>${crusadeFormatDiamonds(c.feeDiamonds)}</td>
       <td>${crusadeFormatDiamonds(c.netDiamondReward)}</td>
@@ -254,7 +281,7 @@ document.getElementById('addCrusadeForm').addEventListener('submit', async (e) =
       }),
     });
     document.getElementById('addCrusadeModal').classList.add('hidden');
-    window.location.hash = `crusade/${crusade.id}`;
+    window.location.hash = `crusade/${crusadeSlugSegment(crusade)}`;
   } catch (err) {
     toast(err.message);
   }
@@ -592,7 +619,7 @@ document.getElementById('deleteTeamBtn').addEventListener('click', async () => {
     sovereignState.participants = sovereignState.participants.filter((p) => p.partyNumber !== n);
     sovereignState.teams = sovereignState.teams.filter((t) => t.teamNumber !== n);
     toast(`Team ${n} deleted`);
-    window.location.hash = `crusade/${sovereignState.crusadeId}`;
+    window.location.hash = `crusade/${crusadeSlugSegment(sovereignState.crusade)}`;
   } catch (err) {
     toast(err.message);
   }
@@ -624,7 +651,7 @@ function renderTeamList() {
       return `
       <tr>
         <td>${i + 1}</td>
-        <td><a href="#crusade/${sovereignState.crusadeId}/team/${n}" style="font-weight:600;">${t('sovereign.common.team')} ${n}</a></td>
+        <td><a href="#crusade/${crusadeSlugSegment(sovereignState.crusade)}/team/${n}" style="font-weight:600;">${t('sovereign.common.team')} ${n}</a></td>
         <td>${crusadeStatusBadge(team.result)}</td>
         <td>${team.stance ? t(`sovereign.stance.${team.stance.toLowerCase()}`) : '–'}</td>
         <td>${count}</td>
@@ -786,7 +813,7 @@ function renderPlayerSalaryCard(g) {
       const primaryTeam = e.teamNumbers.size ? Math.min(...e.teamNumbers) : null;
       const nameCell =
         primaryTeam !== null
-          ? `<a href="#crusade/${sovereignState.crusadeId}/team/${primaryTeam}" style="white-space:nowrap;">${escapeHtml(e.name)}</a>`
+          ? `<a href="#crusade/${crusadeSlugSegment(sovereignState.crusade)}/team/${primaryTeam}" style="white-space:nowrap;">${escapeHtml(e.name)}</a>`
           : `<span style="white-space:nowrap;">${escapeHtml(e.name)}</span>`;
       return `
     <tr>
@@ -1250,7 +1277,7 @@ document.getElementById('crusadeBulkAddForm').addEventListener('submit', async (
 // landing on its (empty) roster page ready for "+ Add Participant".
 document.getElementById('addCrusadeTeamBtn').addEventListener('click', () => {
   const nextTeam = Math.max(...visibleTeamNumbers()) + 1;
-  window.location.hash = `crusade/${sovereignState.crusadeId}/team/${nextTeam}`;
+  window.location.hash = `crusade/${crusadeSlugSegment(sovereignState.crusade)}/team/${nextTeam}`;
 });
 
 document.getElementById('crusadeParticipantForm').addEventListener('submit', async (e) => {
