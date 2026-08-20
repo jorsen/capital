@@ -467,11 +467,18 @@ function populateTeamDetailsForm(teamNumber) {
   updateTeamDetailsStanceUI(form.elements.stance.value);
 }
 
-// No bidding while defending, so the Attendance Share % field (which only
-// exists to split a pool between attendance and bid) is meaningless for a
-// Defense team -- hide it rather than leave a control that does nothing.
+// No bidding while defending, so a Defense team's own-roster pool is
+// always 100% attendance -- fix the field at 60% (this crusade's standard
+// Defense-win split) and lock it rather than leave a stale/editable value
+// that doesn't actually apply.
 function updateTeamDetailsStanceUI(stance) {
-  document.querySelector('.crusade-attendance-pct-field').classList.toggle('hidden', stance === 'Defense');
+  const input = document.querySelector('#teamDetailsForm [name="attendancePct"]');
+  if (stance === 'Defense') {
+    input.value = 60;
+    input.disabled = true;
+  } else {
+    input.disabled = false;
+  }
 }
 
 document.querySelector('#teamDetailsForm select[name="stance"]').addEventListener('change', (e) => {

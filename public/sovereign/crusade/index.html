@@ -196,6 +196,51 @@
       </div>
 
       <section class="panel">
+        <h2 data-i18n="sovereign.team.detailsHeading">Team Details</h2>
+        <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;" data-i18n="sovereign.team.detailsHint">Specific to this team only — other teams on this crusade keep their own war type, stance, result, diamond reward, etc.</p>
+        <form id="teamDetailsForm" class="crusade-header-form">
+          <label><span data-i18n="sovereign.team.warTypeLabel">War Type</span>
+            <select class="admin-disable" name="warType">
+              <option value="">—</option>
+              <option value="20vs20">20vs20</option>
+              <option value="50vs50">50vs50</option>
+            </select>
+          </label>
+          <label><span data-i18n="sovereign.common.stance">Stance</span>
+            <select class="admin-disable" name="stance">
+              <option value="">—</option>
+              <option value="Attack" data-i18n="sovereign.stance.attack">Attack</option>
+              <option value="Defense" data-i18n="sovereign.stance.defense">Defense</option>
+            </select>
+          </label>
+          <label><span data-i18n="sovereign.team.areaLabel">Area</span>
+            <input class="admin-disable" name="area" type="text" maxlength="60" placeholder="e.g. Kamastok">
+          </label>
+          <label><span data-i18n="sovereign.team.leaderLabel">Leader</span>
+            <input class="admin-disable" name="leader" type="text" maxlength="40">
+          </label>
+          <label><span data-i18n="sovereign.team.resultLabel">Result</span>
+            <select class="admin-disable" name="result">
+              <option value="pending" data-i18n="sovereign.result.pending">Pending</option>
+              <option value="win" data-i18n="sovereign.result.win">Win</option>
+              <option value="lose" data-i18n="sovereign.result.lose">Lose</option>
+              <option value="draw" data-i18n="sovereign.result.draw">Draw</option>
+            </select>
+          </label>
+          <label><span data-i18n="sovereign.team.diamondRewardLabel">Diamond Reward</span>
+            <input class="admin-disable" name="diamondReward" type="number" min="0" step="0.01">
+          </label>
+          <label class="crusade-attendance-pct-field"><span data-i18n="sovereign.team.attendanceShareLabel">Attendance Share %</span>
+            <input class="admin-disable" name="attendancePct" type="number" min="0" max="100" step="1">
+          </label>
+          <label class="crusade-notes-field"><span data-i18n="sovereign.team.notesLabel">Notes</span>
+            <textarea class="admin-disable" name="notes" rows="2" placeholder="e.g. Morions / Loot Chest / Guild Coins split still being discussed"></textarea>
+          </label>
+          <button type="submit" class="btn primary small admin-only" data-i18n="sovereign.common.save">Save</button>
+        </form>
+      </section>
+
+      <section class="panel">
         <div class="view-header space-between" style="margin-bottom:6px;">
           <div style="display:flex; align-items:center; gap:10px;">
             <h2 id="crusadeTeamHeading" style="margin:0;">Team</h2>
@@ -269,47 +314,6 @@
             <input type="number" name="percent" min="0" max="100" step="0.1" placeholder="e.g. 5" required>
           </label>
           <button type="submit" class="btn primary small" data-i18n="sovereign.team.addFee">+ Add Fee</button>
-        </form>
-      </section>
-
-      <section class="panel">
-        <h2 data-i18n="sovereign.team.detailsHeading">Team Details</h2>
-        <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;" data-i18n="sovereign.team.detailsHint">Specific to this team only — other teams on this crusade keep their own war type, stance, result, diamond reward, etc.</p>
-        <form id="teamDetailsForm" class="crusade-header-form">
-          <label><span data-i18n="sovereign.team.warTypeLabel">War Type</span>
-            <input class="admin-disable" name="warType" type="text" maxlength="20" placeholder="e.g. 20vs20">
-          </label>
-          <label><span data-i18n="sovereign.common.stance">Stance</span>
-            <select class="admin-disable" name="stance">
-              <option value="">—</option>
-              <option value="Attack" data-i18n="sovereign.stance.attack">Attack</option>
-              <option value="Defense" data-i18n="sovereign.stance.defense">Defense</option>
-            </select>
-          </label>
-          <label><span data-i18n="sovereign.team.areaLabel">Area</span>
-            <input class="admin-disable" name="area" type="text" maxlength="60" placeholder="e.g. Kamastok">
-          </label>
-          <label><span data-i18n="sovereign.team.leaderLabel">Leader</span>
-            <input class="admin-disable" name="leader" type="text" maxlength="40">
-          </label>
-          <label><span data-i18n="sovereign.team.resultLabel">Result</span>
-            <select class="admin-disable" name="result">
-              <option value="pending" data-i18n="sovereign.result.pending">Pending</option>
-              <option value="win" data-i18n="sovereign.result.win">Win</option>
-              <option value="lose" data-i18n="sovereign.result.lose">Lose</option>
-              <option value="draw" data-i18n="sovereign.result.draw">Draw</option>
-            </select>
-          </label>
-          <label><span data-i18n="sovereign.team.diamondRewardLabel">Diamond Reward</span>
-            <input class="admin-disable" name="diamondReward" type="number" min="0" step="0.01">
-          </label>
-          <label class="crusade-attendance-pct-field"><span data-i18n="sovereign.team.attendanceShareLabel">Attendance Share %</span>
-            <input class="admin-disable" name="attendancePct" type="number" min="0" max="100" step="1">
-          </label>
-          <label class="crusade-notes-field"><span data-i18n="sovereign.team.notesLabel">Notes</span>
-            <textarea class="admin-disable" name="notes" rows="2" placeholder="e.g. Morions / Loot Chest / Guild Coins split still being discussed"></textarea>
-          </label>
-          <button type="submit" class="btn primary small admin-only" data-i18n="sovereign.common.save">Save</button>
         </form>
       </section>
     </div>
@@ -494,6 +498,6 @@
 
   <script src="/common.js?v=35"></script>
   <script src="/i18n.js?v=9"></script>
-  <script src="/sovereign/crusade/app.js?v=84"></script>
+  <script src="/sovereign/crusade/app.js?v=85"></script>
 </body>
 </html>
