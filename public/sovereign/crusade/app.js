@@ -813,7 +813,7 @@ function renderPlayerSalaryCard(g) {
       const primaryTeam = e.teamNumbers.size ? Math.min(...e.teamNumbers) : null;
       const nameCell =
         primaryTeam !== null
-          ? `<a href="#crusade/${crusadeSlugSegment(sovereignState.crusade)}/team/${primaryTeam}" style="white-space:nowrap;">${escapeHtml(e.name)}</a>`
+          ? `<a href="#crusade/${crusadeSlugSegment(sovereignState.crusade)}/team/${primaryTeam}" class="crusade-player-link" style="white-space:nowrap;">${escapeHtml(e.name)}</a>`
           : `<span style="white-space:nowrap;">${escapeHtml(e.name)}</span>`;
       return `
     <tr>
