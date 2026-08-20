@@ -651,6 +651,7 @@ function computeCrusadeGuildSalaryDetail() {
         hasAttackTeam: false, // true once seen on a non-Defense team -- distinguishes "never bid" (0) from "never had the option" (all Defense)
         present: 0,
         teamsCount: 0,
+        teamNumbers: new Set(), // every team number this player actually rostered on this crusade (for linking to their team page)
         salary: 0,
         feePercent: 0,
         feeAmount: 0,
@@ -662,6 +663,21 @@ function computeCrusadeGuildSalaryDetail() {
     return players.get(nameKey);
   }
 
+  // A name that already has a roster entry in SOME guild (found by name
+  // alone, ignoring which guild) -- used so a bonus bidder whose guild was
+  // recorded differently back on the crusade they bid on (switched guilds
+  // since, or it was left blank) still merges into their one real row
+  // instead of spawning an orphaned duplicate under a different guild.
+  function findEntryByNameKey(nameKey) {
+    for (const players of byGuild.values()) {
+      if (players.has(nameKey)) return players.get(nameKey);
+    }
+    return null;
+  }
+
+  // Pass 1: every team's own roster/items/fees, across ALL teams, before any
+  // bonus is credited -- so pass 2's name lookup always sees a player's real
+  // roster entry (on whichever team it lives on) already in place.
   allKnownTeamNumbers().forEach((n) => {
     const team = getTeamData(n);
     const isDefense = isDefenseStance(team);
@@ -670,6 +686,7 @@ function computeCrusadeGuildSalaryDetail() {
       const entry = ensureEntry(p.guildName || 'Unassigned', p.name.trim().toLowerCase(), p.name);
       entry.isParticipant = true;
       entry.teamsCount += 1;
+      entry.teamNumbers.add(n);
       entry.present += p.attended ? 1 : 0;
       if (!isDefense) {
         entry.hasAttackTeam = true;
@@ -701,20 +718,25 @@ function computeCrusadeGuildSalaryDetail() {
       entry.feePercent += Number(fee.percent) || 0;
       entry.feeAmount += crusadeFeeAmount(fee, team);
     });
+  });
 
-    // Defense-win bonus, credited by name/guild to whoever bid gold on the
-    // team this one inherited its bonus from -- regardless of whether
-    // they're on THIS team's (or any team's) roster at all.
+  // Pass 2: Defense-win bonus, credited by name to whoever bid gold on the
+  // team this one inherited its bonus from -- regardless of whether
+  // they're on THIS team's (or any team's) roster at all. Matched by name
+  // only (see findEntryByNameKey) so it lands on a bidder's real roster
+  // row even if their guild changed since the crusade they bid on.
+  allKnownTeamNumbers().forEach((n) => {
+    const team = getTeamData(n);
     const { perBidder } = computeTeamBonusShares(n);
-    if (perBidder > 0) {
-      (team.lastTeamBidders || []).forEach((bidder) => {
-        const entry = ensureEntry(bidder.guildName || 'Unassigned', bidder.name.trim().toLowerCase(), bidder.name);
-        entry.bonusShare += perBidder;
-        if (team.lastTeam && !entry.bonusSources.some((s) => s.crusadeName === team.lastTeam.crusadeName)) {
-          entry.bonusSources.push({ crusadeName: team.lastTeam.crusadeName, eventDate: team.lastTeam.eventDate });
-        }
-      });
-    }
+    if (perBidder <= 0) return;
+    (team.lastTeamBidders || []).forEach((bidder) => {
+      const nameKey = bidder.name.trim().toLowerCase();
+      const entry = findEntryByNameKey(nameKey) || ensureEntry(bidder.guildName || 'Unassigned', nameKey, bidder.name);
+      entry.bonusShare += perBidder;
+      if (team.lastTeam && !entry.bonusSources.some((s) => s.crusadeName === team.lastTeam.crusadeName)) {
+        entry.bonusSources.push({ crusadeName: team.lastTeam.crusadeName, eventDate: team.lastTeam.eventDate });
+      }
+    });
   });
 
   return Array.from(byGuild.entries())
@@ -751,10 +773,18 @@ function renderPlayerSalaryCard(g) {
       const bonusShareCell = e.bonusSources.length
         ? `<span title="${escapeHtml(`${t('sovereign.salary.sourceCrusade')}: ${bonusSourceText}`)}" style="border-bottom:1px dotted var(--text-muted); cursor:help;">${crusadeFormatDiamonds(e.bonusShare)}</span>`
         : crusadeFormatDiamonds(e.bonusShare);
+      // Links straight to whichever team this player actually rostered on
+      // (their lowest team number, if on more than one) -- a fee/bonus-only
+      // entry with no roster appearance at all has nowhere to link to.
+      const primaryTeam = e.teamNumbers.size ? Math.min(...e.teamNumbers) : null;
+      const nameCell =
+        primaryTeam !== null
+          ? `<a href="#crusade/${sovereignState.crusadeId}/team/${primaryTeam}" style="white-space:nowrap;">${escapeHtml(e.name)}</a>`
+          : `<span style="white-space:nowrap;">${escapeHtml(e.name)}</span>`;
       return `
     <tr>
       <td>${i + 1}</td>
-      <td style="font-weight:600;"><div style="white-space:nowrap;">${escapeHtml(e.name)}</div></td>
+      <td style="font-weight:600;">${nameCell}</td>
       <td>${maxBidCell}</td>
       <td>${presentCell}</td>
       <td>${crusadeFormatDiamonds(e.salary)}</td>
