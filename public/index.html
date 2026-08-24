@@ -452,6 +452,7 @@
     <div id="view-world-dungeon" class="view hidden">
       <div class="view-header space-between">
         <p style="color:var(--text-muted); font-size:13px; margin:0; flex:1;" data-i18n="worldDungeon.hint">Every Thursday and Sunday, assign which guild is taking on each boss.</p>
+        <a href="#/world-dungeon-salary" class="btn small">💰 Salary</a>
         <button id="manageWorldDungeonGuildsBtn" class="btn small admin-only" data-i18n="worldDungeon.manageGuilds">Manage Guilds</button>
       </div>
 
@@ -478,6 +479,104 @@
           </div>
         </div>
         <p id="worldDungeonNoGuildsState" class="empty-state hidden" data-i18n="worldDungeon.noGuilds">No guilds added yet — click "Manage Guilds" to add one.</p>
+      </section>
+    </div>
+
+    <!-- ===================== WORLD DUNGEON SALARY VIEW ===================== -->
+    <div id="view-world-dungeon-salary" class="view hidden">
+      <div class="view-header space-between">
+        <a href="#/world-dungeon" class="back-link">← Back to World Dungeon Schedule</a>
+        <input type="month" id="worldDungeonSalaryMonthInput" aria-label="Month">
+      </div>
+
+      <section class="panel">
+        <div class="growth-form-row" style="align-items:end;">
+          <div class="stat-tile">
+            <span class="stat-label">Salary Pool</span>
+            <span class="stat-value" id="worldDungeonSalaryPoolValue">0 💎</span>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-label">Accounting Fees</span>
+            <span class="stat-value" id="worldDungeonSalaryFeesValue">0 💎</span>
+          </div>
+          <div class="stat-tile gold">
+            <span class="stat-label">Final Salary Pool</span>
+            <span class="stat-value" id="worldDungeonSalaryFinalPoolValue">0 💎</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>World Dungeon Runs</h2>
+        <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;">Click a run to mark attendees and log sold loot. The Salary Pool above is the sum of qty × sold price across every run this month.</p>
+        <form id="addWorldDungeonSalarySessionForm" class="growth-form-row admin-only" style="margin-bottom:12px;">
+          <label><span>Date</span><input type="date" name="date" required></label>
+          <label><span>Run / Notes</span><input type="text" name="run" placeholder="e.g. Hisharat"></label>
+          <button type="submit" class="btn primary small">+ Log a Run</button>
+        </form>
+        <div class="table-scroll">
+          <table class="members-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Run</th>
+                <th>Attendees</th>
+                <th>Records</th>
+                <th>Total Qty</th>
+                <th>Total Pool</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="worldDungeonSalarySessionsBody"></tbody>
+          </table>
+        </div>
+        <p id="worldDungeonSalarySessionsEmptyState" class="empty-state hidden">No World Dungeon runs logged for this month yet — click "Log a Run" to start.</p>
+      </section>
+
+      <section class="panel">
+        <h2>Accounting Fees</h2>
+        <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;">
+          Each entry takes a flat % of the raw Salary Pool off the top, then that amount is added back on top of the recipient's own distributed share.
+        </p>
+        <div class="table-scroll">
+          <table class="growth-table">
+            <thead><tr><th>Name</th><th>Percent</th><th></th></tr></thead>
+            <tbody id="worldDungeonSalaryFeesBody"></tbody>
+          </table>
+        </div>
+        <form id="addWorldDungeonSalaryFeeForm" class="growth-form-row admin-only" style="margin-top:12px;">
+          <label style="flex:1.5;"><span>Name / Member</span>
+            <select name="memberId" id="worldDungeonSalaryFeeMemberSelect"></select>
+          </label>
+          <label><span>Custom name <span style="color:var(--text-muted); font-weight:400;">(if not a member)</span></span>
+            <input type="text" name="customName" placeholder="e.g. Attendance Marshals">
+          </label>
+          <label style="max-width:120px;"><span>Percent</span><input type="number" name="percent" min="0" max="100" step="0.01" required></label>
+          <button type="submit" class="btn primary small">Add Fee</button>
+        </form>
+      </section>
+
+      <section class="panel">
+        <h2>Salary Breakdown</h2>
+        <div class="table-scroll">
+          <table class="members-table">
+            <thead>
+              <tr>
+                <th>IGN</th>
+                <th>Attendance</th>
+                <th title="Flat value set per member"><span>Multiplier</span><br><span class="th-formula">set per member</span></th>
+                <th title="Base Share = Attendance ÷ Total Attendance"><span>Base Share</span><br><span class="th-formula">Attendance ÷ Σ Attendance</span></th>
+                <th title="Base + Multiplier = Base Share × Multiplier"><span>Base + Multiplier</span><br><span class="th-formula">Base Share × Multiplier</span></th>
+                <th title="Normalized Share = (Base + Multiplier) ÷ Σ(Base + Multiplier)"><span>Normalized Share</span><br><span class="th-formula">(Base+Mult) ÷ Σ(Base+Mult)</span></th>
+                <th title="Initial Computation = Normalized Share × Final Salary Pool"><span>Initial Computation</span><br><span class="th-formula">Norm. Share × Final Pool</span></th>
+                <th title="Final Salary = Initial Computation + Accounting Fee (if applicable)"><span>Final Salary</span><br><span class="th-formula">Initial Comp. + Fee</span></th>
+                <th>Sent</th>
+              </tr>
+            </thead>
+            <tbody id="worldDungeonSalaryBody"></tbody>
+          </table>
+        </div>
+        <p id="worldDungeonSalaryEmptyState" class="empty-state hidden">No World Dungeon runs logged for this month yet.</p>
       </section>
     </div>
 
@@ -847,6 +946,7 @@
   <script src="boss-timer-view.js?v=34"></script>
   <script src="boss-history-view.js?v=33"></script>
   <script src="world-dungeon-view.js?v=3"></script>
+  <script src="world-dungeon-salary-view.js?v=1"></script>
   <script src="users-view.js?v=3"></script>
   <script src="activity-log-view.js?v=5"></script>
   <script src="auth.js?v=29"></script>

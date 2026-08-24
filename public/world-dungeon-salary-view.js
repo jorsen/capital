@@ -1,0 +1,446 @@
+// World Dungeon Salary — same Base Share × Multiplier → Normalized Share →
+// Final Salary math as Cave Salary (see cave-salary-view.js), but the
+// multiplier is a flat number an admin types in per member (not a growth-rate
+// tier lookup), and it isn't month-scoped — it's a standing weight that
+// carries over every month until changed.
+const worldDungeonSalaryState = {
+  month: null,
+  sessions: [],
+  members: [],
+  multipliers: new Map(), // memberId -> multiplier
+  fees: [],
+  paidMemberIds: [],
+  expandedSessionId: null,
+};
+
+function worldDungeonSalaryFormatMoney(amount) {
+  return `${(amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 💎`;
+}
+
+function worldDungeonSalaryMultiplier(memberId) {
+  return worldDungeonSalaryState.multipliers.get(memberId) ?? 1;
+}
+
+async function loadWorldDungeonSalaryData() {
+  const monthInput = document.getElementById('worldDungeonSalaryMonthInput');
+  if (!worldDungeonSalaryState.month) worldDungeonSalaryState.month = currentMonthValue();
+  monthInput.value = worldDungeonSalaryState.month;
+
+  const [sessions, members, multipliers] = await Promise.all([
+    api('/api/world-dungeon-sessions'),
+    api('/api/members'),
+    api('/api/world-dungeon-multipliers'),
+  ]);
+  worldDungeonSalaryState.sessions = sessions;
+  worldDungeonSalaryState.members = members;
+  worldDungeonSalaryState.multipliers = new Map(multipliers.map((m) => [m.memberId, m.multiplier]));
+  await loadWorldDungeonSalaryMonthData();
+}
+
+async function loadWorldDungeonSalaryMonthData() {
+  const [fees, paidMemberIds] = await Promise.all([
+    api(`/api/world-dungeon-salary-fees?month=${encodeURIComponent(worldDungeonSalaryState.month)}`),
+    api(`/api/world-dungeon-salary-paid?month=${encodeURIComponent(worldDungeonSalaryState.month)}`),
+  ]);
+  worldDungeonSalaryState.fees = fees;
+  worldDungeonSalaryState.paidMemberIds = paidMemberIds;
+  renderWorldDungeonSalary();
+}
+
+function worldDungeonSessionsForMonth() {
+  return worldDungeonSalaryState.sessions.filter((s) => s.date.slice(0, 7) === worldDungeonSalaryState.month);
+}
+
+function computeWorldDungeonSalary() {
+  const sessions = worldDungeonSessionsForMonth();
+  const members = worldDungeonSalaryState.members;
+
+  const attendanceByMember = new Map(members.map((m) => [m.id, 0]));
+  sessions.forEach((s) => {
+    s.attendees.forEach((id) => {
+      if (attendanceByMember.has(id)) attendanceByMember.set(id, attendanceByMember.get(id) + 1);
+    });
+  });
+  const totalAttendance = Array.from(attendanceByMember.values()).reduce((sum, n) => sum + n, 0);
+
+  const rawPool = sessions.reduce(
+    (sum, s) => sum + s.records.reduce((rSum, r) => rSum + (Number(r.quantity) || 0) * (Number(r.soldPrice) || 0), 0),
+    0
+  );
+  const totalFeeAmount = worldDungeonSalaryState.fees.reduce((sum, f) => sum + (f.percent / 100) * rawPool, 0);
+  const finalPool = rawPool - totalFeeAmount;
+
+  const feeAmountByMemberId = new Map();
+  worldDungeonSalaryState.fees.forEach((f) => {
+    if (!f.memberId) return;
+    const amount = (f.percent / 100) * rawPool;
+    feeAmountByMemberId.set(f.memberId, (feeAmountByMemberId.get(f.memberId) || 0) + amount);
+  });
+
+  const rows = members.map((m) => {
+    const attendance = attendanceByMember.get(m.id) || 0;
+    const multiplier = worldDungeonSalaryMultiplier(m.id);
+    // Base Share = this member's attendance as a fraction of everyone's combined attendance.
+    const baseShare = totalAttendance > 0 ? attendance / totalAttendance : 0;
+    const baseWithMultiplier = baseShare * multiplier;
+    return { member: m, attendance, multiplier, baseShare, baseWithMultiplier };
+  });
+  const sumBaseWithMultiplier = rows.reduce((sum, r) => sum + r.baseWithMultiplier, 0);
+
+  rows.forEach((r) => {
+    r.normalizedShare = sumBaseWithMultiplier > 0 ? r.baseWithMultiplier / sumBaseWithMultiplier : 0;
+    r.initialComputation = r.normalizedShare * finalPool;
+    r.finalSalary = r.initialComputation + (feeAmountByMemberId.get(r.member.id) || 0);
+  });
+
+  rows.sort((a, b) => b.attendance - a.attendance);
+
+  return { rows, rawPool, totalFeeAmount, finalPool };
+}
+
+function renderWorldDungeonSalary() {
+  const { rows, rawPool, totalFeeAmount, finalPool } = computeWorldDungeonSalary();
+
+  document.getElementById('worldDungeonSalaryPoolValue').textContent = worldDungeonSalaryFormatMoney(rawPool);
+  document.getElementById('worldDungeonSalaryFeesValue').textContent = worldDungeonSalaryFormatMoney(totalFeeAmount);
+  document.getElementById('worldDungeonSalaryFinalPoolValue').textContent = worldDungeonSalaryFormatMoney(finalPool);
+
+  renderWorldDungeonSalaryFees();
+  renderWorldDungeonSalarySessions();
+  renderWorldDungeonSalaryBreakdown(rows);
+}
+
+// ---------- Accounting fees (identical pattern to Cave Salary) ----------
+
+function renderWorldDungeonSalaryFees() {
+  const feesBody = document.getElementById('worldDungeonSalaryFeesBody');
+  feesBody.innerHTML = worldDungeonSalaryState.fees
+    .map(
+      (f) => `
+    <tr>
+      <td>${escapeHtml(f.name)}</td>
+      <td>${f.percent}%</td>
+      <td class="admin-only"><button class="icon-btn" data-delete-fee="${f.id}" title="Remove fee">✕</button></td>
+    </tr>`
+    )
+    .join('') || '<tr><td colspan="3" style="color:var(--text-muted)">No accounting fees for this month.</td></tr>';
+
+  feesBody.querySelectorAll('[data-delete-fee]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-delete-fee');
+      await api(`/api/world-dungeon-salary-fees/${id}`, { method: 'DELETE' });
+      worldDungeonSalaryState.fees = worldDungeonSalaryState.fees.filter((f) => f.id !== id);
+      renderWorldDungeonSalary();
+      toast('Fee removed');
+    });
+  });
+
+  const memberSelect = document.getElementById('worldDungeonSalaryFeeMemberSelect');
+  const sortedMembers = worldDungeonSalaryState.members.slice().sort((a, b) => a.name.localeCompare(b.name));
+  memberSelect.innerHTML =
+    '<option value="">— none (use custom name) —</option>' +
+    sortedMembers.map((m) => `<option value="${m.id}">${escapeHtml(memberDisplayName(m))}</option>`).join('');
+}
+
+document.getElementById('worldDungeonSalaryMonthInput').addEventListener('change', async (e) => {
+  worldDungeonSalaryState.month = e.target.value;
+  try {
+    await loadWorldDungeonSalaryMonthData();
+  } catch (err) {
+    toast(err.message);
+  }
+});
+
+document.getElementById('addWorldDungeonSalaryFeeForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const memberId = fd.get('memberId');
+  const customName = fd.get('customName').trim();
+  const member = memberId ? worldDungeonSalaryState.members.find((m) => m.id === memberId) : null;
+  const name = member ? member.name : customName;
+  if (!name) {
+    toast('Pick a member or enter a custom name');
+    return;
+  }
+  try {
+    const fee = await api('/api/world-dungeon-salary-fees', {
+      method: 'POST',
+      body: JSON.stringify({
+        month: worldDungeonSalaryState.month,
+        name,
+        memberId: memberId || null,
+        percent: Number(fd.get('percent')),
+      }),
+    });
+    worldDungeonSalaryState.fees.push(fee);
+    e.target.reset();
+    renderWorldDungeonSalary();
+    toast('Fee added');
+  } catch (err) {
+    toast(err.message);
+  }
+});
+
+// ---------- Runs (log a date, mark attendees, log sold loot) ----------
+
+document.getElementById('addWorldDungeonSalarySessionForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  try {
+    const session = await api('/api/world-dungeon-sessions', {
+      method: 'POST',
+      body: JSON.stringify({ date: fd.get('date'), run: fd.get('run') }),
+    });
+    worldDungeonSalaryState.sessions.push(session);
+    worldDungeonSalaryState.expandedSessionId = session.id;
+    e.target.reset();
+    renderWorldDungeonSalary();
+    toast('Run logged');
+  } catch (err) {
+    toast(err.message);
+  }
+});
+
+function renderWorldDungeonSalarySessions() {
+  const sessions = worldDungeonSessionsForMonth();
+  const body = document.getElementById('worldDungeonSalarySessionsBody');
+  const empty = document.getElementById('worldDungeonSalarySessionsEmptyState');
+  empty.classList.toggle('hidden', sessions.length !== 0);
+
+  body.innerHTML = sessions
+    .map((s) => {
+      const totalQty = s.records.reduce((sum, r) => sum + (Number(r.quantity) || 0), 0);
+      const totalPool = s.records.reduce((sum, r) => sum + (Number(r.quantity) || 0) * (Number(r.soldPrice) || 0), 0);
+      const expanded = worldDungeonSalaryState.expandedSessionId === s.id;
+      const rows = [
+        `<tr class="world-dungeon-salary-session-row" data-session-id="${s.id}" style="cursor:pointer;">
+          <td>${escapeHtml(s.date)}</td>
+          <td>${escapeHtml(s.run || '—')}</td>
+          <td>${s.attendees.length}</td>
+          <td>${s.records.length}</td>
+          <td>${totalQty}</td>
+          <td>${worldDungeonSalaryFormatMoney(totalPool)}</td>
+          <td class="admin-only"><button class="icon-btn" data-delete-session="${s.id}" title="Delete run">✕</button></td>
+        </tr>`,
+      ];
+      if (expanded) rows.push(worldDungeonSalarySessionDetailRow(s));
+      return rows.join('');
+    })
+    .join('');
+
+  body.querySelectorAll('.world-dungeon-salary-session-row').forEach((row) => {
+    row.addEventListener('click', (e) => {
+      if (e.target.closest('[data-delete-session]')) return;
+      const id = row.getAttribute('data-session-id');
+      worldDungeonSalaryState.expandedSessionId = worldDungeonSalaryState.expandedSessionId === id ? null : id;
+      renderWorldDungeonSalarySessions();
+    });
+  });
+
+  body.querySelectorAll('[data-delete-session]').forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const id = btn.getAttribute('data-delete-session');
+      if (!confirm('Delete this run and all its loot records?')) return;
+      try {
+        await api(`/api/world-dungeon-sessions/${id}`, { method: 'DELETE' });
+        worldDungeonSalaryState.sessions = worldDungeonSalaryState.sessions.filter((s) => s.id !== id);
+        if (worldDungeonSalaryState.expandedSessionId === id) worldDungeonSalaryState.expandedSessionId = null;
+        renderWorldDungeonSalary();
+        toast('Run deleted');
+      } catch (err) {
+        toast(err.message);
+      }
+    });
+  });
+
+  attachWorldDungeonSalarySessionDetailHandlers();
+}
+
+function worldDungeonSalarySessionDetailRow(s) {
+  const memberChecks = worldDungeonSalaryState.members
+    .slice()
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map(
+      (m) => `
+      <label style="display:inline-flex; align-items:center; gap:4px; margin:2px 10px 2px 0;">
+        <input type="checkbox" class="world-dungeon-salary-attendee-check admin-disable" data-session-id="${s.id}" data-member-id="${m.id}" ${s.attendees.includes(m.id) ? 'checked' : ''}>
+        ${escapeHtml(memberDisplayName(m))}
+      </label>`
+    )
+    .join('');
+
+  const recordRows = s.records
+    .map(
+      (r) => `
+    <tr>
+      <td>${escapeHtml(r.item)}</td>
+      <td>${r.quantity}</td>
+      <td>${worldDungeonSalaryFormatMoney(r.soldPrice)}</td>
+      <td>${worldDungeonSalaryFormatMoney(r.quantity * r.soldPrice)}</td>
+      <td>${escapeHtml(r.buyer || '—')}</td>
+      <td class="admin-only"><button class="icon-btn" data-delete-record="${r.id}" data-session-id="${s.id}" title="Remove loot">✕</button></td>
+    </tr>`
+    )
+    .join('');
+
+  return `
+  <tr class="world-dungeon-salary-session-detail" data-session-id="${s.id}">
+    <td colspan="7" style="background:var(--bg-alt, rgba(255,255,255,0.03));">
+      <div style="padding:10px 4px;">
+        <div style="font-weight:600; margin-bottom:6px;">Attendees</div>
+        <div class="admin-only" style="margin-bottom:12px;">${memberChecks}</div>
+
+        <div style="font-weight:600; margin-bottom:6px;">Loot Sold</div>
+        <table class="growth-table" style="margin-bottom:8px;">
+          <thead><tr><th>Item</th><th>Qty</th><th>Sold Price</th><th>Total</th><th>Buyer</th><th></th></tr></thead>
+          <tbody>${recordRows || '<tr><td colspan="6" style="color:var(--text-muted)">No loot logged for this run.</td></tr>'}</tbody>
+        </table>
+        <form class="world-dungeon-salary-add-record-form admin-only growth-form-row" data-session-id="${s.id}">
+          <label><span>Item</span><input type="text" name="item" required></label>
+          <label style="max-width:100px;"><span>Qty</span><input type="number" name="quantity" min="1" step="1" value="1" required></label>
+          <label style="max-width:140px;"><span>Sold Price</span><input type="number" name="soldPrice" min="0" step="0.01" value="0" required></label>
+          <label style="max-width:140px;"><span>Buyer</span><input type="text" name="buyer"></label>
+          <button type="submit" class="btn primary small">Add Loot</button>
+        </form>
+      </div>
+    </td>
+  </tr>`;
+}
+
+function attachWorldDungeonSalarySessionDetailHandlers() {
+  document.querySelectorAll('.world-dungeon-salary-attendee-check').forEach((cb) => {
+    cb.addEventListener('change', async () => {
+      const sessionId = cb.getAttribute('data-session-id');
+      const memberId = cb.getAttribute('data-member-id');
+      const session = worldDungeonSalaryState.sessions.find((s) => s.id === sessionId);
+      const nextAttendees = cb.checked
+        ? [...session.attendees, memberId]
+        : session.attendees.filter((id) => id !== memberId);
+      try {
+        const updated = await api(`/api/world-dungeon-sessions/${sessionId}`, {
+          method: 'PUT',
+          body: JSON.stringify({ attendees: nextAttendees }),
+        });
+        Object.assign(session, updated);
+        renderWorldDungeonSalaryBreakdown(computeWorldDungeonSalary().rows);
+        document.getElementById('worldDungeonSalaryPoolValue').textContent = worldDungeonSalaryFormatMoney(computeWorldDungeonSalary().rawPool);
+      } catch (err) {
+        cb.checked = !cb.checked;
+        toast(err.message);
+      }
+    });
+  });
+
+  document.querySelectorAll('.world-dungeon-salary-add-record-form').forEach((form) => {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const sessionId = form.getAttribute('data-session-id');
+      const fd = new FormData(form);
+      try {
+        const record = await api(`/api/world-dungeon-sessions/${sessionId}/records`, {
+          method: 'POST',
+          body: JSON.stringify({
+            item: fd.get('item'),
+            quantity: fd.get('quantity'),
+            soldPrice: fd.get('soldPrice'),
+            buyer: fd.get('buyer'),
+          }),
+        });
+        const session = worldDungeonSalaryState.sessions.find((s) => s.id === sessionId);
+        session.records.push(record);
+        renderWorldDungeonSalary();
+        toast('Loot added');
+      } catch (err) {
+        toast(err.message);
+      }
+    });
+  });
+
+  document.querySelectorAll('[data-delete-record]').forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const sessionId = btn.getAttribute('data-session-id');
+      const recordId = btn.getAttribute('data-delete-record');
+      try {
+        await api(`/api/world-dungeon-sessions/${sessionId}/records/${recordId}`, { method: 'DELETE' });
+        const session = worldDungeonSalaryState.sessions.find((s) => s.id === sessionId);
+        session.records = session.records.filter((r) => r.id !== recordId);
+        renderWorldDungeonSalary();
+        toast('Loot removed');
+      } catch (err) {
+        toast(err.message);
+      }
+    });
+  });
+}
+
+// ---------- Salary breakdown (multiplier is editable here) ----------
+
+function renderWorldDungeonSalaryBreakdown(rows) {
+  const body = document.getElementById('worldDungeonSalaryBody');
+  const empty = document.getElementById('worldDungeonSalaryEmptyState');
+  empty.classList.toggle('hidden', worldDungeonSessionsForMonth().length !== 0);
+
+  const paidSet = new Set(worldDungeonSalaryState.paidMemberIds);
+
+  body.innerHTML = rows
+    .map((r) => {
+      const sent = paidSet.has(r.member.id);
+      return `
+    <tr class="${sent ? 'row-sent' : ''}">
+      <td style="font-weight:600;">${escapeHtml(memberDisplayName(r.member))}</td>
+      <td>${r.attendance}</td>
+      <td><input type="number" class="world-dungeon-salary-multiplier-input admin-disable" data-member-id="${r.member.id}" value="${r.multiplier}" min="0" step="0.1" style="width:70px;"></td>
+      <td>${(r.baseShare * 100).toFixed(2)}%</td>
+      <td>${r.baseWithMultiplier.toFixed(4)}</td>
+      <td>${(r.normalizedShare * 100).toFixed(2)}%</td>
+      <td>${worldDungeonSalaryFormatMoney(r.initialComputation)}</td>
+      <td style="font-weight:600;">${worldDungeonSalaryFormatMoney(r.finalSalary)}</td>
+      <td><input type="checkbox" class="world-dungeon-salary-sent-check admin-disable" data-member-id="${r.member.id}" ${sent ? 'checked' : ''}></td>
+    </tr>`;
+    })
+    .join('');
+
+  body.querySelectorAll('.world-dungeon-salary-multiplier-input').forEach((input) => {
+    input.addEventListener('change', async () => {
+      const memberId = input.getAttribute('data-member-id');
+      const prev = worldDungeonSalaryMultiplier(memberId);
+      const value = Number(input.value);
+      if (Number.isNaN(value) || value < 0) {
+        toast('Multiplier must be zero or a positive number');
+        input.value = prev;
+        return;
+      }
+      try {
+        await api(`/api/world-dungeon-multipliers/${memberId}`, { method: 'PUT', body: JSON.stringify({ multiplier: value }) });
+        worldDungeonSalaryState.multipliers.set(memberId, value);
+        renderWorldDungeonSalaryBreakdown(computeWorldDungeonSalary().rows);
+      } catch (err) {
+        input.value = prev;
+        toast(err.message);
+      }
+    });
+  });
+
+  body.querySelectorAll('.world-dungeon-salary-sent-check').forEach((cb) => {
+    cb.addEventListener('change', async () => {
+      const memberId = cb.getAttribute('data-member-id');
+      const row = cb.closest('tr');
+      try {
+        if (cb.checked) {
+          await api('/api/world-dungeon-salary-paid', { method: 'POST', body: JSON.stringify({ month: worldDungeonSalaryState.month, memberId }) });
+          worldDungeonSalaryState.paidMemberIds.push(memberId);
+          row.classList.add('row-sent');
+        } else {
+          await api(`/api/world-dungeon-salary-paid?month=${encodeURIComponent(worldDungeonSalaryState.month)}&memberId=${encodeURIComponent(memberId)}`, { method: 'DELETE' });
+          worldDungeonSalaryState.paidMemberIds = worldDungeonSalaryState.paidMemberIds.filter((id) => id !== memberId);
+          row.classList.remove('row-sent');
+        }
+      } catch (err) {
+        cb.checked = !cb.checked;
+        toast(err.message);
+      }
+    });
+  });
+}
