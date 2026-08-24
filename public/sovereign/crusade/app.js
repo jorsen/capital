@@ -959,7 +959,7 @@ function renderLastCrusadeBidders() {
       // this bonus is being paid to.
       const sourceSlug = lastTeam ? crusadeSlugSegment({ id: lastTeam.crusadeId, name: lastTeam.crusadeName, eventDate: lastTeam.eventDate }) : '';
       const sourceCrusadeLink = sourceSlug
-        ? `<a href="#crusade/${sourceSlug}/team/${lastTeam.teamNumber}">${escapeHtml(lastTeam.crusadeName)} — ${t('sovereign.common.team')} ${lastTeam.teamNumber}</a>`
+        ? `<a class="crusade-inline-link" href="#crusade/${sourceSlug}/team/${lastTeam.teamNumber}">${escapeHtml(lastTeam.crusadeName)} — ${t('sovereign.common.team')} ${lastTeam.teamNumber}</a>`
         : escapeHtml(lastTeam?.crusadeName || '');
 
       // A single source's bidder list can run long with only one card ever
