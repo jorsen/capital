@@ -954,6 +954,13 @@ function renderLastCrusadeBidders() {
       const combinedPerBidder = teamNumbers.reduce((sum, n) => sum + computeTeamBonusShares(n).perBidder, 0);
       const teamListText = teamNumbers.join(' & ');
       const areaText = lastTeam?.area ? ` (${escapeHtml(lastTeam.area)})` : '';
+      // Links straight to the capture team's own page (a different crusade
+      // than the one being viewed here), so you can jump to exactly who
+      // this bonus is being paid to.
+      const sourceSlug = lastTeam ? crusadeSlugSegment({ id: lastTeam.crusadeId, name: lastTeam.crusadeName, eventDate: lastTeam.eventDate }) : '';
+      const sourceCrusadeLink = sourceSlug
+        ? `<a href="#crusade/${sourceSlug}/team/${lastTeam.teamNumber}">${escapeHtml(lastTeam.crusadeName)} — ${t('sovereign.common.team')} ${lastTeam.teamNumber}</a>`
+        : escapeHtml(lastTeam?.crusadeName || '');
 
       // A single source's bidder list can run long with only one card ever
       // showing, leaving the second grid slot empty -- split it into two
@@ -989,7 +996,7 @@ function renderLastCrusadeBidders() {
         <div class="crusade-party-card-header">
           <h3>${t('sovereign.salary.teamBonusHeading').replace('{n}', teamListText)}</h3>
         </div>
-        <p style="color:var(--text-muted); font-size:12px; margin:-4px 0 10px;">${t('sovereign.salary.sourceCrusade')}${areaText}: ${escapeHtml(lastTeam.crusadeName)} — <strong style="color:var(--text);">${sourceDateText}</strong></p>
+        <p style="color:var(--text-muted); font-size:12px; margin:-4px 0 10px;">${t('sovereign.salary.sourceCrusade')}${areaText}: ${sourceCrusadeLink} — <strong style="color:var(--text);">${sourceDateText}</strong></p>
         <div class="crusade-bidders-columns">
           ${buildTable(firstHalf, 0)}
           ${secondHalf.length ? buildTable(secondHalf, half) : ''}
