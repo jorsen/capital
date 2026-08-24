@@ -890,6 +890,8 @@ select:focus, input:focus, textarea:focus {
 .crusade-status-badge.draw { color: var(--gold); border-color: var(--gold); background: rgba(212,175,55,0.12); }
 .crusade-status-badge.pending { color: var(--text-muted); }
 
+.crusade-row-absent td { background: rgba(239,68,68,0.12); color: var(--bad); }
+
 /* Add Multiple Participants modal: click-to-toggle search results, plus
    removable chips for whatever's currently selected. */
 .crusade-bulk-result-row {

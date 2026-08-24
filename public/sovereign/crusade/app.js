@@ -832,8 +832,9 @@ function renderPlayerSalaryCard(g) {
         primaryTeam !== null
           ? `<a href="#crusade/${crusadeSlugSegment(sovereignState.crusade)}/team/${primaryTeam}" class="crusade-player-link" style="white-space:nowrap;">${escapeHtml(e.name)}</a>`
           : `<span style="white-space:nowrap;">${escapeHtml(e.name)}</span>`;
+      const rowClass = e.isParticipant && e.present === 0 ? ' class="crusade-row-absent"' : '';
       return `
-    <tr>
+    <tr${rowClass}>
       <td>${i + 1}</td>
       <td style="font-weight:600;">${nameCell}</td>
       <td>${maxBidCell}</td>
