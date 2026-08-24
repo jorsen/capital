@@ -998,6 +998,9 @@ function renderTeamDetail(n) {
   const statusBadge = document.getElementById('crusadeTeamStatusBadge');
   statusBadge.className = `crusade-status-badge ${statusValue}`;
   statusBadge.textContent = statusLabel;
+  document.getElementById('crusadeTeamRosterDate').textContent = sovereignState.crusade.eventDate
+    ? formatLongDate(String(sovereignState.crusade.eventDate).slice(0, 10))
+    : t('sovereign.common.noDateSet');
   const teamRows = computeTeamDistribution(n);
   document.getElementById('crusadeTeamRosterEmptyState').classList.toggle('hidden', teamRows.length !== 0);
 
