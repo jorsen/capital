@@ -299,6 +299,7 @@ const TRANSLATIONS = {
     'sovereign.common.members': 'members',
     'sovereign.common.noDateSet': 'No date set',
     'sovereign.common.def': 'DEF',
+    'sovereign.common.absent': 'Absent',
     'sovereign.common.addParticipant': '+ Add Participant',
     'sovereign.common.addMultiple': '+ Add Multiple',
 
@@ -647,6 +648,7 @@ const TRANSLATIONS = {
     'sovereign.common.members': '成员',
     'sovereign.common.noDateSet': '未设置日期',
     'sovereign.common.def': '防守',
+    'sovereign.common.absent': '缺席',
     'sovereign.common.addParticipant': '+ 添加成员',
     'sovereign.common.addMultiple': '+ 批量添加',
 
@@ -995,6 +997,7 @@ const TRANSLATIONS = {
     'sovereign.common.members': '명',
     'sovereign.common.noDateSet': '날짜 미설정',
     'sovereign.common.def': '방어',
+    'sovereign.common.absent': '결석',
     'sovereign.common.addParticipant': '+ 참가자 추가',
     'sovereign.common.addMultiple': '+ 여러 명 추가',
 
@@ -1343,6 +1346,7 @@ const TRANSLATIONS = {
     'sovereign.common.members': 'คน',
     'sovereign.common.noDateSet': 'ยังไม่ได้กำหนดวันที่',
     'sovereign.common.def': 'ป้องกัน',
+    'sovereign.common.absent': 'ขาดงาน',
     'sovereign.common.addParticipant': '+ เพิ่มผู้เข้าร่วม',
     'sovereign.common.addMultiple': '+ เพิ่มหลายคน',
 
@@ -1496,6 +1500,7 @@ const TRANSLATIONS = {
     'sovereign.common.members': 'メンバー',
     'sovereign.common.noDateSet': '日付未設定',
     'sovereign.common.def': '防衛',
+    'sovereign.common.absent': '欠席',
     'sovereign.common.addParticipant': '+ メンバー追加',
     'sovereign.common.addMultiple': '+ 一括追加',
 

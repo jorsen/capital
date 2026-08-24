@@ -811,7 +811,11 @@ function renderPlayerSalaryCard(g) {
   const rows = g.entries
     .map((e, i) => {
       const itemCells = CRUSADE_SUMMARY_ITEM_NAMES.map((name) => `<td>${crusadeFormatItemQty(e.itemTotals[name])}</td>`).join('');
-      const presentCell = e.isParticipant ? `${e.present}/${e.teamsCount}` : '–';
+      // The lost-team filter already drops anyone whose only appearance was
+      // on a losing team, so zero-present left here means they simply
+      // skipped a crusade their team actually won -- worth flagging plainly
+      // as Absent instead of a "0/1" that reads like a rendering glitch.
+      const presentCell = !e.isParticipant ? '–' : e.present === 0 ? t('sovereign.common.absent') : `${e.present}/${e.teamsCount}`;
       const maxBidCell = !e.isParticipant ? '–' : !e.hasAttackTeam ? t('sovereign.common.def') : crusadeFormatGold(e.maxBid);
       const feePercentCell = e.feePercent > 0 ? `${e.feePercent}%` : '–';
       const bonusSourceText = e.bonusSources
