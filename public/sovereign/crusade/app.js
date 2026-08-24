@@ -1152,7 +1152,48 @@ document.getElementById('addTeamParticipantBtn').addEventListener('click', () =>
 
 // ---------- Add Multiple Participants (search the Member List, click many) ----------
 
-const crusadeBulkAddState = { selectedNames: [] };
+const crusadeBulkAddState = { selectedNames: [], unmatchedNames: [] };
+
+// Exact match against the Member List, ignoring case and surrounding
+// whitespace only — the game's names can contain any mix of scripts/symbols
+// (e.g. "Serpenta蛇OH", "・ツ・"), so anything looser risks silently matching
+// the wrong member.
+function findMemberByPastedName(rawName) {
+  const needle = rawName.trim().toLowerCase();
+  return sovereignState.memberList.find((m) => m.name.trim().toLowerCase() === needle);
+}
+
+function renderCrusadeBulkUnmatched() {
+  const names = crusadeBulkAddState.unmatchedNames;
+  document.getElementById('crusadeBulkUnmatchedWrap').classList.toggle('hidden', names.length === 0);
+  document.getElementById('crusadeBulkUnmatchedList').innerHTML = names.map((n) => `<div>${escapeHtml(n)}</div>`).join('');
+}
+
+// Splits pasted text into one name per line and matches each against the
+// Member List exactly, so a bulk paste can't silently add the wrong person
+// or skip someone over a typo — anything that doesn't match exactly is
+// surfaced for the user to verify rather than added or guessed at.
+function handleCrusadeBulkPaste(text) {
+  const lines = text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  if (lines.length < 2) return false;
+
+  const unmatched = [];
+  lines.forEach((line) => {
+    const member = findMemberByPastedName(line);
+    if (!member) {
+      unmatched.push(line);
+      return;
+    }
+    if (!crusadeBulkAddState.selectedNames.includes(member.name)) {
+      crusadeBulkAddState.selectedNames.push(member.name);
+    }
+  });
+  crusadeBulkAddState.unmatchedNames = unmatched;
+  return true;
+}
 
 function renderCrusadeBulkResults() {
   const query = document.getElementById('crusadeBulkSearchInput').value.trim().toLowerCase();
@@ -1200,6 +1241,7 @@ function renderCrusadeBulkSelected() {
 
 function openCrusadeBulkAddModal(presetPartyNumber) {
   crusadeBulkAddState.selectedNames = [];
+  crusadeBulkAddState.unmatchedNames = [];
   document.getElementById('crusadeBulkSearchInput').value = '';
   const form = document.getElementById('crusadeBulkAddForm');
   form.reset();
@@ -1214,12 +1256,22 @@ function openCrusadeBulkAddModal(presetPartyNumber) {
   form.querySelector('.crusade-goldbid-field').classList.toggle('hidden', noBidding);
   renderCrusadeBulkResults();
   renderCrusadeBulkSelected();
+  renderCrusadeBulkUnmatched();
   document.getElementById('crusadeBulkAddModal').classList.remove('hidden');
 }
 
 document.getElementById('addCrusadeBulkBtn').addEventListener('click', () => openCrusadeBulkAddModal(null));
 document.getElementById('addTeamBulkBtn').addEventListener('click', () => openCrusadeBulkAddModal(sovereignState.activeTeam));
 document.getElementById('crusadeBulkSearchInput').addEventListener('input', renderCrusadeBulkResults);
+document.getElementById('crusadeBulkSearchInput').addEventListener('paste', (e) => {
+  const text = (e.clipboardData || window.clipboardData).getData('text');
+  if (!handleCrusadeBulkPaste(text)) return; // single-line paste: let it fall through as a normal search
+  e.preventDefault();
+  e.target.value = '';
+  renderCrusadeBulkResults();
+  renderCrusadeBulkSelected();
+  renderCrusadeBulkUnmatched();
+});
 
 document.getElementById('crusadeBulkAddForm').addEventListener('submit', async (e) => {
   e.preventDefault();
