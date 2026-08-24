@@ -263,9 +263,9 @@ function worldDungeonSalarySessionDetailRow(s) {
     .sort((a, b) => a.name.localeCompare(b.name))
     .map(
       (m) => `
-      <label style="display:inline-flex; align-items:center; gap:4px; margin:2px 10px 2px 0;">
+      <label class="world-dungeon-salary-attendee-label">
         <input type="checkbox" class="world-dungeon-salary-attendee-check admin-disable" data-session-id="${s.id}" data-member-id="${m.id}" ${s.attendees.includes(m.id) ? 'checked' : ''}>
-        ${escapeHtml(memberDisplayName(m))}
+        <span>${escapeHtml(memberDisplayName(m))}</span>
       </label>`
     )
     .join('');
@@ -284,23 +284,33 @@ function worldDungeonSalarySessionDetailRow(s) {
     )
     .join('');
 
+  const attendeeCount = s.attendees.length;
+  const memberCount = worldDungeonSalaryState.members.length;
+
   return `
   <tr class="world-dungeon-salary-session-detail" data-session-id="${s.id}">
-    <td colspan="7" style="background:var(--bg-alt, rgba(255,255,255,0.03));">
-      <div style="padding:10px 4px;">
-        <div style="font-weight:600; margin-bottom:6px;">Attendees</div>
-        <div class="admin-only" style="margin-bottom:12px;">${memberChecks}</div>
+    <td colspan="7">
+      <div class="world-dungeon-salary-detail-panel">
+        <div class="world-dungeon-salary-detail-header">
+          <span class="world-dungeon-salary-detail-title">Attendees</span>
+          <span class="world-dungeon-salary-attendee-count">${attendeeCount} / ${memberCount}</span>
+          <div class="admin-only world-dungeon-salary-attendee-actions">
+            <button type="button" class="btn small" data-select-all-attendees="${s.id}">Select All</button>
+            <button type="button" class="btn small" data-clear-all-attendees="${s.id}">Clear All</button>
+          </div>
+        </div>
+        <div class="world-dungeon-salary-attendee-grid admin-only">${memberChecks}</div>
 
-        <div style="font-weight:600; margin-bottom:6px;">Loot Sold</div>
-        <table class="growth-table" style="margin-bottom:8px;">
+        <div class="world-dungeon-salary-detail-title" style="margin-top:18px;">Loot Sold</div>
+        <table class="growth-table world-dungeon-salary-loot-table">
           <thead><tr><th>Item</th><th>Qty</th><th>Sold Price</th><th>Total</th><th>Buyer</th><th></th></tr></thead>
           <tbody>${recordRows || '<tr><td colspan="6" style="color:var(--text-muted)">No loot logged for this run.</td></tr>'}</tbody>
         </table>
         <form class="world-dungeon-salary-add-record-form admin-only growth-form-row" data-session-id="${s.id}">
-          <label><span>Item</span><input type="text" name="item" required></label>
-          <label style="max-width:100px;"><span>Qty</span><input type="number" name="quantity" min="1" step="1" value="1" required></label>
-          <label style="max-width:140px;"><span>Sold Price</span><input type="number" name="soldPrice" min="0" step="0.01" value="0" required></label>
-          <label style="max-width:140px;"><span>Buyer</span><input type="text" name="buyer"></label>
+          <label style="flex:2;"><span>Item</span><input type="text" name="item" required></label>
+          <label style="max-width:90px;"><span>Qty</span><input type="number" name="quantity" min="1" step="1" value="1" required></label>
+          <label style="max-width:130px;"><span>Sold Price</span><input type="number" name="soldPrice" min="0" step="0.01" value="0" required></label>
+          <label style="max-width:130px;"><span>Buyer</span><input type="text" name="buyer"></label>
           <button type="submit" class="btn primary small">Add Loot</button>
         </form>
       </div>
@@ -308,7 +318,35 @@ function worldDungeonSalarySessionDetailRow(s) {
   </tr>`;
 }
 
+async function worldDungeonSalarySetAttendees(sessionId, nextAttendees) {
+  const session = worldDungeonSalaryState.sessions.find((s) => s.id === sessionId);
+  try {
+    const updated = await api(`/api/world-dungeon-sessions/${sessionId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ attendees: nextAttendees }),
+    });
+    Object.assign(session, updated);
+    renderWorldDungeonSalary();
+  } catch (err) {
+    toast(err.message);
+  }
+}
+
 function attachWorldDungeonSalarySessionDetailHandlers() {
+  document.querySelectorAll('[data-select-all-attendees]').forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      await worldDungeonSalarySetAttendees(btn.getAttribute('data-select-all-attendees'), worldDungeonSalaryState.members.map((m) => m.id));
+    });
+  });
+
+  document.querySelectorAll('[data-clear-all-attendees]').forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      await worldDungeonSalarySetAttendees(btn.getAttribute('data-clear-all-attendees'), []);
+    });
+  });
+
   document.querySelectorAll('.world-dungeon-salary-attendee-check').forEach((cb) => {
     cb.addEventListener('change', async () => {
       const sessionId = cb.getAttribute('data-session-id');

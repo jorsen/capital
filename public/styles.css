@@ -722,6 +722,34 @@ select:focus, input:focus, textarea:focus {
 }
 .world-dungeon-miniboss-row td { background: #ece1f7 !important; font-weight: 700; }
 
+/* ---------- World Dungeon Salary ---------- */
+.world-dungeon-salary-session-row:hover { background: var(--surface-2); }
+.world-dungeon-salary-detail-panel { background: var(--surface-1); border-radius: 8px; padding: 14px 16px; margin: 4px 0; }
+.world-dungeon-salary-detail-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.world-dungeon-salary-detail-title { font-weight: 600; }
+.world-dungeon-salary-attendee-count { color: var(--text-muted); font-size: 12px; }
+.world-dungeon-salary-attendee-actions { display: flex; gap: 6px; margin-left: auto; }
+.world-dungeon-salary-attendee-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 4px 12px;
+}
+.world-dungeon-salary-attendee-label {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  padding: 3px 4px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.world-dungeon-salary-attendee-label:hover { background: var(--surface-2); }
+.world-dungeon-salary-attendee-label input { flex: none; margin: 0; }
+.world-dungeon-salary-attendee-label span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.world-dungeon-salary-loot-table { margin-bottom: 10px; }
+
 /* ---------- Sovereign / Crusade ---------- */
 
 .sovereign-header .brand { align-items: center; }
