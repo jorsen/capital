@@ -681,6 +681,7 @@ function computeCrusadeGuildSalaryDetail() {
       players.set(nameKey, {
         name: displayName,
         isParticipant: false, // true once seen on an actual roster (controls Max Bid/Present display)
+        onlyLostTeams: true, // stays true only if every team this player's on lost -- hides the row entirely (see below)
         maxBid: 0,
         hasAttackTeam: false, // true once seen on a non-Defense team -- distinguishes "never bid" (0) from "never had the option" (all Defense)
         present: 0,
@@ -715,6 +716,7 @@ function computeCrusadeGuildSalaryDetail() {
   allKnownTeamNumbers().forEach((n) => {
     const team = getTeamData(n);
     const isDefense = isDefenseStance(team);
+    const isLostTeam = crusadeWasLost(team);
 
     computeTeamDistribution(n).forEach(({ participant: p, total }) => {
       const entry = ensureEntry(p.guildName || 'Unassigned', p.name.trim().toLowerCase(), p.name);
@@ -722,6 +724,7 @@ function computeCrusadeGuildSalaryDetail() {
       entry.teamsCount += 1;
       entry.teamNumbers.add(n);
       entry.present += p.attended ? 1 : 0;
+      if (!isLostTeam) entry.onlyLostTeams = false;
       if (!isDefense) {
         entry.hasAttackTeam = true;
         if (p.goldBid > 0) entry.maxBid = Math.max(entry.maxBid, p.goldBid);
@@ -779,7 +782,12 @@ function computeCrusadeGuildSalaryDetail() {
 
   return Array.from(byGuild.entries())
     .map(([name, players]) => {
+      // A player who only ever showed up on a team that lost the crusade
+      // earns nothing no matter what they bid or attended -- that's not a
+      // real payout record, just noise, so it's left off the list entirely
+      // rather than shown as a row of zeroes.
       const entries = Array.from(players.values())
+        .filter((e) => !(e.isParticipant && e.onlyLostTeams))
         .map((e) => ({ ...e, total: e.salary + e.feeAmount + e.bonusShare }))
         .sort((a, b) => b.total - a.total);
       return {
@@ -789,6 +797,7 @@ function computeCrusadeGuildSalaryDetail() {
         total: entries.reduce((sum, e) => sum + e.total, 0),
       };
     })
+    .filter((g) => g.entries.length) // a guild left with nothing after the lost-team filter has no card to show
     .sort((a, b) => b.total - a.total);
 }
 
