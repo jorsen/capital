@@ -750,6 +750,9 @@ select:focus, input:focus, textarea:focus {
 .world-dungeon-salary-attendee-label span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .world-dungeon-salary-loot-table { margin-bottom: 10px; }
 
+.world-dungeon-pvp-attended { background: rgba(74,222,128,0.16); text-align: center; }
+.world-dungeon-pvp-absent { background: rgba(59,130,246,0.16); text-align: center; }
+
 /* ---------- Sovereign / Crusade ---------- */
 
 .sovereign-header .brand { align-items: center; }
