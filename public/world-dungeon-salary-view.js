@@ -449,6 +449,16 @@ document.getElementById('addWorldDungeonPvpDateForm').addEventListener('submit',
   }
 });
 
+// "2026-07-19T00:00:00.000Z" (a DATE column comes back JSON-serialized as a
+// full ISO timestamp) -> "Jul 19" -- short on purpose, this table is a wide
+// grid of one column per PVP date so a compact header matters more than a
+// fully spelled-out one.
+function worldDungeonPvpShortDate(dateStr) {
+  const d = new Date(String(dateStr).slice(0, 10) + 'T00:00:00');
+  if (Number.isNaN(d.getTime())) return dateStr;
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
 function renderWorldDungeonPvpAttendance() {
   const dates = worldDungeonSalaryState.pvpDates;
   const members = worldDungeonSalaryState.members.slice().sort((a, b) => a.name.localeCompare(b.name));
@@ -461,9 +471,9 @@ function renderWorldDungeonPvpAttendance() {
     dates
       .map(
         (d) => `
-    <th>
-      ${formatLongDate(d.date)}
-      <button type="button" class="icon-btn admin-only" data-delete-pvp-date="${d.id}" title="Remove this date" style="margin-left:4px;">✕</button>
+    <th class="world-dungeon-pvp-date-th">
+      <span>${worldDungeonPvpShortDate(d.date)}</span>
+      <button type="button" class="icon-btn admin-only" data-delete-pvp-date="${d.id}" title="Remove this date">✕</button>
     </th>`
       )
       .join('');
@@ -550,6 +560,22 @@ function renderWorldDungeonSalaryBreakdown(rows) {
     </tr>`;
     })
     .join('');
+
+  const totalMultiplier = rows.reduce((sum, r) => sum + r.multiplier, 0);
+  body.innerHTML += `
+    <tr class="table-total-row">
+      <td>Total</td>
+      <td></td>
+      <td></td>
+      <td>${totalMultiplier.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>`;
 
   body.querySelectorAll('.world-dungeon-salary-multiplier-input').forEach((input) => {
     input.addEventListener('change', async () => {

@@ -750,8 +750,20 @@ select:focus, input:focus, textarea:focus {
 .world-dungeon-salary-attendee-label span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .world-dungeon-salary-loot-table { margin-bottom: 10px; }
 
-.world-dungeon-pvp-attended { background: rgba(74,222,128,0.16); text-align: center; }
-.world-dungeon-pvp-absent { background: rgba(59,130,246,0.16); text-align: center; }
+/* Compact on purpose -- one column per PVP date next to a full member
+   roster gets wide fast, so this table trades the members-table's normal
+   row height/font-size for a denser grid. */
+.world-dungeon-pvp-table th,
+.world-dungeon-pvp-table td { padding: 4px 8px; font-size: 12px; }
+.world-dungeon-pvp-date-th { text-align: center; white-space: nowrap; }
+.world-dungeon-pvp-date-th .icon-btn { width: 16px; height: 16px; font-size: 10px; margin-left: 4px; vertical-align: middle; }
+.world-dungeon-pvp-attended, .world-dungeon-pvp-absent { text-align: center; vertical-align: middle; }
+.world-dungeon-pvp-attended { background: rgba(74,222,128,0.16); }
+.world-dungeon-pvp-absent { background: rgba(59,130,246,0.16); }
+.world-dungeon-pvp-attended input[type="checkbox"],
+.world-dungeon-pvp-absent input[type="checkbox"] { width: 14px; height: 14px; margin: 0; }
+.world-dungeon-pvp-attended input[type="checkbox"] { accent-color: var(--good); }
+.world-dungeon-pvp-absent input[type="checkbox"] { accent-color: var(--reserved); }
 
 /* ---------- Sovereign / Crusade ---------- */
 
@@ -812,9 +824,12 @@ select:focus, input:focus, textarea:focus {
   margin: 10px 0 16px;
 }
 .crusade-formula-hint strong { color: var(--text-primary); }
-.crusade-table-total-row { cursor: default; box-shadow: none; font-weight: 600; }
-.crusade-table-total-row:hover { background: none; box-shadow: none; }
-.crusade-table-total-row td { border-top: 1px solid var(--border); }
+
+/* Generic "sum row at the bottom of a table" style -- not crusade-specific
+   despite the leftover name, reused wherever a table needs a total row. */
+.table-total-row { cursor: default; box-shadow: none; font-weight: 600; }
+.table-total-row:hover { background: none; box-shadow: none; }
+.table-total-row td { border-top: 1px solid var(--border); }
 
 .crusade-member-list-table th, .crusade-member-list-table td { border-right: 1px solid var(--gridline); cursor: default; }
 .crusade-member-list-table th:last-child, .crusade-member-list-table td:last-child { border-right: none; }
