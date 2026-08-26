@@ -559,7 +559,6 @@ function renderWorldDungeonSalaryHeaderRow() {
     <th>#</th>
     <th>IGN</th>
     <th>Growth Rate</th>
-    <th title="Total World Dungeon runs attended this month">Attendance</th>
     <th title="Flat value set per member"><span>Multiplier</span><br><span class="th-formula">set per member</span></th>
     <th title="PVP Bonus = PVP dates attended ÷ PVP dates tracked"><span>PVP Bonus</span><br><span class="th-formula">attended ÷ tracked</span></th>
     ${sessionHeaders}
@@ -595,7 +594,7 @@ function renderWorldDungeonSalaryBreakdown(rows) {
       const sessionCells = sessions
         .map((s) => {
           const attended = s.attendees.includes(r.member.id);
-          return `<td class="${attended ? 'world-dungeon-pvp-attended' : 'world-dungeon-pvp-absent'}"><input type="checkbox" class="world-dungeon-session-attendance-check admin-disable" data-session-id="${s.id}" data-member-id="${r.member.id}" ${attended ? 'checked' : ''}></td>`;
+          return `<td class="${attended ? 'world-dungeon-session-attended' : 'world-dungeon-session-absent'}"><input type="checkbox" class="world-dungeon-session-attendance-check admin-disable" data-session-id="${s.id}" data-member-id="${r.member.id}" ${attended ? 'checked' : ''}></td>`;
         })
         .join('');
       const dateCells = dates
@@ -609,7 +608,6 @@ function renderWorldDungeonSalaryBreakdown(rows) {
       <td>${i + 1}</td>
       <td style="font-weight:600;">${escapeHtml(memberDisplayName(r.member))}</td>
       <td>${r.growthRate === null ? '–' : r.growthRate.toLocaleString()}</td>
-      <td class="world-dungeon-attendance-cell">${r.attendance}</td>
       <td><input type="number" class="world-dungeon-salary-multiplier-input admin-disable" data-member-id="${r.member.id}" value="${r.multiplier}" min="0" step="0.1" style="width:70px;"></td>
       <td>${(r.pvpFraction * 100).toFixed(0)}%</td>
       ${sessionCells}
@@ -633,7 +631,6 @@ function renderWorldDungeonSalaryBreakdown(rows) {
     <tr class="table-total-row">
       <td></td>
       <td>Total</td>
-      <td></td>
       <td></td>
       <td>${totalMultiplier.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
       <td></td>

@@ -750,28 +750,33 @@ select:focus, input:focus, textarea:focus {
 .world-dungeon-salary-attendee-label span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .world-dungeon-salary-loot-table { margin-bottom: 10px; }
 
-/* PVP date columns live inline in the Salary Breakdown table now (merged
-   with what used to be its own separate table) -- these target just the
-   date cells, not the whole table, so the surrounding breakdown columns
-   keep their normal sizing. Solid (non-transparent) attended/absent colors
-   instead of a tint, so every cell in the same state renders as the exact
-   same pixel color regardless of row. */
-.world-dungeon-pvp-date-th, .world-dungeon-pvp-attended, .world-dungeon-pvp-absent { width: 56px; padding: 3px 6px; }
+/* Date columns (World Dungeon runs AND PVP dates) live inline in the Salary
+   Breakdown table now (merged with what used to be two separate tables) --
+   these target just the date cells, not the whole table, so the
+   surrounding breakdown columns keep their normal sizing. Solid
+   (non-transparent) colors instead of a tint, so every cell in the same
+   state renders as the exact same pixel color regardless of row. World
+   Dungeon run columns get their own gold/maroon pair, distinct from PVP's
+   green/blue, so the two kinds of date column read apart from each other
+   at a glance. */
+.world-dungeon-pvp-date-th, .world-dungeon-pvp-attended, .world-dungeon-pvp-absent,
+.world-dungeon-session-attended, .world-dungeon-session-absent { width: 56px; padding: 3px 6px; }
 .world-dungeon-pvp-date-th { text-align: center; white-space: nowrap; }
 .world-dungeon-pvp-date-th .icon-btn { width: 14px; height: 14px; font-size: 9px; margin-left: 2px; vertical-align: middle; }
-.world-dungeon-pvp-attended, .world-dungeon-pvp-absent { text-align: center; vertical-align: middle; }
+.world-dungeon-pvp-attended, .world-dungeon-pvp-absent,
+.world-dungeon-session-attended, .world-dungeon-session-absent { text-align: center; vertical-align: middle; }
 .world-dungeon-pvp-attended { background: #17392a; }
 .world-dungeon-pvp-absent { background: #17263f; }
+.world-dungeon-session-attended { background: #3d3312; }
+.world-dungeon-session-absent { background: #3a1620; }
 .world-dungeon-pvp-attended input[type="checkbox"],
-.world-dungeon-pvp-absent input[type="checkbox"] { width: 12px; height: 12px; margin: 0; }
+.world-dungeon-pvp-absent input[type="checkbox"],
+.world-dungeon-session-attended input[type="checkbox"],
+.world-dungeon-session-absent input[type="checkbox"] { width: 12px; height: 12px; margin: 0; }
 .world-dungeon-pvp-attended input[type="checkbox"] { accent-color: var(--good); }
 .world-dungeon-pvp-absent input[type="checkbox"] { accent-color: var(--reserved); }
-
-/* The summed Attendance count gets its own color (gold, same family as the
-   Final Salary Pool stat tile) so it reads as the "main" figure, distinct
-   from the green/blue attended/absent of the individual date columns next
-   to it. */
-.world-dungeon-attendance-cell { background: rgba(242,169,60,0.14); color: var(--gold); font-weight: 600; text-align: center; }
+.world-dungeon-session-attended input[type="checkbox"] { accent-color: var(--gold); }
+.world-dungeon-session-absent input[type="checkbox"] { accent-color: var(--bad); }
 
 /* ---------- Sovereign / Crusade ---------- */
 
