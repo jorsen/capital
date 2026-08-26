@@ -533,6 +533,11 @@ function attachWorldDungeonPvpDateDeleteHandlers() {
 // one row instead of two separate tables that have to be cross-referenced
 // by name.
 function renderWorldDungeonSalaryHeaderRow() {
+  const sessions = worldDungeonSessionsForMonth();
+  const sessionHeaders = sessions
+    .map((s) => `<th class="world-dungeon-pvp-date-th"><span>${worldDungeonPvpShortDate(s.date)}</span></th>`)
+    .join('');
+
   const dates = worldDungeonSalaryState.pvpDates;
   const dateHeaders = dates
     .map(
@@ -548,9 +553,9 @@ function renderWorldDungeonSalaryHeaderRow() {
     <th>#</th>
     <th>IGN</th>
     <th>Growth Rate</th>
-    <th>Attendance</th>
     <th title="Flat value set per member"><span>Multiplier</span><br><span class="th-formula">set per member</span></th>
     <th title="PVP Bonus = PVP dates attended ÷ PVP dates tracked"><span>PVP Bonus</span><br><span class="th-formula">attended ÷ tracked</span></th>
+    ${sessionHeaders}
     ${dateHeaders}
     <th title="Base Share = Attendance ÷ Total Attendance"><span>Base Share</span><br><span class="th-formula">Attendance ÷ Σ Attendance</span></th>
     <th title="Base + Multiplier = Base Share × Multiplier"><span>Base + Multiplier</span><br><span class="th-formula">Base Share × Multiplier</span></th>
@@ -574,11 +579,18 @@ function renderWorldDungeonSalaryBreakdown(rows) {
   empty.classList.toggle('hidden', worldDungeonSessionsForMonth().length !== 0);
 
   const paidSet = new Set(worldDungeonSalaryState.paidMemberIds);
+  const sessions = worldDungeonSessionsForMonth();
   const dates = worldDungeonSalaryState.pvpDates;
 
   body.innerHTML = rows
     .map((r, i) => {
       const sent = paidSet.has(r.member.id);
+      const sessionCells = sessions
+        .map((s) => {
+          const attended = s.attendees.includes(r.member.id);
+          return `<td class="${attended ? 'world-dungeon-pvp-attended' : 'world-dungeon-pvp-absent'}"><input type="checkbox" class="world-dungeon-session-attendance-check admin-disable" data-session-id="${s.id}" data-member-id="${r.member.id}" ${attended ? 'checked' : ''}></td>`;
+        })
+        .join('');
       const dateCells = dates
         .map((d) => {
           const attended = !!worldDungeonSalaryState.pvpAttendance.get(`${d.id}:${r.member.id}`);
@@ -590,9 +602,9 @@ function renderWorldDungeonSalaryBreakdown(rows) {
       <td>${i + 1}</td>
       <td style="font-weight:600;">${escapeHtml(memberDisplayName(r.member))}</td>
       <td>${r.growthRate === null ? '–' : r.growthRate.toLocaleString()}</td>
-      <td>${r.attendance}</td>
       <td><input type="number" class="world-dungeon-salary-multiplier-input admin-disable" data-member-id="${r.member.id}" value="${r.multiplier}" min="0" step="0.1" style="width:70px;"></td>
       <td>${(r.pvpFraction * 100).toFixed(0)}%</td>
+      ${sessionCells}
       ${dateCells}
       <td>${(r.baseShare * 100).toFixed(2)}%</td>
       <td>${r.baseWithMultiplier.toFixed(4)}</td>
@@ -607,15 +619,16 @@ function renderWorldDungeonSalaryBreakdown(rows) {
     .join('');
 
   const totalMultiplier = rows.reduce((sum, r) => sum + r.multiplier, 0);
+  const blankSessionCells = sessions.map(() => '<td></td>').join('');
   const blankDateCells = dates.map(() => '<td></td>').join('');
   body.innerHTML += `
     <tr class="table-total-row">
       <td></td>
       <td>Total</td>
       <td></td>
-      <td></td>
       <td>${totalMultiplier.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
       <td></td>
+      ${blankSessionCells}
       ${blankDateCells}
       <td></td>
       <td></td>
@@ -626,6 +639,16 @@ function renderWorldDungeonSalaryBreakdown(rows) {
       <td></td>
       <td></td>
     </tr>`;
+
+  body.querySelectorAll('.world-dungeon-session-attendance-check').forEach((cb) => {
+    cb.addEventListener('change', async () => {
+      const sessionId = cb.getAttribute('data-session-id');
+      const memberId = cb.getAttribute('data-member-id');
+      const session = worldDungeonSalaryState.sessions.find((s) => s.id === sessionId);
+      const nextAttendees = cb.checked ? [...session.attendees, memberId] : session.attendees.filter((id) => id !== memberId);
+      await worldDungeonSalarySetAttendees(sessionId, nextAttendees);
+    });
+  });
 
   body.querySelectorAll('.world-dungeon-pvp-attendance-check').forEach((cb) => {
     cb.addEventListener('change', async () => {
