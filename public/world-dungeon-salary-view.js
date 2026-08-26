@@ -588,10 +588,11 @@ function renderWorldDungeonSalaryBreakdown(rows) {
   const paidSet = new Set(worldDungeonSalaryState.paidMemberIds);
 
   body.innerHTML = rows
-    .map((r) => {
+    .map((r, i) => {
       const sent = paidSet.has(r.member.id);
       return `
     <tr class="${sent ? 'row-sent' : ''}">
+      <td>${i + 1}</td>
       <td style="font-weight:600;">${escapeHtml(memberDisplayName(r.member))}</td>
       <td>${r.growthRate === null ? '–' : r.growthRate.toLocaleString()}</td>
       <td>${r.attendance}</td>
@@ -612,6 +613,7 @@ function renderWorldDungeonSalaryBreakdown(rows) {
   const totalMultiplier = rows.reduce((sum, r) => sum + r.multiplier, 0);
   body.innerHTML += `
     <tr class="table-total-row">
+      <td></td>
       <td>Total</td>
       <td></td>
       <td></td>
