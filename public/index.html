@@ -503,15 +503,28 @@
             <span class="stat-label">Final Salary Pool</span>
             <span class="stat-value" id="worldDungeonSalaryFinalPoolValue">0 🐦‍⬛</span>
           </div>
+          <div class="stat-tile">
+            <span class="stat-label">Diamond Pool</span>
+            <span class="stat-value" id="worldDungeonSalaryDiamondPoolValue">0 💎</span>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-label">Diamond Fees</span>
+            <span class="stat-value" id="worldDungeonSalaryDiamondFeesValue">0 💎</span>
+          </div>
+          <div class="stat-tile gold">
+            <span class="stat-label">Final Diamond Pool</span>
+            <span class="stat-value" id="worldDungeonSalaryFinalDiamondPoolValue">0 💎</span>
+          </div>
         </div>
       </section>
 
       <section class="panel">
         <h2>World Dungeon Runs</h2>
-        <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;">Click a run to mark attendees and log sold loot. The Salary Pool above is the sum of qty × sold price across every run this month.</p>
+        <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;">Click a run to mark attendees and log sold loot. The Salary Pool above is the sum of qty × sold price across every run this month; Diamonds is a separate pool a run can drop directly, split the same way but never mixed with the loot-sold crows.</p>
         <form id="addWorldDungeonSalarySessionForm" class="growth-form-row admin-only" style="margin-bottom:12px;">
           <label><span>Date</span><input type="date" name="date" required></label>
           <label><span>Run / Notes</span><input type="text" name="run" placeholder="e.g. Hisharat"></label>
+          <label><span>Diamond Reward</span><input type="number" name="diamondReward" min="0" step="1" value="0"></label>
           <button type="submit" class="btn primary small">+ Log a Run</button>
         </form>
         <div class="table-scroll">
@@ -523,7 +536,8 @@
                 <th>Attendees</th>
                 <th>Records</th>
                 <th>Total Qty</th>
-                <th>Total Pool</th>
+                <th>Total Pool (🐦‍⬛)</th>
+                <th>Diamond Reward (💎)</th>
                 <th></th>
               </tr>
             </thead>
@@ -592,8 +606,10 @@
                 <th title="Base Share = Attendance ÷ Total Attendance"><span>Base Share</span><br><span class="th-formula">Attendance ÷ Σ Attendance</span></th>
                 <th title="Base + Multiplier = Base Share × Multiplier"><span>Base + Multiplier</span><br><span class="th-formula">Base Share × Multiplier</span></th>
                 <th title="Normalized Share = (Base + Multiplier) ÷ Σ(Base + Multiplier)"><span>Normalized Share</span><br><span class="th-formula">(Base+Mult) ÷ Σ(Base+Mult)</span></th>
-                <th title="Initial Computation = Normalized Share × Final Salary Pool"><span>Initial Computation</span><br><span class="th-formula">Norm. Share × Final Pool</span></th>
-                <th title="Final Salary = Initial Computation + Accounting Fee (if applicable)"><span>Final Salary</span><br><span class="th-formula">Initial Comp. + Fee</span></th>
+                <th title="Initial Computation = Normalized Share × Final Salary Pool"><span>Initial Computation (🐦‍⬛)</span><br><span class="th-formula">Norm. Share × Final Pool</span></th>
+                <th title="Final Salary = Initial Computation + Accounting Fee (if applicable)"><span>Final Salary (🐦‍⬛)</span><br><span class="th-formula">Initial Comp. + Fee</span></th>
+                <th title="Same Normalized Share applied to the separate Final Diamond Pool"><span>Initial Computation (💎)</span><br><span class="th-formula">Norm. Share × Final Diamond Pool</span></th>
+                <th title="Final Diamond Salary = Initial Computation (💎) + Accounting Fee (if applicable)"><span>Final Salary (💎)</span><br><span class="th-formula">Initial Comp. + Fee</span></th>
                 <th>Sent</th>
               </tr>
             </thead>
@@ -970,7 +986,7 @@
   <script src="boss-timer-view.js?v=34"></script>
   <script src="boss-history-view.js?v=33"></script>
   <script src="world-dungeon-view.js?v=3"></script>
-  <script src="world-dungeon-salary-view.js?v=4"></script>
+  <script src="world-dungeon-salary-view.js?v=5"></script>
   <script src="users-view.js?v=3"></script>
   <script src="activity-log-view.js?v=5"></script>
   <script src="auth.js?v=29"></script>

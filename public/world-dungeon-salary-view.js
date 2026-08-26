@@ -19,6 +19,10 @@ function worldDungeonSalaryFormatMoney(amount) {
   return `${(amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 🐦‍⬛`;
 }
 
+function worldDungeonSalaryFormatDiamonds(amount) {
+  return `${(amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 💎`;
+}
+
 function worldDungeonSalaryMultiplier(memberId) {
   return worldDungeonSalaryState.multipliers.get(memberId) ?? 1;
 }
@@ -92,6 +96,20 @@ function computeWorldDungeonSalary() {
     feeAmountByMemberId.set(f.memberId, (feeAmountByMemberId.get(f.memberId) || 0) + amount);
   });
 
+  // Diamonds a run drops directly -- a separate pool from the loot-sold
+  // crows above, run through the exact same accounting-fee percentages, but
+  // never mixed with the crow pool since they're different currencies.
+  const diamondRawPool = sessions.reduce((sum, s) => sum + (Number(s.diamondReward) || 0), 0);
+  const totalFeeAmountDiamonds = worldDungeonSalaryState.fees.reduce((sum, f) => sum + (f.percent / 100) * diamondRawPool, 0);
+  const finalDiamondPool = diamondRawPool - totalFeeAmountDiamonds;
+
+  const feeAmountByMemberIdDiamonds = new Map();
+  worldDungeonSalaryState.fees.forEach((f) => {
+    if (!f.memberId) return;
+    const amount = (f.percent / 100) * diamondRawPool;
+    feeAmountByMemberIdDiamonds.set(f.memberId, (feeAmountByMemberIdDiamonds.get(f.memberId) || 0) + amount);
+  });
+
   const rows = members.map((m) => {
     const attendance = attendanceByMember.get(m.id) || 0;
     const growthRate = latestGrowth(m)?.rate ?? null;
@@ -109,19 +127,24 @@ function computeWorldDungeonSalary() {
     r.normalizedShare = sumBaseWithMultiplier > 0 ? r.baseWithMultiplier / sumBaseWithMultiplier : 0;
     r.initialComputation = r.normalizedShare * finalPool;
     r.finalSalary = r.initialComputation + (feeAmountByMemberId.get(r.member.id) || 0);
+    r.initialComputationDiamonds = r.normalizedShare * finalDiamondPool;
+    r.finalSalaryDiamonds = r.initialComputationDiamonds + (feeAmountByMemberIdDiamonds.get(r.member.id) || 0);
   });
 
   rows.sort((a, b) => (b.growthRate ?? -Infinity) - (a.growthRate ?? -Infinity));
 
-  return { rows, rawPool, totalFeeAmount, finalPool };
+  return { rows, rawPool, totalFeeAmount, finalPool, diamondRawPool, totalFeeAmountDiamonds, finalDiamondPool };
 }
 
 function renderWorldDungeonSalary() {
-  const { rows, rawPool, totalFeeAmount, finalPool } = computeWorldDungeonSalary();
+  const { rows, rawPool, totalFeeAmount, finalPool, diamondRawPool, totalFeeAmountDiamonds, finalDiamondPool } = computeWorldDungeonSalary();
 
   document.getElementById('worldDungeonSalaryPoolValue').textContent = worldDungeonSalaryFormatMoney(rawPool);
   document.getElementById('worldDungeonSalaryFeesValue').textContent = worldDungeonSalaryFormatMoney(totalFeeAmount);
   document.getElementById('worldDungeonSalaryFinalPoolValue').textContent = worldDungeonSalaryFormatMoney(finalPool);
+  document.getElementById('worldDungeonSalaryDiamondPoolValue').textContent = worldDungeonSalaryFormatDiamonds(diamondRawPool);
+  document.getElementById('worldDungeonSalaryDiamondFeesValue').textContent = worldDungeonSalaryFormatDiamonds(totalFeeAmountDiamonds);
+  document.getElementById('worldDungeonSalaryFinalDiamondPoolValue').textContent = worldDungeonSalaryFormatDiamonds(finalDiamondPool);
 
   renderWorldDungeonSalaryFees();
   renderWorldDungeonSalarySessions();
@@ -208,7 +231,7 @@ document.getElementById('addWorldDungeonSalarySessionForm').addEventListener('su
   try {
     const session = await api('/api/world-dungeon-sessions', {
       method: 'POST',
-      body: JSON.stringify({ date: fd.get('date'), run: fd.get('run') }),
+      body: JSON.stringify({ date: fd.get('date'), run: fd.get('run'), diamondReward: fd.get('diamondReward') }),
     });
     worldDungeonSalaryState.sessions.push(session);
     worldDungeonSalaryState.expandedSessionId = session.id;
@@ -239,6 +262,7 @@ function renderWorldDungeonSalarySessions() {
           <td>${s.records.length}</td>
           <td>${totalQty}</td>
           <td>${worldDungeonSalaryFormatMoney(totalPool)}</td>
+          <td><input type="number" class="world-dungeon-salary-diamond-input admin-disable" data-session-id="${s.id}" value="${s.diamondReward}" min="0" step="1" style="width:80px;" onclick="event.stopPropagation()"></td>
           <td class="admin-only"><button class="icon-btn" data-delete-session="${s.id}" title="Delete run">✕</button></td>
         </tr>`,
       ];
@@ -249,10 +273,32 @@ function renderWorldDungeonSalarySessions() {
 
   body.querySelectorAll('.world-dungeon-salary-session-row').forEach((row) => {
     row.addEventListener('click', (e) => {
-      if (e.target.closest('[data-delete-session]')) return;
+      if (e.target.closest('[data-delete-session], .world-dungeon-salary-diamond-input')) return;
       const id = row.getAttribute('data-session-id');
       worldDungeonSalaryState.expandedSessionId = worldDungeonSalaryState.expandedSessionId === id ? null : id;
       renderWorldDungeonSalarySessions();
+    });
+  });
+
+  body.querySelectorAll('.world-dungeon-salary-diamond-input').forEach((input) => {
+    input.addEventListener('change', async () => {
+      const sessionId = input.getAttribute('data-session-id');
+      const session = worldDungeonSalaryState.sessions.find((s) => s.id === sessionId);
+      const prev = session.diamondReward;
+      const value = Number(input.value);
+      if (Number.isNaN(value) || value < 0) {
+        toast('Diamond Reward must be zero or a positive number');
+        input.value = prev;
+        return;
+      }
+      try {
+        const updated = await api(`/api/world-dungeon-sessions/${sessionId}`, { method: 'PUT', body: JSON.stringify({ diamondReward: value }) });
+        Object.assign(session, updated);
+        renderWorldDungeonSalary();
+      } catch (err) {
+        input.value = prev;
+        toast(err.message);
+      }
     });
   });
 
@@ -556,6 +602,8 @@ function renderWorldDungeonSalaryBreakdown(rows) {
       <td>${(r.normalizedShare * 100).toFixed(2)}%</td>
       <td>${worldDungeonSalaryFormatMoney(r.initialComputation)}</td>
       <td style="font-weight:600;">${worldDungeonSalaryFormatMoney(r.finalSalary)}</td>
+      <td>${worldDungeonSalaryFormatDiamonds(r.initialComputationDiamonds)}</td>
+      <td style="font-weight:600;">${worldDungeonSalaryFormatDiamonds(r.finalSalaryDiamonds)}</td>
       <td><input type="checkbox" class="world-dungeon-salary-sent-check admin-disable" data-member-id="${r.member.id}" ${sent ? 'checked' : ''}></td>
     </tr>`;
     })
@@ -568,6 +616,8 @@ function renderWorldDungeonSalaryBreakdown(rows) {
       <td></td>
       <td></td>
       <td>${totalMultiplier.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+      <td></td>
+      <td></td>
       <td></td>
       <td></td>
       <td></td>
