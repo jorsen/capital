@@ -752,16 +752,22 @@ select:focus, input:focus, textarea:focus {
 
 /* Compact on purpose -- one column per PVP date next to a full member
    roster gets wide fast, so this table trades the members-table's normal
-   row height/font-size for a denser grid. */
+   row height/font-size for a denser grid. Date columns get a fixed narrow
+   width instead of auto-sizing to their "Jul 19 ✕" header content, which is
+   wider than the checkbox it's sitting above. Solid (non-transparent)
+   attended/absent colors instead of a tint, so every cell in the same state
+   renders as the exact same pixel color regardless of row. */
 .world-dungeon-pvp-table th,
-.world-dungeon-pvp-table td { padding: 4px 8px; font-size: 12px; }
+.world-dungeon-pvp-table td { padding: 3px 6px; font-size: 12px; }
+.world-dungeon-pvp-table th:not(:first-child),
+.world-dungeon-pvp-table td:not(:first-child) { width: 56px; }
 .world-dungeon-pvp-date-th { text-align: center; white-space: nowrap; }
-.world-dungeon-pvp-date-th .icon-btn { width: 16px; height: 16px; font-size: 10px; margin-left: 4px; vertical-align: middle; }
+.world-dungeon-pvp-date-th .icon-btn { width: 14px; height: 14px; font-size: 9px; margin-left: 2px; vertical-align: middle; }
 .world-dungeon-pvp-attended, .world-dungeon-pvp-absent { text-align: center; vertical-align: middle; }
-.world-dungeon-pvp-attended { background: rgba(74,222,128,0.16); }
-.world-dungeon-pvp-absent { background: rgba(59,130,246,0.16); }
+.world-dungeon-pvp-attended { background: #17392a; }
+.world-dungeon-pvp-absent { background: #17263f; }
 .world-dungeon-pvp-attended input[type="checkbox"],
-.world-dungeon-pvp-absent input[type="checkbox"] { width: 14px; height: 14px; margin: 0; }
+.world-dungeon-pvp-absent input[type="checkbox"] { width: 12px; height: 12px; margin: 0; }
 .world-dungeon-pvp-attended input[type="checkbox"] { accent-color: var(--good); }
 .world-dungeon-pvp-absent input[type="checkbox"] { accent-color: var(--reserved); }
 
