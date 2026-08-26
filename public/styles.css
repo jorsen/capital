@@ -767,6 +767,12 @@ select:focus, input:focus, textarea:focus {
 .world-dungeon-pvp-attended input[type="checkbox"] { accent-color: var(--good); }
 .world-dungeon-pvp-absent input[type="checkbox"] { accent-color: var(--reserved); }
 
+/* The summed Attendance count gets its own color (gold, same family as the
+   Final Salary Pool stat tile) so it reads as the "main" figure, distinct
+   from the green/blue attended/absent of the individual date columns next
+   to it. */
+.world-dungeon-attendance-cell { background: rgba(242,169,60,0.14); color: var(--gold); font-weight: 600; text-align: center; }
+
 /* ---------- Sovereign / Crusade ---------- */
 
 .sovereign-header .brand { align-items: center; }
