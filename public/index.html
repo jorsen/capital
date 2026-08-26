@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=84">
+  <link rel="stylesheet" href="styles.css?v=85">
 </head>
 <body>
   <div class="app viz-root">
@@ -571,48 +571,18 @@
       </section>
 
       <section class="panel">
-        <h2>PVP Attendance Bonus</h2>
+        <h2>Salary Breakdown</h2>
         <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;">
-          Each member's Multiplier below is scaled by how many of these PVP dates they attended — miss one and their World Dungeon share shrinks along with it. Add a date for each PVP, then check off who showed up. Remove a date once its period's payout is done.
+          Each member's Multiplier is scaled by how many of the PVP dates below they attended — miss one and their World Dungeon share shrinks along with it. Add a date for each PVP, then check off who showed up in that member's row; remove a date once its period's payout is done.
         </p>
         <form id="addWorldDungeonPvpDateForm" class="growth-form-row admin-only" style="margin-bottom:12px;">
           <label style="max-width:180px;"><span>Date</span><input type="date" name="date" required></label>
           <button type="submit" class="btn primary small">+ Add PVP Date</button>
         </form>
         <div class="table-scroll">
-          <table class="members-table world-dungeon-pvp-table">
-            <thead>
-              <tr id="worldDungeonPvpDateHeaderRow">
-                <th>IGN</th>
-              </tr>
-            </thead>
-            <tbody id="worldDungeonPvpAttendanceBody"></tbody>
-          </table>
-        </div>
-        <p id="worldDungeonPvpAttendanceEmptyState" class="empty-state hidden">No PVP dates added yet — everyone's bonus defaults to 100% until you add one.</p>
-      </section>
-
-      <section class="panel">
-        <h2>Salary Breakdown</h2>
-        <div class="table-scroll">
           <table class="members-table">
             <thead>
-              <tr>
-                <th>#</th>
-                <th>IGN</th>
-                <th>Growth Rate</th>
-                <th>Attendance</th>
-                <th title="Flat value set per member"><span>Multiplier</span><br><span class="th-formula">set per member</span></th>
-                <th title="PVP Bonus = PVP dates attended ÷ PVP dates tracked"><span>PVP Bonus</span><br><span class="th-formula">attended ÷ tracked</span></th>
-                <th title="Base Share = Attendance ÷ Total Attendance"><span>Base Share</span><br><span class="th-formula">Attendance ÷ Σ Attendance</span></th>
-                <th title="Base + Multiplier = Base Share × Multiplier"><span>Base + Multiplier</span><br><span class="th-formula">Base Share × Multiplier</span></th>
-                <th title="Normalized Share = (Base + Multiplier) ÷ Σ(Base + Multiplier)"><span>Normalized Share</span><br><span class="th-formula">(Base+Mult) ÷ Σ(Base+Mult)</span></th>
-                <th title="Initial Computation = Normalized Share × Final Salary Pool"><span>Initial Computation (🐦‍⬛)</span><br><span class="th-formula">Norm. Share × Final Pool</span></th>
-                <th title="Final Salary = Initial Computation + Accounting Fee (if applicable)"><span>Final Salary (🐦‍⬛)</span><br><span class="th-formula">Initial Comp. + Fee</span></th>
-                <th title="Same Normalized Share applied to the separate Final Diamond Pool"><span>Initial Computation (💎)</span><br><span class="th-formula">Norm. Share × Final Diamond Pool</span></th>
-                <th title="Final Diamond Salary = Initial Computation (💎) + Accounting Fee (if applicable)"><span>Final Salary (💎)</span><br><span class="th-formula">Initial Comp. + Fee</span></th>
-                <th>Sent</th>
-              </tr>
+              <tr id="worldDungeonSalaryHeaderRow"></tr>
             </thead>
             <tbody id="worldDungeonSalaryBody"></tbody>
           </table>
@@ -987,7 +957,7 @@
   <script src="boss-timer-view.js?v=34"></script>
   <script src="boss-history-view.js?v=33"></script>
   <script src="world-dungeon-view.js?v=3"></script>
-  <script src="world-dungeon-salary-view.js?v=6"></script>
+  <script src="world-dungeon-salary-view.js?v=7"></script>
   <script src="users-view.js?v=3"></script>
   <script src="activity-log-view.js?v=5"></script>
   <script src="auth.js?v=29"></script>

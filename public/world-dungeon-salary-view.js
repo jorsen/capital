@@ -148,7 +148,6 @@ function renderWorldDungeonSalary() {
 
   renderWorldDungeonSalaryFees();
   renderWorldDungeonSalarySessions();
-  renderWorldDungeonPvpAttendance();
   renderWorldDungeonSalaryBreakdown(rows);
 }
 
@@ -505,64 +504,14 @@ function worldDungeonPvpShortDate(dateStr) {
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
-function renderWorldDungeonPvpAttendance() {
-  const dates = worldDungeonSalaryState.pvpDates;
-  const members = worldDungeonSalaryState.members.slice().sort((a, b) => a.name.localeCompare(b.name));
-
-  document.getElementById('worldDungeonPvpAttendanceEmptyState').classList.toggle('hidden', dates.length !== 0);
-
-  const headerRow = document.getElementById('worldDungeonPvpDateHeaderRow');
-  headerRow.innerHTML =
-    '<th>IGN</th>' +
-    dates
-      .map(
-        (d) => `
-    <th class="world-dungeon-pvp-date-th">
-      <span>${worldDungeonPvpShortDate(d.date)}</span>
-      <button type="button" class="icon-btn admin-only" data-delete-pvp-date="${d.id}" title="Remove this date">✕</button>
-    </th>`
-      )
-      .join('');
-
-  const body = document.getElementById('worldDungeonPvpAttendanceBody');
-  body.innerHTML = members
-    .map(
-      (m) => `
-    <tr>
-      <td style="font-weight:600;">${escapeHtml(memberDisplayName(m))}</td>
-      ${dates
-        .map((d) => {
-          const attended = !!worldDungeonSalaryState.pvpAttendance.get(`${d.id}:${m.id}`);
-          return `<td class="${attended ? 'world-dungeon-pvp-attended' : 'world-dungeon-pvp-absent'}"><input type="checkbox" class="world-dungeon-pvp-attendance-check admin-disable" data-pvp-date-id="${d.id}" data-member-id="${m.id}" ${attended ? 'checked' : ''}></td>`;
-        })
-        .join('')}
-    </tr>`
-    )
-    .join('');
-
-  body.querySelectorAll('.world-dungeon-pvp-attendance-check').forEach((cb) => {
-    cb.addEventListener('change', async () => {
-      const pvpDateId = cb.getAttribute('data-pvp-date-id');
-      const memberId = cb.getAttribute('data-member-id');
-      const key = `${pvpDateId}:${memberId}`;
-      const attended = cb.checked;
-      try {
-        await api('/api/world-dungeon-pvp-attendance', { method: 'PUT', body: JSON.stringify({ pvpDateId, memberId, attended }) });
-        worldDungeonSalaryState.pvpAttendance.set(key, attended);
-        cb.closest('td').classList.toggle('world-dungeon-pvp-attended', attended);
-        cb.closest('td').classList.toggle('world-dungeon-pvp-absent', !attended);
-        renderWorldDungeonSalaryBreakdown(computeWorldDungeonSalary().rows);
-      } catch (err) {
-        cb.checked = !cb.checked;
-        toast(err.message);
-      }
-    });
-  });
-
-  headerRow.querySelectorAll('[data-delete-pvp-date]').forEach((btn) => {
+// Deleting a PVP date drops its column and everyone's recorded attendance
+// for it -- attached fresh each time the header is (re)built, same as the
+// checkbox handlers in renderWorldDungeonSalaryBreakdown below.
+function attachWorldDungeonPvpDateDeleteHandlers() {
+  document.querySelectorAll('[data-delete-pvp-date]').forEach((btn) => {
     btn.addEventListener('click', async () => {
       const id = btn.getAttribute('data-delete-pvp-date');
-      if (!confirm('Remove this PVP date and everyone\'s attendance for it?')) return;
+      if (!confirm("Remove this PVP date and everyone's attendance for it?")) return;
       try {
         await api(`/api/world-dungeon-pvp-dates/${id}`, { method: 'DELETE' });
         worldDungeonSalaryState.pvpDates = worldDungeonSalaryState.pvpDates.filter((d) => d.id !== id);
@@ -578,18 +527,64 @@ function renderWorldDungeonPvpAttendance() {
   });
 }
 
-// ---------- Salary breakdown (multiplier is editable here) ----------
+// One shared header row for both the Salary Breakdown columns and the PVP
+// attendance date columns -- the date columns are spliced in right after
+// "PVP Bonus" so a member's whole story (rank, PVP record, payout) reads as
+// one row instead of two separate tables that have to be cross-referenced
+// by name.
+function renderWorldDungeonSalaryHeaderRow() {
+  const dates = worldDungeonSalaryState.pvpDates;
+  const dateHeaders = dates
+    .map(
+      (d) => `
+    <th class="world-dungeon-pvp-date-th">
+      <span>${worldDungeonPvpShortDate(d.date)}</span>
+      <button type="button" class="icon-btn admin-only" data-delete-pvp-date="${d.id}" title="Remove this date">✕</button>
+    </th>`
+    )
+    .join('');
+
+  document.getElementById('worldDungeonSalaryHeaderRow').innerHTML = `
+    <th>#</th>
+    <th>IGN</th>
+    <th>Growth Rate</th>
+    <th>Attendance</th>
+    <th title="Flat value set per member"><span>Multiplier</span><br><span class="th-formula">set per member</span></th>
+    <th title="PVP Bonus = PVP dates attended ÷ PVP dates tracked"><span>PVP Bonus</span><br><span class="th-formula">attended ÷ tracked</span></th>
+    ${dateHeaders}
+    <th title="Base Share = Attendance ÷ Total Attendance"><span>Base Share</span><br><span class="th-formula">Attendance ÷ Σ Attendance</span></th>
+    <th title="Base + Multiplier = Base Share × Multiplier"><span>Base + Multiplier</span><br><span class="th-formula">Base Share × Multiplier</span></th>
+    <th title="Normalized Share = (Base + Multiplier) ÷ Σ(Base + Multiplier)"><span>Normalized Share</span><br><span class="th-formula">(Base+Mult) ÷ Σ(Base+Mult)</span></th>
+    <th title="Initial Computation = Normalized Share × Final Salary Pool"><span>Initial Computation (🐦‍⬛)</span><br><span class="th-formula">Norm. Share × Final Pool</span></th>
+    <th title="Final Salary = Initial Computation + Accounting Fee (if applicable)"><span>Final Salary (🐦‍⬛)</span><br><span class="th-formula">Initial Comp. + Fee</span></th>
+    <th title="Same Normalized Share applied to the separate Final Diamond Pool"><span>Initial Computation (💎)</span><br><span class="th-formula">Norm. Share × Final Diamond Pool</span></th>
+    <th title="Final Diamond Salary = Initial Computation (💎) + Accounting Fee (if applicable)"><span>Final Salary (💎)</span><br><span class="th-formula">Initial Comp. + Fee</span></th>
+    <th>Sent</th>`;
+
+  attachWorldDungeonPvpDateDeleteHandlers();
+}
+
+// ---------- Salary breakdown (multiplier + PVP attendance are editable here) ----------
 
 function renderWorldDungeonSalaryBreakdown(rows) {
+  renderWorldDungeonSalaryHeaderRow();
+
   const body = document.getElementById('worldDungeonSalaryBody');
   const empty = document.getElementById('worldDungeonSalaryEmptyState');
   empty.classList.toggle('hidden', worldDungeonSessionsForMonth().length !== 0);
 
   const paidSet = new Set(worldDungeonSalaryState.paidMemberIds);
+  const dates = worldDungeonSalaryState.pvpDates;
 
   body.innerHTML = rows
     .map((r, i) => {
       const sent = paidSet.has(r.member.id);
+      const dateCells = dates
+        .map((d) => {
+          const attended = !!worldDungeonSalaryState.pvpAttendance.get(`${d.id}:${r.member.id}`);
+          return `<td class="${attended ? 'world-dungeon-pvp-attended' : 'world-dungeon-pvp-absent'}"><input type="checkbox" class="world-dungeon-pvp-attendance-check admin-disable" data-pvp-date-id="${d.id}" data-member-id="${r.member.id}" ${attended ? 'checked' : ''}></td>`;
+        })
+        .join('');
       return `
     <tr class="${sent ? 'row-sent' : ''}">
       <td>${i + 1}</td>
@@ -598,6 +593,7 @@ function renderWorldDungeonSalaryBreakdown(rows) {
       <td>${r.attendance}</td>
       <td><input type="number" class="world-dungeon-salary-multiplier-input admin-disable" data-member-id="${r.member.id}" value="${r.multiplier}" min="0" step="0.1" style="width:70px;"></td>
       <td>${(r.pvpFraction * 100).toFixed(0)}%</td>
+      ${dateCells}
       <td>${(r.baseShare * 100).toFixed(2)}%</td>
       <td>${r.baseWithMultiplier.toFixed(4)}</td>
       <td>${(r.normalizedShare * 100).toFixed(2)}%</td>
@@ -611,6 +607,7 @@ function renderWorldDungeonSalaryBreakdown(rows) {
     .join('');
 
   const totalMultiplier = rows.reduce((sum, r) => sum + r.multiplier, 0);
+  const blankDateCells = dates.map(() => '<td></td>').join('');
   body.innerHTML += `
     <tr class="table-total-row">
       <td></td>
@@ -619,6 +616,7 @@ function renderWorldDungeonSalaryBreakdown(rows) {
       <td></td>
       <td>${totalMultiplier.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
       <td></td>
+      ${blankDateCells}
       <td></td>
       <td></td>
       <td></td>
@@ -628,6 +626,23 @@ function renderWorldDungeonSalaryBreakdown(rows) {
       <td></td>
       <td></td>
     </tr>`;
+
+  body.querySelectorAll('.world-dungeon-pvp-attendance-check').forEach((cb) => {
+    cb.addEventListener('change', async () => {
+      const pvpDateId = cb.getAttribute('data-pvp-date-id');
+      const memberId = cb.getAttribute('data-member-id');
+      const key = `${pvpDateId}:${memberId}`;
+      const attended = cb.checked;
+      try {
+        await api('/api/world-dungeon-pvp-attendance', { method: 'PUT', body: JSON.stringify({ pvpDateId, memberId, attended }) });
+        worldDungeonSalaryState.pvpAttendance.set(key, attended);
+        renderWorldDungeonSalaryBreakdown(computeWorldDungeonSalary().rows);
+      } catch (err) {
+        cb.checked = !cb.checked;
+        toast(err.message);
+      }
+    });
+  });
 
   body.querySelectorAll('.world-dungeon-salary-multiplier-input').forEach((input) => {
     input.addEventListener('change', async () => {

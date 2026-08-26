@@ -750,26 +750,13 @@ select:focus, input:focus, textarea:focus {
 .world-dungeon-salary-attendee-label span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .world-dungeon-salary-loot-table { margin-bottom: 10px; }
 
-/* Compact on purpose -- one column per PVP date next to a full member
-   roster gets wide fast, so this table trades the members-table's normal
-   row height/font-size for a denser grid. Date columns get a fixed narrow
-   width instead of auto-sizing to their "Jul 19 ✕" header content, which is
-   wider than the checkbox it's sitting above. Solid (non-transparent)
-   attended/absent colors instead of a tint, so every cell in the same state
-   renders as the exact same pixel color regardless of row. */
-/* table-layout:fixed makes each column's width the actual specified value
-   instead of a mere cap -- with the default "auto" layout, leftover space
-   still gets handed to the unconstrained first column no matter what
-   max-width says. width:min-content then shrinks the table itself down to
-   the sum of those fixed columns instead of stretching to fill the panel
-   (which .members-table's width:100% would otherwise force). */
-.world-dungeon-pvp-table { width: min-content !important; table-layout: fixed; }
-.world-dungeon-pvp-table th,
-.world-dungeon-pvp-table td { padding: 3px 6px; font-size: 12px; }
-.world-dungeon-pvp-table th:first-child,
-.world-dungeon-pvp-table td:first-child { width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.world-dungeon-pvp-table th:not(:first-child),
-.world-dungeon-pvp-table td:not(:first-child) { width: 56px; }
+/* PVP date columns live inline in the Salary Breakdown table now (merged
+   with what used to be its own separate table) -- these target just the
+   date cells, not the whole table, so the surrounding breakdown columns
+   keep their normal sizing. Solid (non-transparent) attended/absent colors
+   instead of a tint, so every cell in the same state renders as the exact
+   same pixel color regardless of row. */
+.world-dungeon-pvp-date-th, .world-dungeon-pvp-attended, .world-dungeon-pvp-absent { width: 56px; padding: 3px 6px; }
 .world-dungeon-pvp-date-th { text-align: center; white-space: nowrap; }
 .world-dungeon-pvp-date-th .icon-btn { width: 14px; height: 14px; font-size: 9px; margin-left: 2px; vertical-align: middle; }
 .world-dungeon-pvp-attended, .world-dungeon-pvp-absent { text-align: center; vertical-align: middle; }
