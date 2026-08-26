@@ -94,13 +94,14 @@ function computeWorldDungeonSalary() {
 
   const rows = members.map((m) => {
     const attendance = attendanceByMember.get(m.id) || 0;
+    const growthRate = latestGrowth(m)?.rate ?? null;
     const multiplier = worldDungeonSalaryMultiplier(m.id);
     const pvpFraction = worldDungeonPvpAttendanceFraction(m.id);
     const effectiveMultiplier = multiplier * pvpFraction;
     // Base Share = this member's attendance as a fraction of everyone's combined attendance.
     const baseShare = totalAttendance > 0 ? attendance / totalAttendance : 0;
     const baseWithMultiplier = baseShare * effectiveMultiplier;
-    return { member: m, attendance, multiplier, pvpFraction, effectiveMultiplier, baseShare, baseWithMultiplier };
+    return { member: m, attendance, growthRate, multiplier, pvpFraction, effectiveMultiplier, baseShare, baseWithMultiplier };
   });
   const sumBaseWithMultiplier = rows.reduce((sum, r) => sum + r.baseWithMultiplier, 0);
 
@@ -110,7 +111,7 @@ function computeWorldDungeonSalary() {
     r.finalSalary = r.initialComputation + (feeAmountByMemberId.get(r.member.id) || 0);
   });
 
-  rows.sort((a, b) => b.attendance - a.attendance);
+  rows.sort((a, b) => (b.growthRate ?? -Infinity) - (a.growthRate ?? -Infinity));
 
   return { rows, rawPool, totalFeeAmount, finalPool };
 }
@@ -536,6 +537,7 @@ function renderWorldDungeonSalaryBreakdown(rows) {
       return `
     <tr class="${sent ? 'row-sent' : ''}">
       <td style="font-weight:600;">${escapeHtml(memberDisplayName(r.member))}</td>
+      <td>${r.growthRate === null ? '–' : r.growthRate.toLocaleString()}</td>
       <td>${r.attendance}</td>
       <td><input type="number" class="world-dungeon-salary-multiplier-input admin-disable" data-member-id="${r.member.id}" value="${r.multiplier}" min="0" step="0.1" style="width:70px;"></td>
       <td>${(r.pvpFraction * 100).toFixed(0)}%</td>
