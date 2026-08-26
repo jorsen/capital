@@ -757,11 +757,17 @@ select:focus, input:focus, textarea:focus {
    wider than the checkbox it's sitting above. Solid (non-transparent)
    attended/absent colors instead of a tint, so every cell in the same state
    renders as the exact same pixel color regardless of row. */
-.world-dungeon-pvp-table { width: auto; }
+/* table-layout:fixed makes each column's width the actual specified value
+   instead of a mere cap -- with the default "auto" layout, leftover space
+   still gets handed to the unconstrained first column no matter what
+   max-width says. width:min-content then shrinks the table itself down to
+   the sum of those fixed columns instead of stretching to fill the panel
+   (which .members-table's width:100% would otherwise force). */
+.world-dungeon-pvp-table { width: min-content !important; table-layout: fixed; }
 .world-dungeon-pvp-table th,
 .world-dungeon-pvp-table td { padding: 3px 6px; font-size: 12px; }
 .world-dungeon-pvp-table th:first-child,
-.world-dungeon-pvp-table td:first-child { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.world-dungeon-pvp-table td:first-child { width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .world-dungeon-pvp-table th:not(:first-child),
 .world-dungeon-pvp-table td:not(:first-child) { width: 56px; }
 .world-dungeon-pvp-date-th { text-align: center; white-space: nowrap; }
