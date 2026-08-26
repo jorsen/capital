@@ -750,6 +750,12 @@ select:focus, input:focus, textarea:focus {
 .world-dungeon-salary-attendee-label span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .world-dungeon-salary-loot-table { margin-bottom: 10px; }
 
+/* A LOT of columns live in this one table now (the merged PVP/session date
+   columns on top of the usual salary math columns) -- trades the
+   members-table default row height/font-size for a denser grid so it has a
+   better chance of fitting without horizontal scroll. */
+.world-dungeon-salary-table th, .world-dungeon-salary-table td { padding: 6px 8px; font-size: 12.5px; white-space: nowrap; }
+
 /* Date columns (World Dungeon runs AND PVP dates) live inline in the Salary
    Breakdown table now (merged with what used to be two separate tables) --
    these target just the date cells, not the whole table, so the

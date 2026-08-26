@@ -555,21 +555,24 @@ function renderWorldDungeonSalaryHeaderRow() {
     )
     .join('');
 
+  // Short labels, no printed formula subtitle -- the full formula still
+  // shows on hover via title, but the column no longer has to be as wide as
+  // its own explanation, which was the main thing forcing horizontal scroll.
   document.getElementById('worldDungeonSalaryHeaderRow').innerHTML = `
     <th>#</th>
     <th>IGN</th>
-    <th>Growth Rate</th>
-    <th title="Flat value set per member"><span>Multiplier</span><br><span class="th-formula">set per member</span></th>
-    <th title="PVP Bonus = PVP dates attended ÷ PVP dates tracked"><span>PVP Bonus</span><br><span class="th-formula">attended ÷ tracked</span></th>
+    <th title="Latest recorded growth rate">Growth</th>
+    <th title="Flat value set per member">Mult.</th>
+    <th title="PVP Bonus = PVP dates attended ÷ PVP dates tracked">PVP %</th>
     ${sessionHeaders}
     ${dateHeaders}
-    <th title="Base Share = Attendance ÷ Total Attendance"><span>Base Share</span><br><span class="th-formula">Attendance ÷ Σ Attendance</span></th>
-    <th title="Base + Multiplier = Base Share × Multiplier"><span>Base + Multiplier</span><br><span class="th-formula">Base Share × Multiplier</span></th>
-    <th title="Normalized Share = (Base + Multiplier) ÷ Σ(Base + Multiplier)"><span>Normalized Share</span><br><span class="th-formula">(Base+Mult) ÷ Σ(Base+Mult)</span></th>
-    <th title="Initial Computation = Normalized Share × Final Salary Pool"><span>Initial Computation (🐦‍⬛)</span><br><span class="th-formula">Norm. Share × Final Pool</span></th>
-    <th title="Final Salary = Initial Computation + Accounting Fee (if applicable)"><span>Final Salary (🐦‍⬛)</span><br><span class="th-formula">Initial Comp. + Fee</span></th>
-    <th title="Same Normalized Share applied to the separate Final Diamond Pool"><span>Initial Computation (💎)</span><br><span class="th-formula">Norm. Share × Final Diamond Pool</span></th>
-    <th title="Final Diamond Salary = Initial Computation (💎) + Accounting Fee (if applicable)"><span>Final Salary (💎)</span><br><span class="th-formula">Initial Comp. + Fee</span></th>
+    <th title="Base Share = Attendance ÷ Total Attendance">Base %</th>
+    <th title="Base + Multiplier = Base Share × Multiplier">Base×Mult</th>
+    <th title="Normalized Share = (Base + Multiplier) ÷ Σ(Base + Multiplier)">Norm. %</th>
+    <th title="Initial Computation = Normalized Share × Final Salary Pool">Init 🐦‍⬛</th>
+    <th title="Final Salary = Initial Computation + Accounting Fee (if applicable)">Final 🐦‍⬛</th>
+    <th title="Same Normalized Share applied to the separate Final Diamond Pool">Init 💎</th>
+    <th title="Final Diamond Salary = Initial Computation (💎) + Accounting Fee (if applicable)">Final 💎</th>
     <th>Sent</th>`;
 
   attachWorldDungeonPvpDateDeleteHandlers();
