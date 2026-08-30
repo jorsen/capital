@@ -746,6 +746,22 @@
     </div>
   </div>
 
+  <div id="spawnTimeModal" class="modal-overlay hidden">
+    <div class="modal">
+      <button class="modal-close" data-close="spawnTimeModal" aria-label="Close">×</button>
+      <h2>Set Spawn Time</h2>
+      <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;">
+        Enter the exact time you actually saw (or expect) this boss spawn — the timer works backward from its Respawn Interval to figure out the equivalent kill time.
+      </p>
+      <form id="spawnTimeForm" style="display:flex; flex-direction:column; gap:12px; margin-top:10px;">
+        <label><span>Spawns At</span> <span style="color:var(--text-muted); font-weight:400;">(your local time)</span>
+          <input type="datetime-local" name="spawnAt" required>
+        </label>
+        <button type="submit" class="btn primary">Save</button>
+      </form>
+    </div>
+  </div>
+
   <div id="addModal" class="modal-overlay hidden">
     <div class="modal">
       <button class="modal-close" data-close="addModal" aria-label="Close">×</button>
@@ -954,7 +970,7 @@
   <script src="cave-salary-view.js?v=8"></script>
   <script src="cave-schedule-view.js?v=5"></script>
   <script src="item-report-view.js?v=30"></script>
-  <script src="boss-timer-view.js?v=34"></script>
+  <script src="boss-timer-view.js?v=35"></script>
   <script src="boss-history-view.js?v=33"></script>
   <script src="world-dungeon-view.js?v=3"></script>
   <script src="world-dungeon-salary-view.js?v=11"></script>
