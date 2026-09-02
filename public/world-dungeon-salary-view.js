@@ -36,10 +36,16 @@ function worldDungeonPvpAttendanceFraction(memberId) {
   return attended / dates.length;
 }
 
-async function loadWorldDungeonSalaryData() {
+// monthParam (the URL's #/world-dungeon-salary/<month> segment, e.g.
+// "2026-08") lets a specific month be linked/bookmarked directly instead of
+// always landing on whatever the current month happens to be -- matches
+// the <input type="month"> value format so it round-trips exactly.
+async function loadWorldDungeonSalaryData(monthParam) {
   const monthInput = document.getElementById('worldDungeonSalaryMonthInput');
-  if (!worldDungeonSalaryState.month) worldDungeonSalaryState.month = currentMonthValue();
+  if (monthParam && /^\d{4}-\d{2}$/.test(monthParam)) worldDungeonSalaryState.month = monthParam;
+  else if (!worldDungeonSalaryState.month) worldDungeonSalaryState.month = currentMonthValue();
   monthInput.value = worldDungeonSalaryState.month;
+  worldDungeonSalarySyncHash();
 
   const [sessions, members, multipliers, pvpDates, pvpAttendance] = await Promise.all([
     api('/api/world-dungeon-sessions'),
@@ -195,8 +201,21 @@ function renderWorldDungeonSalaryFees() {
     sortedMembers.map((m) => `<option value="${m.id}">${escapeHtml(memberDisplayName(m))}</option>`).join('');
 }
 
+// Keeps the URL in sync with whatever month is currently selected, so the
+// address bar is always a valid, shareable/bookmarkable link back to this
+// same view -- e.g. https://capital-records.vercel.app/#/world-dungeon-salary/2026-08.
+// Uses replaceState rather than assigning location.hash -- that would fire
+// a 'hashchange' event and send this same load right back through the
+// router a second time (harmless, just a redundant re-fetch); replaceState
+// updates the address bar without triggering that.
+function worldDungeonSalarySyncHash() {
+  const target = `#/world-dungeon-salary/${worldDungeonSalaryState.month}`;
+  if (window.location.hash !== target) history.replaceState(null, '', target);
+}
+
 document.getElementById('worldDungeonSalaryMonthInput').addEventListener('change', async (e) => {
   worldDungeonSalaryState.month = e.target.value;
+  worldDungeonSalarySyncHash();
   try {
     await loadWorldDungeonSalaryMonthData();
   } catch (err) {

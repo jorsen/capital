@@ -64,7 +64,7 @@ function parseRoute() {
     loadBossHistoryData().catch((err) => toast(err.message));
   }
   if (activeView === 'world-dungeon') loadWorldDungeonScheduleData().catch((err) => toast(err.message));
-  if (activeView === 'world-dungeon-salary') loadWorldDungeonSalaryData().catch((err) => toast(err.message));
+  if (activeView === 'world-dungeon-salary') loadWorldDungeonSalaryData(param).catch((err) => toast(err.message));
   if (activeView === 'users') loadUsersData().catch((err) => toast(err.message));
   if (activeView === 'activity-log') loadActivityLogData().catch((err) => toast(err.message));
 }
