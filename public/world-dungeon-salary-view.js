@@ -136,8 +136,14 @@ function computeWorldDungeonSalary() {
   // No World Dungeon attendance this month means no real share of the pool
   // either way (their Base Share is already 0), so they're left off the
   // list entirely -- a high PVP attendance doesn't save them, PVP is a
-  // bonus on top of showing up, not a substitute for it.
-  const visibleRows = rows.filter((r) => r.attendance > 0);
+  // bonus on top of showing up, not a substitute for it. A member who
+  // didn't attend but still has a management fee tied to them (e.g. a
+  // guild leader's cut) stays visible regardless -- otherwise that fee
+  // amount would still be deducted from the pool (via totalFeeAmount) but
+  // never actually shown or paid out to anyone.
+  const visibleRows = rows.filter(
+    (r) => r.attendance > 0 || (feeAmountByMemberId.get(r.member.id) || 0) > 0 || (feeAmountByMemberIdDiamonds.get(r.member.id) || 0) > 0
+  );
 
   return { rows: visibleRows, rawPool, totalFeeAmount, finalPool, diamondRawPool, totalFeeAmountDiamonds, finalDiamondPool };
 }
@@ -628,6 +634,10 @@ function renderWorldDungeonSalaryBreakdown(rows) {
     .join('');
 
   const totalMultiplier = rows.reduce((sum, r) => sum + r.multiplier, 0);
+  const totalInitialComputation = rows.reduce((sum, r) => sum + r.initialComputation, 0);
+  const totalFinalSalary = rows.reduce((sum, r) => sum + r.finalSalary, 0);
+  const totalInitialComputationDiamonds = rows.reduce((sum, r) => sum + r.initialComputationDiamonds, 0);
+  const totalFinalSalaryDiamonds = rows.reduce((sum, r) => sum + r.finalSalaryDiamonds, 0);
   const blankSessionCells = sessions.map(() => '<td></td>').join('');
   const blankDateCells = dates.map(() => '<td></td>').join('');
   body.innerHTML += `
@@ -642,10 +652,10 @@ function renderWorldDungeonSalaryBreakdown(rows) {
       <td></td>
       <td></td>
       <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
+      <td>${worldDungeonSalaryFormatMoney(totalInitialComputation)}</td>
+      <td>${worldDungeonSalaryFormatMoney(totalFinalSalary)}</td>
+      <td>${worldDungeonSalaryFormatDiamonds(totalInitialComputationDiamonds)}</td>
+      <td>${worldDungeonSalaryFormatDiamonds(totalFinalSalaryDiamonds)}</td>
       <td></td>
     </tr>`;
 
