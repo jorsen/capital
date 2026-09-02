@@ -121,7 +121,11 @@ function computeWorldDungeonSalary() {
     const growthRate = latestGrowth(m)?.rate ?? null;
     const multiplier = worldDungeonSalaryMultiplier(m.id);
     const pvpFraction = worldDungeonPvpAttendanceFraction(m.id);
-    const effectiveMultiplier = multiplier * pvpFraction;
+    // Half the multiplier is guaranteed just for showing up to World
+    // Dungeon; the other half scales with PVP attendance -- missing every
+    // tracked PVP date costs half the multiplier, not all of it (attending
+    // every one keeps it whole, same as before).
+    const effectiveMultiplier = multiplier * (0.5 + 0.5 * pvpFraction);
     // Base Share = this member's attendance as a fraction of everyone's combined attendance.
     const baseShare = totalAttendance > 0 ? attendance / totalAttendance : 0;
     const baseWithMultiplier = baseShare * effectiveMultiplier;
@@ -608,11 +612,11 @@ function renderWorldDungeonSalaryHeaderRow() {
     <th title="In-game name">IGN</th>
     <th title="Latest recorded growth rate">Growth</th>
     <th title="Flat value set per member">Mult.</th>
-    <th title="PVP Bonus = PVP dates attended ÷ PVP dates tracked">PVP %</th>
+    <th title="PVP % = PVP dates attended ÷ PVP dates tracked. Half the Multiplier is guaranteed for World Dungeon attendance; the other half scales with this — 0% PVP costs half the Multiplier, not all of it.">PVP %</th>
     ${sessionHeaders}
     ${dateHeaders}
     <th title="Base Share = Attendance ÷ Total Attendance">Base %</th>
-    <th title="Base + Multiplier = Base Share × Multiplier">Base×Mult</th>
+    <th title="Base + Multiplier = Base Share × Effective Multiplier, where Effective Multiplier = Multiplier × (50% + 50% × PVP %)">Base×Mult</th>
     <th title="Normalized Share = (Base + Multiplier) ÷ Σ(Base + Multiplier)">Norm. %</th>
     <th title="Initial Computation = Normalized Share × Final Salary Pool">Init 🐦‍⬛</th>
     <th title="Final Salary = Initial Computation + Accounting Fee (if applicable)">Final 🐦‍⬛</th>
