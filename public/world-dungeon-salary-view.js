@@ -547,14 +547,17 @@ function attachWorldDungeonPvpDateDeleteHandlers() {
 function renderWorldDungeonSalaryHeaderRow() {
   const sessions = worldDungeonSessionsForMonth();
   const sessionHeaders = sessions
-    .map((s) => `<th class="world-dungeon-pvp-date-th"><span>${worldDungeonPvpShortDate(s.date)}</span></th>`)
+    .map(
+      (s) =>
+        `<th class="world-dungeon-pvp-date-th" title="World Dungeon run on ${escapeHtml(s.date)}${s.run ? ` (${escapeHtml(s.run)})` : ''} — check who attended"><span>${worldDungeonPvpShortDate(s.date)}</span></th>`
+    )
     .join('');
 
   const dates = worldDungeonSalaryState.pvpDates;
   const dateHeaders = dates
     .map(
       (d) => `
-    <th class="world-dungeon-pvp-date-th">
+    <th class="world-dungeon-pvp-date-th" title="PVP date ${escapeHtml(String(d.date).slice(0, 10))} — check who attended; counts toward the PVP % bonus">
       <span>${worldDungeonPvpShortDate(d.date)}</span>
       <button type="button" class="icon-btn admin-only" data-delete-pvp-date="${d.id}" title="Remove this date">✕</button>
     </th>`
@@ -565,8 +568,8 @@ function renderWorldDungeonSalaryHeaderRow() {
   // shows on hover via title, but the column no longer has to be as wide as
   // its own explanation, which was the main thing forcing horizontal scroll.
   document.getElementById('worldDungeonSalaryHeaderRow').innerHTML = `
-    <th>#</th>
-    <th>IGN</th>
+    <th title="Row number">#</th>
+    <th title="In-game name">IGN</th>
     <th title="Latest recorded growth rate">Growth</th>
     <th title="Flat value set per member">Mult.</th>
     <th title="PVP Bonus = PVP dates attended ÷ PVP dates tracked">PVP %</th>
@@ -579,7 +582,7 @@ function renderWorldDungeonSalaryHeaderRow() {
     <th title="Final Salary = Initial Computation + Accounting Fee (if applicable)">Final 🐦‍⬛</th>
     <th title="Same Normalized Share applied to the separate Final Diamond Pool">Init 💎</th>
     <th title="Final Diamond Salary = Initial Computation (💎) + Accounting Fee (if applicable)">Final 💎</th>
-    <th>Sent</th>`;
+    <th title="Whether this month's payout has been sent to this member">Sent</th>`;
 
   attachWorldDungeonPvpDateDeleteHandlers();
 }
