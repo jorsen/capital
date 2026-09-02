@@ -321,12 +321,16 @@ function renderWorldDungeonSalarySessions() {
         input.value = prev;
         return;
       }
+      // Applies to the on-screen totals immediately rather than waiting on
+      // the round trip -- reverted below if the save actually fails.
+      session.diamondReward = value;
+      renderWorldDungeonSalary();
       try {
         const updated = await api(`/api/world-dungeon-sessions/${sessionId}`, { method: 'PUT', body: JSON.stringify({ diamondReward: value }) });
         Object.assign(session, updated);
-        renderWorldDungeonSalary();
       } catch (err) {
-        input.value = prev;
+        session.diamondReward = prev;
+        renderWorldDungeonSalary();
         toast(err.message);
       }
     });
@@ -415,14 +419,19 @@ function worldDungeonSalarySessionDetailRow(s) {
 
 async function worldDungeonSalarySetAttendees(sessionId, nextAttendees) {
   const session = worldDungeonSalaryState.sessions.find((s) => s.id === sessionId);
+  const prevAttendees = session.attendees;
+  // Reflected on screen immediately -- reverted below if the save fails.
+  session.attendees = nextAttendees;
+  renderWorldDungeonSalary();
   try {
     const updated = await api(`/api/world-dungeon-sessions/${sessionId}`, {
       method: 'PUT',
       body: JSON.stringify({ attendees: nextAttendees }),
     });
     Object.assign(session, updated);
-    renderWorldDungeonSalary();
   } catch (err) {
+    session.attendees = prevAttendees;
+    renderWorldDungeonSalary();
     toast(err.message);
   }
 }
@@ -447,19 +456,27 @@ function attachWorldDungeonSalarySessionDetailHandlers() {
       const sessionId = cb.getAttribute('data-session-id');
       const memberId = cb.getAttribute('data-member-id');
       const session = worldDungeonSalaryState.sessions.find((s) => s.id === sessionId);
+      const prevAttendees = session.attendees;
       const nextAttendees = cb.checked
         ? [...session.attendees, memberId]
         : session.attendees.filter((id) => id !== memberId);
+      // Applied immediately (without rebuilding the whole detail panel, so
+      // the checkbox grid itself isn't disturbed mid-click) -- reverted
+      // below if the save fails.
+      session.attendees = nextAttendees;
+      renderWorldDungeonSalaryBreakdown(computeWorldDungeonSalary().rows);
+      document.getElementById('worldDungeonSalaryPoolValue').textContent = worldDungeonSalaryFormatMoney(computeWorldDungeonSalary().rawPool);
       try {
         const updated = await api(`/api/world-dungeon-sessions/${sessionId}`, {
           method: 'PUT',
           body: JSON.stringify({ attendees: nextAttendees }),
         });
         Object.assign(session, updated);
+      } catch (err) {
+        session.attendees = prevAttendees;
+        cb.checked = !cb.checked;
         renderWorldDungeonSalaryBreakdown(computeWorldDungeonSalary().rows);
         document.getElementById('worldDungeonSalaryPoolValue').textContent = worldDungeonSalaryFormatMoney(computeWorldDungeonSalary().rawPool);
-      } catch (err) {
-        cb.checked = !cb.checked;
         toast(err.message);
       }
     });
@@ -697,12 +714,14 @@ function renderWorldDungeonSalaryBreakdown(rows) {
       const memberId = cb.getAttribute('data-member-id');
       const key = `${pvpDateId}:${memberId}`;
       const attended = cb.checked;
+      const prevAttended = worldDungeonSalaryState.pvpAttendance.get(key);
+      worldDungeonSalaryState.pvpAttendance.set(key, attended);
+      renderWorldDungeonSalaryBreakdown(computeWorldDungeonSalary().rows);
       try {
         await api('/api/world-dungeon-pvp-attendance', { method: 'PUT', body: JSON.stringify({ pvpDateId, memberId, attended }) });
-        worldDungeonSalaryState.pvpAttendance.set(key, attended);
-        renderWorldDungeonSalaryBreakdown(computeWorldDungeonSalary().rows);
       } catch (err) {
-        cb.checked = !cb.checked;
+        worldDungeonSalaryState.pvpAttendance.set(key, prevAttended);
+        renderWorldDungeonSalaryBreakdown(computeWorldDungeonSalary().rows);
         toast(err.message);
       }
     });
@@ -718,12 +737,13 @@ function renderWorldDungeonSalaryBreakdown(rows) {
         input.value = prev;
         return;
       }
+      worldDungeonSalaryState.multipliers.set(memberId, value);
+      renderWorldDungeonSalaryBreakdown(computeWorldDungeonSalary().rows);
       try {
         await api(`/api/world-dungeon-multipliers/${memberId}`, { method: 'PUT', body: JSON.stringify({ multiplier: value }) });
-        worldDungeonSalaryState.multipliers.set(memberId, value);
-        renderWorldDungeonSalaryBreakdown(computeWorldDungeonSalary().rows);
       } catch (err) {
-        input.value = prev;
+        worldDungeonSalaryState.multipliers.set(memberId, prev);
+        renderWorldDungeonSalaryBreakdown(computeWorldDungeonSalary().rows);
         toast(err.message);
       }
     });
@@ -733,18 +753,30 @@ function renderWorldDungeonSalaryBreakdown(rows) {
     cb.addEventListener('change', async () => {
       const memberId = cb.getAttribute('data-member-id');
       const row = cb.closest('tr');
+      const wasSent = worldDungeonSalaryState.paidMemberIds.includes(memberId);
+      // Row shading flips immediately -- reverted below if the save fails.
+      if (cb.checked) {
+        worldDungeonSalaryState.paidMemberIds.push(memberId);
+        row.classList.add('row-sent');
+      } else {
+        worldDungeonSalaryState.paidMemberIds = worldDungeonSalaryState.paidMemberIds.filter((id) => id !== memberId);
+        row.classList.remove('row-sent');
+      }
       try {
         if (cb.checked) {
           await api('/api/world-dungeon-salary-paid', { method: 'POST', body: JSON.stringify({ month: worldDungeonSalaryState.month, memberId }) });
-          worldDungeonSalaryState.paidMemberIds.push(memberId);
-          row.classList.add('row-sent');
         } else {
           await api(`/api/world-dungeon-salary-paid?month=${encodeURIComponent(worldDungeonSalaryState.month)}&memberId=${encodeURIComponent(memberId)}`, { method: 'DELETE' });
-          worldDungeonSalaryState.paidMemberIds = worldDungeonSalaryState.paidMemberIds.filter((id) => id !== memberId);
-          row.classList.remove('row-sent');
         }
       } catch (err) {
         cb.checked = !cb.checked;
+        if (wasSent) {
+          worldDungeonSalaryState.paidMemberIds.push(memberId);
+          row.classList.add('row-sent');
+        } else {
+          worldDungeonSalaryState.paidMemberIds = worldDungeonSalaryState.paidMemberIds.filter((id) => id !== memberId);
+          row.classList.remove('row-sent');
+        }
         toast(err.message);
       }
     });
