@@ -777,7 +777,7 @@ function renderWorldDungeonSalaryBreakdown(rows) {
       <td>${(r.pvpShare * 100).toFixed(2)}%</td>
       <td>${worldDungeonSalaryFormatMoney(r.initialComputation)}</td>
       <td style="font-weight:600;">${worldDungeonSalaryFormatMoney(r.finalSalary)}</td>
-      <td style="font-weight:600;">${worldDungeonSalaryFormatPhp(r.finalSalary * worldDungeonSalaryState.phpPerCrow)}</td>
+      <td style="font-weight:600;">${noGcash ? '–' : worldDungeonSalaryFormatPhp(r.finalSalary * worldDungeonSalaryState.phpPerCrow)}</td>
       <td>${worldDungeonSalaryFormatDiamonds(r.initialComputationDiamonds)}</td>
       <td style="font-weight:600;">${worldDungeonSalaryFormatDiamonds(r.finalSalaryDiamonds)}</td>
       <td class="${noGcash ? 'world-dungeon-non-gcash' : ''}"><input type="checkbox" class="world-dungeon-salary-gcash-check admin-disable" data-member-id="${r.member.id}" ${noGcash ? 'checked' : ''}></td>
@@ -808,7 +808,7 @@ function renderWorldDungeonSalaryBreakdown(rows) {
       <td></td>
       <td>${worldDungeonSalaryFormatMoney(totalInitialComputation)}</td>
       <td>${worldDungeonSalaryFormatMoney(totalFinalSalary)}</td>
-      <td>${worldDungeonSalaryFormatPhp(totalFinalSalary * worldDungeonSalaryState.phpPerCrow)}</td>
+      <td>${worldDungeonSalaryFormatPhp(rows.reduce((sum, r) => (worldDungeonHasGcash(r.member.id) ? sum + r.finalSalary : sum), 0) * worldDungeonSalaryState.phpPerCrow)}</td>
       <td>${worldDungeonSalaryFormatDiamonds(totalInitialComputationDiamonds)}</td>
       <td>${worldDungeonSalaryFormatDiamonds(totalFinalSalaryDiamonds)}</td>
       <td></td>
