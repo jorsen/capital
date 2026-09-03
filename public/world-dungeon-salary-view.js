@@ -29,6 +29,14 @@ function worldDungeonSalaryFormatPhp(amount) {
   return `₱${(amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
+// Defaults to "has GCash" for anyone with no explicit row -- most members
+// do have GCash, so the checkbox column only needs to flag the minority who
+// don't (see the inverted "Non GCash" checkbox below), instead of everyone
+// needing to be explicitly marked.
+function worldDungeonHasGcash(memberId) {
+  return worldDungeonSalaryState.gcash.has(memberId) ? worldDungeonSalaryState.gcash.get(memberId) : true;
+}
+
 function worldDungeonSalaryMultiplier(memberId) {
   return worldDungeonSalaryState.multipliers.get(memberId) ?? 1;
 }
@@ -655,7 +663,7 @@ function renderWorldDungeonSalaryHeaderRow() {
     <th title="Final Salary (🐦‍⬛) × the 1 crow = ₱ rate set above">Final ₱</th>
     <th title="Same split applied to the separate Final Diamond Pool">Init 💎</th>
     <th title="Final Diamond Salary = Initial Computation (💎) + Accounting Fee (if applicable)">Final 💎</th>
-    <th title="Whether this member has GCash on file (standing, not month-scoped)">GCash</th>
+    <th title="Check for members who do NOT have GCash (standing, not month-scoped) — unchecked/default assumes they do">Non GCash</th>
     <th title="Whether this month's payout has been sent to this member">Sent</th>`;
 
   attachWorldDungeonPvpDateDeleteHandlers();
@@ -670,8 +678,8 @@ function renderWorldDungeonSalaryHeaderRow() {
 // updates these two tiles without needing to rebuild the whole table (and
 // losing focus/scroll position) just for that.
 function renderWorldDungeonGcashTotals(rows) {
-  const gcashTotal = rows.reduce((sum, r) => (worldDungeonSalaryState.gcash.get(r.member.id) ? sum + r.finalSalary : sum), 0);
-  const noGcashTotal = rows.reduce((sum, r) => (worldDungeonSalaryState.gcash.get(r.member.id) ? sum : sum + r.finalSalary), 0);
+  const gcashTotal = rows.reduce((sum, r) => (worldDungeonHasGcash(r.member.id) ? sum + r.finalSalary : sum), 0);
+  const noGcashTotal = rows.reduce((sum, r) => (worldDungeonHasGcash(r.member.id) ? sum : sum + r.finalSalary), 0);
   document.getElementById('worldDungeonGcashTotalValue').textContent =
     `${worldDungeonSalaryFormatMoney(gcashTotal)} (${worldDungeonSalaryFormatPhp(gcashTotal * worldDungeonSalaryState.phpPerCrow)})`;
   document.getElementById('worldDungeonNoGcashTotalValue').textContent =
@@ -692,7 +700,7 @@ function renderWorldDungeonSalaryBreakdown(rows) {
   body.innerHTML = rows
     .map((r, i) => {
       const sent = paidSet.has(r.member.id);
-      const hasGcash = !!worldDungeonSalaryState.gcash.get(r.member.id);
+      const noGcash = !worldDungeonHasGcash(r.member.id);
       const sessionCells = sessions
         .map((s) => {
           const attended = s.attendees.includes(r.member.id);
@@ -721,7 +729,7 @@ function renderWorldDungeonSalaryBreakdown(rows) {
       <td style="font-weight:600;">${worldDungeonSalaryFormatPhp(r.finalSalary * worldDungeonSalaryState.phpPerCrow)}</td>
       <td>${worldDungeonSalaryFormatDiamonds(r.initialComputationDiamonds)}</td>
       <td style="font-weight:600;">${worldDungeonSalaryFormatDiamonds(r.finalSalaryDiamonds)}</td>
-      <td><input type="checkbox" class="world-dungeon-salary-gcash-check admin-disable" data-member-id="${r.member.id}" ${hasGcash ? 'checked' : ''}></td>
+      <td><input type="checkbox" class="world-dungeon-salary-gcash-check admin-disable" data-member-id="${r.member.id}" ${noGcash ? 'checked' : ''}></td>
       <td><input type="checkbox" class="world-dungeon-salary-sent-check admin-disable" data-member-id="${r.member.id}" ${sent ? 'checked' : ''}></td>
     </tr>`;
     })
@@ -843,15 +851,17 @@ function renderWorldDungeonSalaryBreakdown(rows) {
   body.querySelectorAll('.world-dungeon-salary-gcash-check').forEach((cb) => {
     cb.addEventListener('change', async () => {
       const memberId = cb.getAttribute('data-member-id');
-      const prev = !!worldDungeonSalaryState.gcash.get(memberId);
-      const value = cb.checked;
+      const prev = worldDungeonHasGcash(memberId);
+      // The checkbox is "Non GCash" (checked = flagged as NOT having GCash),
+      // inverted from the hasGcash value actually saved.
+      const value = !cb.checked;
       worldDungeonSalaryState.gcash.set(memberId, value);
       renderWorldDungeonGcashTotals(computeWorldDungeonSalary().rows);
       try {
         await api(`/api/world-dungeon-gcash/${memberId}`, { method: 'PUT', body: JSON.stringify({ hasGcash: value }) });
       } catch (err) {
         worldDungeonSalaryState.gcash.set(memberId, prev);
-        cb.checked = prev;
+        cb.checked = !prev;
         renderWorldDungeonGcashTotals(computeWorldDungeonSalary().rows);
         toast(err.message);
       }
