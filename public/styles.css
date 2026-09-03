@@ -786,6 +786,12 @@ select:focus, input:focus, textarea:focus {
 .world-dungeon-session-attended input[type="checkbox"] { accent-color: var(--gold); }
 .world-dungeon-session-absent input[type="checkbox"] { accent-color: var(--bad); }
 
+/* Flags the minority checked as "Non GCash" -- unchecked (the default, has
+   GCash) stays the table's normal background, only the exception gets
+   highlighted. */
+.world-dungeon-non-gcash { background: rgba(239,68,68,0.14); text-align: center; }
+.world-dungeon-non-gcash input[type="checkbox"] { accent-color: var(--bad); }
+
 /* ---------- Sovereign / Crusade ---------- */
 
 .sovereign-header .brand { align-items: center; }

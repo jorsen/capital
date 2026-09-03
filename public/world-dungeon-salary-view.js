@@ -729,7 +729,7 @@ function renderWorldDungeonSalaryBreakdown(rows) {
       <td style="font-weight:600;">${worldDungeonSalaryFormatPhp(r.finalSalary * worldDungeonSalaryState.phpPerCrow)}</td>
       <td>${worldDungeonSalaryFormatDiamonds(r.initialComputationDiamonds)}</td>
       <td style="font-weight:600;">${worldDungeonSalaryFormatDiamonds(r.finalSalaryDiamonds)}</td>
-      <td><input type="checkbox" class="world-dungeon-salary-gcash-check admin-disable" data-member-id="${r.member.id}" ${noGcash ? 'checked' : ''}></td>
+      <td class="${noGcash ? 'world-dungeon-non-gcash' : ''}"><input type="checkbox" class="world-dungeon-salary-gcash-check admin-disable" data-member-id="${r.member.id}" ${noGcash ? 'checked' : ''}></td>
       <td><input type="checkbox" class="world-dungeon-salary-sent-check admin-disable" data-member-id="${r.member.id}" ${sent ? 'checked' : ''}></td>
     </tr>`;
     })
@@ -856,12 +856,14 @@ function renderWorldDungeonSalaryBreakdown(rows) {
       // inverted from the hasGcash value actually saved.
       const value = !cb.checked;
       worldDungeonSalaryState.gcash.set(memberId, value);
+      cb.closest('td').classList.toggle('world-dungeon-non-gcash', cb.checked);
       renderWorldDungeonGcashTotals(computeWorldDungeonSalary().rows);
       try {
         await api(`/api/world-dungeon-gcash/${memberId}`, { method: 'PUT', body: JSON.stringify({ hasGcash: value }) });
       } catch (err) {
         worldDungeonSalaryState.gcash.set(memberId, prev);
         cb.checked = !prev;
+        cb.closest('td').classList.toggle('world-dungeon-non-gcash', cb.checked);
         renderWorldDungeonGcashTotals(computeWorldDungeonSalary().rows);
         toast(err.message);
       }
