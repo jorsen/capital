@@ -14,6 +14,7 @@ const worldDungeonSalaryState = {
   paidMemberIds: [],
   expandedSessionId: null,
   phpPerCrow: 0, // standing conversion rate (not month-scoped) — e.g. 33 means 1 🐦‍⬛ = ₱33
+  gcash: new Map(), // memberId -> hasGcash (boolean), standing (not month-scoped)
 };
 
 function worldDungeonSalaryFormatMoney(amount) {
@@ -52,17 +53,19 @@ async function loadWorldDungeonSalaryData(monthParam) {
   monthInput.value = worldDungeonSalaryState.month;
   worldDungeonSalarySyncHash();
 
-  const [sessions, members, multipliers, pvpDates, pvpAttendance, settings] = await Promise.all([
+  const [sessions, members, multipliers, pvpDates, pvpAttendance, settings, gcash] = await Promise.all([
     api('/api/world-dungeon-sessions'),
     api('/api/members'),
     api('/api/world-dungeon-multipliers'),
     api('/api/world-dungeon-pvp-dates'),
     api('/api/world-dungeon-pvp-attendance'),
     api('/api/world-dungeon-settings'),
+    api('/api/world-dungeon-gcash'),
   ]);
   worldDungeonSalaryState.sessions = sessions;
   worldDungeonSalaryState.members = members;
   worldDungeonSalaryState.multipliers = new Map(multipliers.map((m) => [m.memberId, m.multiplier]));
+  worldDungeonSalaryState.gcash = new Map(gcash.map((g) => [g.memberId, g.hasGcash]));
   worldDungeonSalaryState.pvpDates = pvpDates;
   worldDungeonSalaryState.pvpAttendance = new Map(pvpAttendance.map((a) => [`${a.pvpDateId}:${a.memberId}`, a.attended]));
   worldDungeonSalaryState.phpPerCrow = settings.phpPerCrow;
@@ -652,7 +655,8 @@ function renderWorldDungeonSalaryHeaderRow() {
     <th title="Final Salary (🐦‍⬛) × the 1 crow = ₱ rate set above">Final ₱</th>
     <th title="Same split applied to the separate Final Diamond Pool">Init 💎</th>
     <th title="Final Diamond Salary = Initial Computation (💎) + Accounting Fee (if applicable)">Final 💎</th>
-    <th title="Whether this month's payout has been sent to this member">Sent</th>`;
+    <th title="Whether this month's payout has been sent to this member">Sent</th>
+    <th title="Whether this member has GCash on file (standing, not month-scoped)">GCash</th>`;
 
   attachWorldDungeonPvpDateDeleteHandlers();
 }
@@ -673,6 +677,7 @@ function renderWorldDungeonSalaryBreakdown(rows) {
   body.innerHTML = rows
     .map((r, i) => {
       const sent = paidSet.has(r.member.id);
+      const hasGcash = !!worldDungeonSalaryState.gcash.get(r.member.id);
       const sessionCells = sessions
         .map((s) => {
           const attended = s.attendees.includes(r.member.id);
@@ -702,6 +707,7 @@ function renderWorldDungeonSalaryBreakdown(rows) {
       <td>${worldDungeonSalaryFormatDiamonds(r.initialComputationDiamonds)}</td>
       <td style="font-weight:600;">${worldDungeonSalaryFormatDiamonds(r.finalSalaryDiamonds)}</td>
       <td><input type="checkbox" class="world-dungeon-salary-sent-check admin-disable" data-member-id="${r.member.id}" ${sent ? 'checked' : ''}></td>
+      <td><input type="checkbox" class="world-dungeon-salary-gcash-check admin-disable" data-member-id="${r.member.id}" ${hasGcash ? 'checked' : ''}></td>
     </tr>`;
     })
     .join('');
@@ -729,6 +735,7 @@ function renderWorldDungeonSalaryBreakdown(rows) {
       <td>${worldDungeonSalaryFormatPhp(totalFinalSalary * worldDungeonSalaryState.phpPerCrow)}</td>
       <td>${worldDungeonSalaryFormatDiamonds(totalInitialComputationDiamonds)}</td>
       <td>${worldDungeonSalaryFormatDiamonds(totalFinalSalaryDiamonds)}</td>
+      <td></td>
       <td></td>
     </tr>`;
 
@@ -811,6 +818,22 @@ function renderWorldDungeonSalaryBreakdown(rows) {
           worldDungeonSalaryState.paidMemberIds = worldDungeonSalaryState.paidMemberIds.filter((id) => id !== memberId);
           row.classList.remove('row-sent');
         }
+        toast(err.message);
+      }
+    });
+  });
+
+  body.querySelectorAll('.world-dungeon-salary-gcash-check').forEach((cb) => {
+    cb.addEventListener('change', async () => {
+      const memberId = cb.getAttribute('data-member-id');
+      const prev = !!worldDungeonSalaryState.gcash.get(memberId);
+      const value = cb.checked;
+      worldDungeonSalaryState.gcash.set(memberId, value);
+      try {
+        await api(`/api/world-dungeon-gcash/${memberId}`, { method: 'PUT', body: JSON.stringify({ hasGcash: value }) });
+      } catch (err) {
+        worldDungeonSalaryState.gcash.set(memberId, prev);
+        cb.checked = prev;
         toast(err.message);
       }
     });
