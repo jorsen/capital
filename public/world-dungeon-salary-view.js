@@ -116,28 +116,30 @@ function computeWorldDungeonSalary() {
     feeAmountByMemberIdDiamonds.set(f.memberId, (feeAmountByMemberIdDiamonds.get(f.memberId) || 0) + amount);
   });
 
+  // Pool is split into two independent halves rather than PVP acting as a
+  // scaling factor on one combined share: 50% distributed purely by World
+  // Dungeon attendance (weighted by Multiplier), the other 50% distributed
+  // purely by PVP attendance fraction (also weighted by Multiplier) -- a
+  // member's World Dungeon payout no longer depends on their PVP record at
+  // all, it's just a separate, independently-earned half of the pool.
   const rows = members.map((m) => {
     const attendance = attendanceByMember.get(m.id) || 0;
     const growthRate = latestGrowth(m)?.rate ?? null;
     const multiplier = worldDungeonSalaryMultiplier(m.id);
     const pvpFraction = worldDungeonPvpAttendanceFraction(m.id);
-    // Half the multiplier is guaranteed just for showing up to World
-    // Dungeon; the other half scales with PVP attendance -- missing every
-    // tracked PVP date costs half the multiplier, not all of it (attending
-    // every one keeps it whole, same as before).
-    const effectiveMultiplier = multiplier * (0.5 + 0.5 * pvpFraction);
-    // Base Share = this member's attendance as a fraction of everyone's combined attendance.
-    const baseShare = totalAttendance > 0 ? attendance / totalAttendance : 0;
-    const baseWithMultiplier = baseShare * effectiveMultiplier;
-    return { member: m, attendance, growthRate, multiplier, pvpFraction, effectiveMultiplier, baseShare, baseWithMultiplier };
+    const normalWeight = attendance * multiplier;
+    const pvpWeight = pvpFraction * multiplier;
+    return { member: m, attendance, growthRate, multiplier, pvpFraction, normalWeight, pvpWeight };
   });
-  const sumBaseWithMultiplier = rows.reduce((sum, r) => sum + r.baseWithMultiplier, 0);
+  const sumNormalWeight = rows.reduce((sum, r) => sum + r.normalWeight, 0);
+  const sumPvpWeight = rows.reduce((sum, r) => sum + r.pvpWeight, 0);
 
   rows.forEach((r) => {
-    r.normalizedShare = sumBaseWithMultiplier > 0 ? r.baseWithMultiplier / sumBaseWithMultiplier : 0;
-    r.initialComputation = r.normalizedShare * finalPool;
+    r.normalShare = sumNormalWeight > 0 ? r.normalWeight / sumNormalWeight : 0;
+    r.pvpShare = sumPvpWeight > 0 ? r.pvpWeight / sumPvpWeight : 0;
+    r.initialComputation = r.normalShare * (finalPool * 0.5) + r.pvpShare * (finalPool * 0.5);
     r.finalSalary = r.initialComputation + (feeAmountByMemberId.get(r.member.id) || 0);
-    r.initialComputationDiamonds = r.normalizedShare * finalDiamondPool;
+    r.initialComputationDiamonds = r.normalShare * (finalDiamondPool * 0.5) + r.pvpShare * (finalDiamondPool * 0.5);
     r.finalSalaryDiamonds = r.initialComputationDiamonds + (feeAmountByMemberIdDiamonds.get(r.member.id) || 0);
   });
 
@@ -612,15 +614,14 @@ function renderWorldDungeonSalaryHeaderRow() {
     <th title="In-game name">IGN</th>
     <th title="Latest recorded growth rate">Growth</th>
     <th title="Flat value set per member">Mult.</th>
-    <th title="PVP % = PVP dates attended ÷ PVP dates tracked. Half the Multiplier is guaranteed for World Dungeon attendance; the other half scales with this — 0% PVP costs half the Multiplier, not all of it.">PVP %</th>
+    <th title="PVP % = PVP dates attended ÷ PVP dates tracked">PVP %</th>
     ${sessionHeaders}
     ${dateHeaders}
-    <th title="Base Share = Attendance ÷ Total Attendance">Base %</th>
-    <th title="Base + Multiplier = Base Share × Effective Multiplier, where Effective Multiplier = Multiplier × (50% + 50% × PVP %)">Base×Mult</th>
-    <th title="Normalized Share = (Base + Multiplier) ÷ Σ(Base + Multiplier)">Norm. %</th>
-    <th title="Initial Computation = Normalized Share × Final Salary Pool">Init 🐦‍⬛</th>
+    <th title="Normal Share = (Attendance × Multiplier) ÷ Σ(Attendance × Multiplier) — this member's cut of the World Dungeon-attendance half of the pool">Normal %</th>
+    <th title="PVP Share = (PVP % × Multiplier) ÷ Σ(PVP % × Multiplier) — this member's cut of the PVP-attendance half of the pool">PVP Share %</th>
+    <th title="Initial Computation = Normal Share × 50% of Final Pool + PVP Share × 50% of Final Pool">Init 🐦‍⬛</th>
     <th title="Final Salary = Initial Computation + Accounting Fee (if applicable)">Final 🐦‍⬛</th>
-    <th title="Same Normalized Share applied to the separate Final Diamond Pool">Init 💎</th>
+    <th title="Same split applied to the separate Final Diamond Pool">Init 💎</th>
     <th title="Final Diamond Salary = Initial Computation (💎) + Accounting Fee (if applicable)">Final 💎</th>
     <th title="Whether this month's payout has been sent to this member">Sent</th>`;
 
@@ -664,9 +665,8 @@ function renderWorldDungeonSalaryBreakdown(rows) {
       <td>${(r.pvpFraction * 100).toFixed(0)}%</td>
       ${sessionCells}
       ${dateCells}
-      <td>${(r.baseShare * 100).toFixed(2)}%</td>
-      <td>${r.baseWithMultiplier.toFixed(4)}</td>
-      <td>${(r.normalizedShare * 100).toFixed(2)}%</td>
+      <td>${(r.normalShare * 100).toFixed(2)}%</td>
+      <td>${(r.pvpShare * 100).toFixed(2)}%</td>
       <td>${worldDungeonSalaryFormatMoney(r.initialComputation)}</td>
       <td style="font-weight:600;">${worldDungeonSalaryFormatMoney(r.finalSalary)}</td>
       <td>${worldDungeonSalaryFormatDiamonds(r.initialComputationDiamonds)}</td>
@@ -692,7 +692,6 @@ function renderWorldDungeonSalaryBreakdown(rows) {
       <td></td>
       ${blankSessionCells}
       ${blankDateCells}
-      <td></td>
       <td></td>
       <td></td>
       <td>${worldDungeonSalaryFormatMoney(totalInitialComputation)}</td>
