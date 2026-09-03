@@ -655,13 +655,28 @@ function renderWorldDungeonSalaryHeaderRow() {
     <th title="Final Salary (🐦‍⬛) × the 1 crow = ₱ rate set above">Final ₱</th>
     <th title="Same split applied to the separate Final Diamond Pool">Init 💎</th>
     <th title="Final Diamond Salary = Initial Computation (💎) + Accounting Fee (if applicable)">Final 💎</th>
-    <th title="Whether this month's payout has been sent to this member">Sent</th>
-    <th title="Whether this member has GCash on file (standing, not month-scoped)">GCash</th>`;
+    <th title="Whether this member has GCash on file (standing, not month-scoped)">GCash</th>
+    <th title="Whether this month's payout has been sent to this member">Sent</th>`;
 
   attachWorldDungeonPvpDateDeleteHandlers();
 }
 
 // ---------- Salary breakdown (multiplier + PVP attendance are editable here) ----------
+
+// Splits the Final Salary total by whether each member has GCash on file --
+// lets an admin see at a glance how much needs to go out via GCash vs. some
+// other payment method this month. Called both from the main breakdown
+// render and from the GCash checkbox handler directly, so toggling one
+// updates these two tiles without needing to rebuild the whole table (and
+// losing focus/scroll position) just for that.
+function renderWorldDungeonGcashTotals(rows) {
+  const gcashTotal = rows.reduce((sum, r) => (worldDungeonSalaryState.gcash.get(r.member.id) ? sum + r.finalSalary : sum), 0);
+  const noGcashTotal = rows.reduce((sum, r) => (worldDungeonSalaryState.gcash.get(r.member.id) ? sum : sum + r.finalSalary), 0);
+  document.getElementById('worldDungeonGcashTotalValue').textContent =
+    `${worldDungeonSalaryFormatMoney(gcashTotal)} (${worldDungeonSalaryFormatPhp(gcashTotal * worldDungeonSalaryState.phpPerCrow)})`;
+  document.getElementById('worldDungeonNoGcashTotalValue').textContent =
+    `${worldDungeonSalaryFormatMoney(noGcashTotal)} (${worldDungeonSalaryFormatPhp(noGcashTotal * worldDungeonSalaryState.phpPerCrow)})`;
+}
 
 function renderWorldDungeonSalaryBreakdown(rows) {
   renderWorldDungeonSalaryHeaderRow();
@@ -706,8 +721,8 @@ function renderWorldDungeonSalaryBreakdown(rows) {
       <td style="font-weight:600;">${worldDungeonSalaryFormatPhp(r.finalSalary * worldDungeonSalaryState.phpPerCrow)}</td>
       <td>${worldDungeonSalaryFormatDiamonds(r.initialComputationDiamonds)}</td>
       <td style="font-weight:600;">${worldDungeonSalaryFormatDiamonds(r.finalSalaryDiamonds)}</td>
-      <td><input type="checkbox" class="world-dungeon-salary-sent-check admin-disable" data-member-id="${r.member.id}" ${sent ? 'checked' : ''}></td>
       <td><input type="checkbox" class="world-dungeon-salary-gcash-check admin-disable" data-member-id="${r.member.id}" ${hasGcash ? 'checked' : ''}></td>
+      <td><input type="checkbox" class="world-dungeon-salary-sent-check admin-disable" data-member-id="${r.member.id}" ${sent ? 'checked' : ''}></td>
     </tr>`;
     })
     .join('');
@@ -717,6 +732,8 @@ function renderWorldDungeonSalaryBreakdown(rows) {
   const totalFinalSalary = rows.reduce((sum, r) => sum + r.finalSalary, 0);
   const totalInitialComputationDiamonds = rows.reduce((sum, r) => sum + r.initialComputationDiamonds, 0);
   const totalFinalSalaryDiamonds = rows.reduce((sum, r) => sum + r.finalSalaryDiamonds, 0);
+
+  renderWorldDungeonGcashTotals(rows);
   const blankSessionCells = sessions.map(() => '<td></td>').join('');
   const blankDateCells = dates.map(() => '<td></td>').join('');
   body.innerHTML += `
@@ -829,11 +846,13 @@ function renderWorldDungeonSalaryBreakdown(rows) {
       const prev = !!worldDungeonSalaryState.gcash.get(memberId);
       const value = cb.checked;
       worldDungeonSalaryState.gcash.set(memberId, value);
+      renderWorldDungeonGcashTotals(computeWorldDungeonSalary().rows);
       try {
         await api(`/api/world-dungeon-gcash/${memberId}`, { method: 'PUT', body: JSON.stringify({ hasGcash: value }) });
       } catch (err) {
         worldDungeonSalaryState.gcash.set(memberId, prev);
         cb.checked = prev;
+        renderWorldDungeonGcashTotals(computeWorldDungeonSalary().rows);
         toast(err.message);
       }
     });
