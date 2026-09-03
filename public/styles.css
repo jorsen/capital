@@ -756,7 +756,10 @@ select:focus, input:focus, textarea:focus {
    columns on top of the usual salary math columns) -- trades the
    members-table default row height/font-size for a denser grid so it has a
    better chance of fitting without horizontal scroll. */
-.world-dungeon-salary-table th, .world-dungeon-salary-table td { padding: 6px 8px; font-size: 12.5px; white-space: nowrap; }
+.world-dungeon-salary-table th, .world-dungeon-salary-table td { padding: 4px 6px; font-size: 11.5px; white-space: nowrap; }
+.world-dungeon-salary-table td:nth-child(2), .world-dungeon-salary-table th:nth-child(2) {
+  max-width: 130px; overflow: hidden; text-overflow: ellipsis;
+}
 
 /* Date columns (World Dungeon runs AND PVP dates) live inline in the Salary
    Breakdown table now (merged with what used to be two separate tables) --
@@ -768,7 +771,7 @@ select:focus, input:focus, textarea:focus {
    green/blue, so the two kinds of date column read apart from each other
    at a glance. */
 .world-dungeon-pvp-date-th, .world-dungeon-pvp-attended, .world-dungeon-pvp-absent,
-.world-dungeon-session-attended, .world-dungeon-session-absent { width: 56px; padding: 3px 6px; }
+.world-dungeon-session-attended, .world-dungeon-session-absent { width: 40px; padding: 2px 4px; }
 .world-dungeon-pvp-date-th { text-align: center; white-space: nowrap; }
 .world-dungeon-pvp-date-th .icon-btn { width: 14px; height: 14px; font-size: 9px; margin-left: 2px; vertical-align: middle; }
 .world-dungeon-pvp-attended, .world-dungeon-pvp-absent,
