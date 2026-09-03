@@ -309,6 +309,8 @@ body {
 .stat-tile:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
 .stat-tile.gold { border-left-color: var(--gold); }
 .stat-tile.gold .stat-value { color: var(--gold); }
+.stat-tile.bad { background: linear-gradient(160deg, rgba(239,68,68,0.14), var(--surface-2) 220%); border-left-color: var(--bad); }
+.stat-tile.bad .stat-value { color: var(--bad); }
 .stat-label {
   font-size: 11.5px;
   color: var(--text-muted);
