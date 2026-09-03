@@ -852,6 +852,22 @@ select:focus, input:focus, textarea:focus {
 }
 .crusade-formula-hint strong { color: var(--text-primary); }
 
+/* A short, deliberately eye-catching note (gold accent, not the muted gray
+   of a plain hint) -- for a highlight worth actually reading, not just
+   background documentation. */
+.info-callout {
+  background: var(--gold-soft);
+  border: 1px solid var(--gold);
+  border-left: 4px solid var(--gold);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  margin: 14px 0 0;
+}
+.info-callout strong { color: var(--gold); }
+
 /* Generic "sum row at the bottom of a table" style -- not crusade-specific
    despite the leftover name, reused wherever a table needs a total row. */
 .table-total-row { cursor: default; box-shadow: none; font-weight: 600; }
