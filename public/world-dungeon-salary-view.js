@@ -13,6 +13,7 @@ const worldDungeonSalaryState = {
   fees: [],
   paidMemberIds: [],
   expandedSessionId: null,
+  phpPerCrow: 0, // standing conversion rate (not month-scoped) — e.g. 33 means 1 🐦‍⬛ = ₱33
 };
 
 function worldDungeonSalaryFormatMoney(amount) {
@@ -21,6 +22,10 @@ function worldDungeonSalaryFormatMoney(amount) {
 
 function worldDungeonSalaryFormatDiamonds(amount) {
   return `${(amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 💎`;
+}
+
+function worldDungeonSalaryFormatPhp(amount) {
+  return `₱${(amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function worldDungeonSalaryMultiplier(memberId) {
@@ -47,18 +52,21 @@ async function loadWorldDungeonSalaryData(monthParam) {
   monthInput.value = worldDungeonSalaryState.month;
   worldDungeonSalarySyncHash();
 
-  const [sessions, members, multipliers, pvpDates, pvpAttendance] = await Promise.all([
+  const [sessions, members, multipliers, pvpDates, pvpAttendance, settings] = await Promise.all([
     api('/api/world-dungeon-sessions'),
     api('/api/members'),
     api('/api/world-dungeon-multipliers'),
     api('/api/world-dungeon-pvp-dates'),
     api('/api/world-dungeon-pvp-attendance'),
+    api('/api/world-dungeon-settings'),
   ]);
   worldDungeonSalaryState.sessions = sessions;
   worldDungeonSalaryState.members = members;
   worldDungeonSalaryState.multipliers = new Map(multipliers.map((m) => [m.memberId, m.multiplier]));
   worldDungeonSalaryState.pvpDates = pvpDates;
   worldDungeonSalaryState.pvpAttendance = new Map(pvpAttendance.map((a) => [`${a.pvpDateId}:${a.memberId}`, a.attended]));
+  worldDungeonSalaryState.phpPerCrow = settings.phpPerCrow;
+  document.getElementById('worldDungeonPhpRateInput').value = settings.phpPerCrow;
   await loadWorldDungeonSalaryMonthData();
 }
 
@@ -225,6 +233,26 @@ document.getElementById('worldDungeonSalaryMonthInput').addEventListener('change
   try {
     await loadWorldDungeonSalaryMonthData();
   } catch (err) {
+    toast(err.message);
+  }
+});
+
+document.getElementById('worldDungeonPhpRateInput').addEventListener('change', async (e) => {
+  const prev = worldDungeonSalaryState.phpPerCrow;
+  const value = Number(e.target.value);
+  if (Number.isNaN(value) || value < 0) {
+    toast('₱ per crow must be zero or a positive number');
+    e.target.value = prev;
+    return;
+  }
+  worldDungeonSalaryState.phpPerCrow = value;
+  renderWorldDungeonSalaryBreakdown(computeWorldDungeonSalary().rows);
+  try {
+    await api('/api/world-dungeon-settings', { method: 'PUT', body: JSON.stringify({ phpPerCrow: value }) });
+  } catch (err) {
+    worldDungeonSalaryState.phpPerCrow = prev;
+    e.target.value = prev;
+    renderWorldDungeonSalaryBreakdown(computeWorldDungeonSalary().rows);
     toast(err.message);
   }
 });
@@ -621,6 +649,7 @@ function renderWorldDungeonSalaryHeaderRow() {
     <th title="PVP Share = (PVP % × Multiplier) ÷ Σ(PVP % × Multiplier) — this member's cut of the PVP-attendance half of the pool">PVP Share %</th>
     <th title="Initial Computation = Normal Share × 50% of Final Pool + PVP Share × 50% of Final Pool">Init 🐦‍⬛</th>
     <th title="Final Salary = Initial Computation + Accounting Fee (if applicable)">Final 🐦‍⬛</th>
+    <th title="Final Salary (🐦‍⬛) × the 1 crow = ₱ rate set above">Final ₱</th>
     <th title="Same split applied to the separate Final Diamond Pool">Init 💎</th>
     <th title="Final Diamond Salary = Initial Computation (💎) + Accounting Fee (if applicable)">Final 💎</th>
     <th title="Whether this month's payout has been sent to this member">Sent</th>`;
@@ -669,6 +698,7 @@ function renderWorldDungeonSalaryBreakdown(rows) {
       <td>${(r.pvpShare * 100).toFixed(2)}%</td>
       <td>${worldDungeonSalaryFormatMoney(r.initialComputation)}</td>
       <td style="font-weight:600;">${worldDungeonSalaryFormatMoney(r.finalSalary)}</td>
+      <td style="font-weight:600;">${worldDungeonSalaryFormatPhp(r.finalSalary * worldDungeonSalaryState.phpPerCrow)}</td>
       <td>${worldDungeonSalaryFormatDiamonds(r.initialComputationDiamonds)}</td>
       <td style="font-weight:600;">${worldDungeonSalaryFormatDiamonds(r.finalSalaryDiamonds)}</td>
       <td><input type="checkbox" class="world-dungeon-salary-sent-check admin-disable" data-member-id="${r.member.id}" ${sent ? 'checked' : ''}></td>
@@ -696,6 +726,7 @@ function renderWorldDungeonSalaryBreakdown(rows) {
       <td></td>
       <td>${worldDungeonSalaryFormatMoney(totalInitialComputation)}</td>
       <td>${worldDungeonSalaryFormatMoney(totalFinalSalary)}</td>
+      <td>${worldDungeonSalaryFormatPhp(totalFinalSalary * worldDungeonSalaryState.phpPerCrow)}</td>
       <td>${worldDungeonSalaryFormatDiamonds(totalInitialComputationDiamonds)}</td>
       <td>${worldDungeonSalaryFormatDiamonds(totalFinalSalaryDiamonds)}</td>
       <td></td>
