@@ -735,6 +735,10 @@ function renderWorldDungeonGcashTotals(rows) {
   // No ₱ conversion here -- non-GCash members aren't paid through that
   // channel, so a PHP figure for them doesn't mean anything.
   document.getElementById('worldDungeonNoGcashTotalValue').textContent = worldDungeonSalaryFormatMoney(noGcashTotal);
+  // Total row's own ₱ cell (same GCash-only sum) -- may not exist yet the
+  // very first time this runs, before the table body has ever rendered.
+  const totalPhpCell = document.getElementById('worldDungeonTotalFinalPhpCell');
+  if (totalPhpCell) totalPhpCell.textContent = worldDungeonSalaryFormatPhp(gcashTotal * worldDungeonSalaryState.phpPerCrow);
 }
 
 function renderWorldDungeonSalaryBreakdown(rows) {
@@ -777,10 +781,10 @@ function renderWorldDungeonSalaryBreakdown(rows) {
       <td>${(r.pvpShare * 100).toFixed(2)}%</td>
       <td>${worldDungeonSalaryFormatMoney(r.initialComputation)}</td>
       <td style="font-weight:600;">${worldDungeonSalaryFormatMoney(r.finalSalary)}</td>
-      <td style="font-weight:600;">${noGcash ? '–' : worldDungeonSalaryFormatPhp(r.finalSalary * worldDungeonSalaryState.phpPerCrow)}</td>
+      <td class="world-dungeon-final-php-cell" data-member-id="${r.member.id}" style="font-weight:600;">${noGcash ? '–' : worldDungeonSalaryFormatPhp(r.finalSalary * worldDungeonSalaryState.phpPerCrow)}</td>
       <td>${worldDungeonSalaryFormatDiamonds(r.initialComputationDiamonds)}</td>
       <td style="font-weight:600;">${worldDungeonSalaryFormatDiamonds(r.finalSalaryDiamonds)}</td>
-      <td class="${noGcash ? 'world-dungeon-non-gcash' : ''}"><input type="checkbox" class="world-dungeon-salary-gcash-check admin-disable" data-member-id="${r.member.id}" ${noGcash ? 'checked' : ''}></td>
+      <td class="world-dungeon-non-gcash-cell ${noGcash ? 'world-dungeon-non-gcash' : ''}"><input type="checkbox" class="world-dungeon-salary-gcash-check admin-disable" data-member-id="${r.member.id}" ${noGcash ? 'checked' : ''}></td>
       <td><input type="checkbox" class="world-dungeon-salary-sent-check admin-disable" data-member-id="${r.member.id}" ${sent ? 'checked' : ''}></td>
     </tr>`;
     })
@@ -808,7 +812,7 @@ function renderWorldDungeonSalaryBreakdown(rows) {
       <td></td>
       <td>${worldDungeonSalaryFormatMoney(totalInitialComputation)}</td>
       <td>${worldDungeonSalaryFormatMoney(totalFinalSalary)}</td>
-      <td>${worldDungeonSalaryFormatPhp(rows.reduce((sum, r) => (worldDungeonHasGcash(r.member.id) ? sum + r.finalSalary : sum), 0) * worldDungeonSalaryState.phpPerCrow)}</td>
+      <td id="worldDungeonTotalFinalPhpCell">${worldDungeonSalaryFormatPhp(rows.reduce((sum, r) => (worldDungeonHasGcash(r.member.id) ? sum + r.finalSalary : sum), 0) * worldDungeonSalaryState.phpPerCrow)}</td>
       <td>${worldDungeonSalaryFormatDiamonds(totalInitialComputationDiamonds)}</td>
       <td>${worldDungeonSalaryFormatDiamonds(totalFinalSalaryDiamonds)}</td>
       <td></td>
@@ -908,6 +912,7 @@ function renderWorldDungeonSalaryBreakdown(rows) {
       const value = !cb.checked;
       worldDungeonSalaryState.gcash.set(memberId, value);
       cb.closest('td').classList.toggle('world-dungeon-non-gcash', cb.checked);
+      updateWorldDungeonFinalPhpCell(memberId);
       renderWorldDungeonGcashTotals(computeWorldDungeonSalary().rows);
       try {
         await api(`/api/world-dungeon-gcash/${memberId}`, { method: 'PUT', body: JSON.stringify({ hasGcash: value }) });
@@ -915,9 +920,21 @@ function renderWorldDungeonSalaryBreakdown(rows) {
         worldDungeonSalaryState.gcash.set(memberId, prev);
         cb.checked = !prev;
         cb.closest('td').classList.toggle('world-dungeon-non-gcash', cb.checked);
+        updateWorldDungeonFinalPhpCell(memberId);
         renderWorldDungeonGcashTotals(computeWorldDungeonSalary().rows);
         toast(err.message);
       }
     });
   });
+}
+
+// Reflects a member's current GCash status in their own Final ₱ cell right
+// away, without rebuilding the whole table -- called after the GCash
+// checkbox changes, same "update in place" approach as the totals tiles.
+function updateWorldDungeonFinalPhpCell(memberId) {
+  const cell = document.querySelector(`.world-dungeon-final-php-cell[data-member-id="${memberId}"]`);
+  if (!cell) return;
+  const row = computeWorldDungeonSalary().rows.find((r) => r.member.id === memberId);
+  if (!row) return;
+  cell.textContent = worldDungeonHasGcash(memberId) ? worldDungeonSalaryFormatPhp(row.finalSalary * worldDungeonSalaryState.phpPerCrow) : '–';
 }
