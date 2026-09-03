@@ -15,7 +15,17 @@ const worldDungeonSalaryState = {
   expandedSessionId: null,
   phpPerCrow: 0, // standing conversion rate (not month-scoped) — e.g. 33 means 1 🐦‍⬛ = ₱33
   gcash: new Map(), // memberId -> hasGcash (boolean), standing (not month-scoped)
+  sortKey: 'growthRate',
+  sortDir: -1, // 1 = ascending, -1 = descending
 };
+
+// Value a given row sorts by for each clickable column -- "ign" reaches into
+// the nested member name since that's the one column not a flat field on
+// the row itself.
+function worldDungeonSalarySortValue(row, key) {
+  if (key === 'ign') return row.member.name.toLowerCase();
+  return row[key];
+}
 
 function worldDungeonSalaryFormatMoney(amount) {
   return `${(amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 🐦‍⬛`;
@@ -162,7 +172,21 @@ function computeWorldDungeonSalary() {
     r.finalSalaryDiamonds = r.initialComputationDiamonds + (feeAmountByMemberIdDiamonds.get(r.member.id) || 0);
   });
 
-  rows.sort((a, b) => (b.growthRate ?? -Infinity) - (a.growthRate ?? -Infinity));
+  // Click a column header to sort by it (see attachWorldDungeonSalarySortHandlers)
+  // -- defaults to Growth Rate descending, same as before sorting was
+  // click-able at all. A null/undefined value (e.g. no growth entry yet)
+  // always sorts to the bottom regardless of direction, rather than
+  // flip-flopping to the top on descending sorts.
+  const { sortKey, sortDir } = worldDungeonSalaryState;
+  rows.sort((a, b) => {
+    const av = worldDungeonSalarySortValue(a, sortKey);
+    const bv = worldDungeonSalarySortValue(b, sortKey);
+    if (av == null && bv == null) return 0;
+    if (av == null) return 1;
+    if (bv == null) return -1;
+    if (typeof av === 'string') return sortDir * av.localeCompare(bv);
+    return (av - bv) * sortDir;
+  });
 
   // No World Dungeon attendance this month means no real share of the pool
   // either way (their Base Share is already 0), so they're left off the
@@ -620,6 +644,24 @@ function attachWorldDungeonPvpDateDeleteHandlers() {
   });
 }
 
+// Clicking a sortable header toggles direction if it's already the active
+// sort column, otherwise switches to that column (descending first, since
+// that's the more useful default for every numeric column here).
+function attachWorldDungeonSalarySortHandlers() {
+  document.querySelectorAll('#worldDungeonSalaryHeaderRow [data-sort]').forEach((th) => {
+    th.addEventListener('click', () => {
+      const key = th.getAttribute('data-sort');
+      if (worldDungeonSalaryState.sortKey === key) {
+        worldDungeonSalaryState.sortDir *= -1;
+      } else {
+        worldDungeonSalaryState.sortKey = key;
+        worldDungeonSalaryState.sortDir = -1;
+      }
+      renderWorldDungeonSalaryBreakdown(computeWorldDungeonSalary().rows);
+    });
+  });
+}
+
 // One shared header row for both the Salary Breakdown columns and the PVP
 // attendance date columns -- the date columns are spliced in right after
 // "PVP Bonus" so a member's whole story (rank, PVP record, payout) reads as
@@ -645,26 +687,34 @@ function renderWorldDungeonSalaryHeaderRow() {
     )
     .join('');
 
+  // Click any of these headers to sort by it -- see
+  // attachWorldDungeonSalarySortHandlers and worldDungeonSalarySortValue.
+  const sortIcon = (key) =>
+    worldDungeonSalaryState.sortKey === key ? `<span class="sort-icon">${worldDungeonSalaryState.sortDir === 1 ? '▲' : '▼'}</span>` : '<span class="sort-icon"></span>';
+  const sortableTh = (key, label, title) => `<th data-sort="${key}" title="${title}" style="cursor:pointer;">${label}${sortIcon(key)}</th>`;
+
   // Short labels, no printed formula subtitle -- the full formula still
   // shows on hover via title, but the column no longer has to be as wide as
   // its own explanation, which was the main thing forcing horizontal scroll.
   document.getElementById('worldDungeonSalaryHeaderRow').innerHTML = `
     <th title="Row number">#</th>
-    <th title="In-game name">IGN</th>
-    <th title="Latest recorded growth rate">Growth</th>
-    <th title="Flat value set per member">Mult.</th>
-    <th title="PVP % = PVP dates attended ÷ PVP dates tracked">PVP %</th>
+    ${sortableTh('ign', 'IGN', 'In-game name')}
+    ${sortableTh('growthRate', 'Growth', 'Latest recorded growth rate')}
+    ${sortableTh('multiplier', 'Mult.', 'Flat value set per member')}
+    ${sortableTh('pvpFraction', 'PVP %', 'PVP % = PVP dates attended ÷ PVP dates tracked')}
     ${sessionHeaders}
     ${dateHeaders}
-    <th title="Normal Share = (Attendance × Multiplier) ÷ Σ(Attendance × Multiplier) — this member's cut of the World Dungeon-attendance half of the pool">Normal %</th>
-    <th title="PVP Share = (PVP % × Multiplier) ÷ Σ(PVP % × Multiplier) — this member's cut of the PVP-attendance half of the pool">PVP Share %</th>
-    <th title="Initial Computation = Normal Share × 50% of Final Pool + PVP Share × 50% of Final Pool">Init 🐦‍⬛</th>
-    <th title="Final Salary = Initial Computation + Accounting Fee (if applicable)">Final 🐦‍⬛</th>
+    ${sortableTh('normalShare', 'Normal %', 'Normal Share = (Attendance × Multiplier) ÷ Σ(Attendance × Multiplier) — this member\'s cut of the World Dungeon-attendance half of the pool')}
+    ${sortableTh('pvpShare', 'PVP Share %', 'PVP Share = (PVP % × Multiplier) ÷ Σ(PVP % × Multiplier) — this member\'s cut of the PVP-attendance half of the pool')}
+    ${sortableTh('initialComputation', 'Init 🐦‍⬛', 'Initial Computation = Normal Share × 50% of Final Pool + PVP Share × 50% of Final Pool')}
+    ${sortableTh('finalSalary', 'Final 🐦‍⬛', 'Final Salary = Initial Computation + Accounting Fee (if applicable)')}
     <th title="Final Salary (🐦‍⬛) × the 1 crow = ₱ rate set above">Final ₱</th>
-    <th title="Same split applied to the separate Final Diamond Pool">Init 💎</th>
-    <th title="Final Diamond Salary = Initial Computation (💎) + Accounting Fee (if applicable)">Final 💎</th>
+    ${sortableTh('initialComputationDiamonds', 'Init 💎', 'Same split applied to the separate Final Diamond Pool')}
+    ${sortableTh('finalSalaryDiamonds', 'Final 💎', 'Final Diamond Salary = Initial Computation (💎) + Accounting Fee (if applicable)')}
     <th title="Check for members who do NOT have GCash (standing, not month-scoped) — unchecked/default assumes they do">Non GCash</th>
     <th title="Whether this month's payout has been sent to this member">Sent</th>`;
+
+  attachWorldDungeonSalarySortHandlers();
 
   attachWorldDungeonPvpDateDeleteHandlers();
 }
@@ -682,8 +732,9 @@ function renderWorldDungeonGcashTotals(rows) {
   const noGcashTotal = rows.reduce((sum, r) => (worldDungeonHasGcash(r.member.id) ? sum : sum + r.finalSalary), 0);
   document.getElementById('worldDungeonGcashTotalValue').textContent =
     `${worldDungeonSalaryFormatMoney(gcashTotal)} (${worldDungeonSalaryFormatPhp(gcashTotal * worldDungeonSalaryState.phpPerCrow)})`;
-  document.getElementById('worldDungeonNoGcashTotalValue').textContent =
-    `${worldDungeonSalaryFormatMoney(noGcashTotal)} (${worldDungeonSalaryFormatPhp(noGcashTotal * worldDungeonSalaryState.phpPerCrow)})`;
+  // No ₱ conversion here -- non-GCash members aren't paid through that
+  // channel, so a PHP figure for them doesn't mean anything.
+  document.getElementById('worldDungeonNoGcashTotalValue').textContent = worldDungeonSalaryFormatMoney(noGcashTotal);
 }
 
 function renderWorldDungeonSalaryBreakdown(rows) {
