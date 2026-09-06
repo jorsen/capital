@@ -3,6 +3,8 @@ const itemReportState = {
   categories: [],
   selectedItem: '',
   expandedDates: new Set(),
+  members: [],
+  sentMemberIds: [],
 };
 
 function formatShortDate(dateStr) {
@@ -11,8 +13,9 @@ function formatShortDate(dateStr) {
 }
 
 async function loadItemReportData() {
-  const [loot, categories] = await Promise.all([api('/api/loot'), api('/api/item-categories')]);
+  const [loot, categories, members] = await Promise.all([api('/api/loot'), api('/api/item-categories'), api('/api/members')]);
   itemReportState.loot = loot;
+  itemReportState.members = members;
   // Only Morion/Frozen Tear/Orb of Winds get a report right now -- everything
   // else stays in the catalog (for the loot picker and historical records)
   // but is left out of this selector via the same hidden flag Manage Items
@@ -27,6 +30,85 @@ async function loadItemReportData() {
   renderItemReportMenu();
   renderItemReportTrigger();
   renderItemReportView();
+  await loadSentStatusForSelectedItem();
+}
+
+// The top 20 by Growth Rate are the only members these three items are meant
+// for, and it's the same ranking World Dungeon Salary already uses (latest
+// recorded growth_entries rate, nulls sorted last since an ungraded member
+// isn't "low", they're just not measured yet).
+function getTop20MembersByGrowth() {
+  return itemReportState.members
+    .map((m) => ({ member: m, growthRate: latestGrowth(m)?.rate ?? null }))
+    .sort((a, b) => {
+      if (a.growthRate === null && b.growthRate === null) return 0;
+      if (a.growthRate === null) return 1;
+      if (b.growthRate === null) return -1;
+      return b.growthRate - a.growthRate;
+    })
+    .slice(0, 20);
+}
+
+async function loadSentStatusForSelectedItem() {
+  if (!itemReportState.selectedItem) {
+    itemReportState.sentMemberIds = [];
+    renderItemReportTop20();
+    return;
+  }
+  itemReportState.sentMemberIds = await api(`/api/item-send-status?itemName=${encodeURIComponent(itemReportState.selectedItem)}`);
+  renderItemReportTop20();
+}
+
+function renderItemReportTop20() {
+  const body = document.getElementById('itemReportTop20Body');
+  if (!body) return;
+  const ranked = getTop20MembersByGrowth();
+
+  body.innerHTML = ranked
+    .map(({ member, growthRate }, i) => {
+      const sent = itemReportState.sentMemberIds.includes(member.id);
+      return `
+      <tr class="${sent ? 'row-sent' : ''}" data-member-id="${member.id}">
+        <td>${i + 1}</td>
+        <td>${escapeHtml(member.alias ? `${member.name} (${member.alias})` : member.name)}</td>
+        <td>${growthRate === null ? '–' : growthRate.toLocaleString()}</td>
+        <td class="col-right"><input type="checkbox" class="item-report-sent-check admin-disable" data-member-id="${member.id}" ${sent ? 'checked' : ''}></td>
+      </tr>`;
+    })
+    .join('');
+
+  body.querySelectorAll('.item-report-sent-check').forEach((cb) => {
+    cb.addEventListener('change', async () => {
+      const memberId = cb.getAttribute('data-member-id');
+      const row = cb.closest('tr');
+      const itemName = itemReportState.selectedItem;
+      const wasSent = itemReportState.sentMemberIds.includes(memberId);
+      if (cb.checked) {
+        itemReportState.sentMemberIds.push(memberId);
+        row.classList.add('row-sent');
+      } else {
+        itemReportState.sentMemberIds = itemReportState.sentMemberIds.filter((id) => id !== memberId);
+        row.classList.remove('row-sent');
+      }
+      try {
+        if (cb.checked) {
+          await api('/api/item-send-status', { method: 'POST', body: JSON.stringify({ itemName, memberId }) });
+        } else {
+          await api(`/api/item-send-status?itemName=${encodeURIComponent(itemName)}&memberId=${encodeURIComponent(memberId)}`, { method: 'DELETE' });
+        }
+      } catch (err) {
+        cb.checked = !cb.checked;
+        if (wasSent) {
+          itemReportState.sentMemberIds.push(memberId);
+          row.classList.add('row-sent');
+        } else {
+          itemReportState.sentMemberIds = itemReportState.sentMemberIds.filter((id) => id !== memberId);
+          row.classList.remove('row-sent');
+        }
+        toast(err.message);
+      }
+    });
+  });
 }
 
 function renderItemReportMenu() {
@@ -50,6 +132,7 @@ function renderItemReportMenu() {
       renderItemReportMenu();
       renderItemReportTrigger();
       renderItemReportView();
+      loadSentStatusForSelectedItem().catch((err) => toast(err.message));
     });
   });
 }

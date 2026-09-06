@@ -637,6 +637,24 @@
         </div>
         <p id="itemReportEmptyState" class="empty-state hidden" data-i18n="items.emptyState">No records for this item yet.</p>
       </section>
+
+      <section class="panel">
+        <h3 style="margin-top:0;">Top 20 Distribution Checklist</h3>
+        <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;">These three items are reserved for the top 20 members by Growth Rate — check a member off once you've sent them the currently selected item.</p>
+        <div class="table-scroll">
+          <table class="members-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Member</th>
+                <th>Growth Rate</th>
+                <th class="col-right">Sent</th>
+              </tr>
+            </thead>
+            <tbody id="itemReportTop20Body"></tbody>
+          </table>
+        </div>
+      </section>
     </div>
 
     <!-- ===================== BOSS TIMERS VIEW ===================== -->
@@ -987,7 +1005,7 @@
   <script src="cave-loot-list-view.js?v=9"></script>
   <script src="cave-salary-view.js?v=8"></script>
   <script src="cave-schedule-view.js?v=5"></script>
-  <script src="item-report-view.js?v=31"></script>
+  <script src="item-report-view.js?v=32"></script>
   <script src="boss-timer-view.js?v=35"></script>
   <script src="boss-history-view.js?v=33"></script>
   <script src="world-dungeon-view.js?v=3"></script>
