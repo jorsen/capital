@@ -7,6 +7,7 @@ async function loadItemCategories() {
 
 function refreshItemDatalist() {
   document.getElementById('itemCategoriesList').innerHTML = itemCategoriesState.list
+    .filter((c) => !c.hidden)
     .map((c) => `<option value="${escapeHtml(c.name)}">`)
     .join('');
 }
@@ -29,11 +30,12 @@ function renderItemCategoryList() {
   list.innerHTML = sorted
     .map(
       (c) => `
-      <li style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;" data-category-id="${c.id}">
+      <li style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; ${c.hidden ? 'opacity:0.5;' : ''}" data-category-id="${c.id}">
         <span class="item-icon-preview">${itemIconImg(c.iconUrl, c.name, 36)}</span>
         <input type="text" value="${escapeHtml(c.name)}" class="category-name-input" style="flex:1 1 160px; min-width:0;">
         <input type="text" value="${escapeHtml(c.iconUrl || '')}" class="category-icon-input" placeholder="Icon URL (optional)" style="flex:1 1 200px; min-width:0;">
         <button class="btn small" data-save-category="${c.id}">${t('common.save')}</button>
+        <button class="btn small" data-toggle-hidden="${c.id}" title="${c.hidden ? 'Show in item picker' : 'Hide from item picker'}">${c.hidden ? 'Show' : 'Hide'}</button>
         <button class="icon-btn" data-delete-category="${c.id}" title="Delete item">✕</button>
       </li>`
     )
@@ -55,6 +57,25 @@ function renderItemCategoryList() {
         refreshItemDatalist();
         toast(`Renamed to "${updated.name}"`);
         renderItemCategoryList();
+      } catch (err) {
+        toast(err.message);
+      }
+    });
+  });
+
+  list.querySelectorAll('[data-toggle-hidden]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-toggle-hidden');
+      const cat = itemCategoriesState.list.find((c) => c.id === id);
+      try {
+        const updated = await api(`/api/item-categories/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify({ hidden: !cat.hidden }),
+        });
+        Object.assign(cat, updated);
+        refreshItemDatalist();
+        renderItemCategoryList();
+        toast(cat.hidden ? `${cat.name} hidden from item picker` : `${cat.name} visible again`);
       } catch (err) {
         toast(err.message);
       }
