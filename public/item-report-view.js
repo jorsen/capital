@@ -7,6 +7,11 @@ const itemReportState = {
   sentByItem: new Map(), // itemName -> Set(memberId)
 };
 
+// Fixed display order + the amount each of the top 20 gets per item, rather
+// than whatever order Manage Items happens to list them in.
+const ITEM_REPORT_ORDER = ['morion', 'frozen tear', 'orb of winds'];
+const ITEM_REPORT_QUANTITY = { morion: 100, 'frozen tear': 10, 'orb of winds': 20 };
+
 function formatShortDate(dateStr) {
   const [, m, d] = dateStr.split('-');
   return `${Number(m)}/${Number(d)}`;
@@ -20,7 +25,17 @@ async function loadItemReportData() {
   // else stays in the catalog (for the loot picker and historical records)
   // but is left out of this selector via the same hidden flag Manage Items
   // exposes, rather than a separate report-specific list to maintain.
-  itemReportState.categories = categories.filter((c) => !c.hidden);
+  itemReportState.categories = categories
+    .filter((c) => !c.hidden)
+    .slice()
+    .sort((a, b) => {
+      const ai = ITEM_REPORT_ORDER.indexOf(a.name.toLowerCase());
+      const bi = ITEM_REPORT_ORDER.indexOf(b.name.toLowerCase());
+      if (ai === -1 && bi === -1) return 0;
+      if (ai === -1) return 1;
+      if (bi === -1) return -1;
+      return ai - bi;
+    });
 
   const names = itemReportState.categories.map((c) => c.name);
   if (!itemReportState.selectedItem || !names.includes(itemReportState.selectedItem)) {
@@ -70,7 +85,12 @@ function renderItemReportTop20() {
     <th>#</th>
     <th>Member</th>
     <th>Growth Rate</th>
-    ${itemReportState.categories.map((c) => `<th class="col-right">${escapeHtml(c.name)}</th>`).join('')}
+    ${itemReportState.categories
+      .map((c) => {
+        const qty = ITEM_REPORT_QUANTITY[c.name.toLowerCase()];
+        return `<th class="col-right">${escapeHtml(c.name)}${qty !== undefined ? ` (${qty} each)` : ''}</th>`;
+      })
+      .join('')}
   `;
 
   body.innerHTML = ranked
