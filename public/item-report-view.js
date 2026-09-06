@@ -4,7 +4,7 @@ const itemReportState = {
   selectedItem: '',
   expandedDates: new Set(),
   members: [],
-  sentMemberIds: [],
+  sentByItem: new Map(), // itemName -> Set(memberId)
 };
 
 function formatShortDate(dateStr) {
@@ -30,7 +30,7 @@ async function loadItemReportData() {
   renderItemReportMenu();
   renderItemReportTrigger();
   renderItemReportView();
-  await loadSentStatusForSelectedItem();
+  await loadAllSentStatus();
 }
 
 // The top 20 by Growth Rate are the only members these three items are meant
@@ -49,30 +49,44 @@ function getTop20MembersByGrowth() {
     .slice(0, 20);
 }
 
-async function loadSentStatusForSelectedItem() {
-  if (!itemReportState.selectedItem) {
-    itemReportState.sentMemberIds = [];
-    renderItemReportTop20();
-    return;
-  }
-  itemReportState.sentMemberIds = await api(`/api/item-send-status?itemName=${encodeURIComponent(itemReportState.selectedItem)}`);
+async function loadAllSentStatus() {
+  const rows = await api('/api/item-send-status');
+  const byItem = new Map();
+  rows.forEach(({ itemName, memberId }) => {
+    if (!byItem.has(itemName)) byItem.set(itemName, new Set());
+    byItem.get(itemName).add(memberId);
+  });
+  itemReportState.sentByItem = byItem;
   renderItemReportTop20();
 }
 
 function renderItemReportTop20() {
+  const head = document.getElementById('itemReportTop20Head');
   const body = document.getElementById('itemReportTop20Body');
-  if (!body) return;
+  if (!head || !body) return;
   const ranked = getTop20MembersByGrowth();
+
+  head.innerHTML = `
+    <th>#</th>
+    <th>Member</th>
+    <th>Growth Rate</th>
+    ${itemReportState.categories.map((c) => `<th class="col-right">${escapeHtml(c.name)}</th>`).join('')}
+  `;
 
   body.innerHTML = ranked
     .map(({ member, growthRate }, i) => {
-      const sent = itemReportState.sentMemberIds.includes(member.id);
+      const cells = itemReportState.categories
+        .map((c) => {
+          const sent = itemReportState.sentByItem.get(c.name)?.has(member.id) || false;
+          return `<td class="col-right ${sent ? 'row-sent' : ''}"><input type="checkbox" class="item-report-sent-check admin-disable" data-member-id="${member.id}" data-item-name="${escapeHtml(c.name)}" ${sent ? 'checked' : ''}></td>`;
+        })
+        .join('');
       return `
-      <tr class="${sent ? 'row-sent' : ''}" data-member-id="${member.id}">
+      <tr data-member-id="${member.id}">
         <td>${i + 1}</td>
         <td>${escapeHtml(member.alias ? `${member.name} (${member.alias})` : member.name)}</td>
         <td>${growthRate === null ? '–' : growthRate.toLocaleString()}</td>
-        <td class="col-right"><input type="checkbox" class="item-report-sent-check admin-disable" data-member-id="${member.id}" ${sent ? 'checked' : ''}></td>
+        ${cells}
       </tr>`;
     })
     .join('');
@@ -80,15 +94,17 @@ function renderItemReportTop20() {
   body.querySelectorAll('.item-report-sent-check').forEach((cb) => {
     cb.addEventListener('change', async () => {
       const memberId = cb.getAttribute('data-member-id');
-      const row = cb.closest('tr');
-      const itemName = itemReportState.selectedItem;
-      const wasSent = itemReportState.sentMemberIds.includes(memberId);
+      const itemName = cb.getAttribute('data-item-name');
+      const cell = cb.closest('td');
+      const set = itemReportState.sentByItem.get(itemName) || new Set();
+      itemReportState.sentByItem.set(itemName, set);
+      const wasSent = set.has(memberId);
       if (cb.checked) {
-        itemReportState.sentMemberIds.push(memberId);
-        row.classList.add('row-sent');
+        set.add(memberId);
+        cell.classList.add('row-sent');
       } else {
-        itemReportState.sentMemberIds = itemReportState.sentMemberIds.filter((id) => id !== memberId);
-        row.classList.remove('row-sent');
+        set.delete(memberId);
+        cell.classList.remove('row-sent');
       }
       try {
         if (cb.checked) {
@@ -99,11 +115,11 @@ function renderItemReportTop20() {
       } catch (err) {
         cb.checked = !cb.checked;
         if (wasSent) {
-          itemReportState.sentMemberIds.push(memberId);
-          row.classList.add('row-sent');
+          set.add(memberId);
+          cell.classList.add('row-sent');
         } else {
-          itemReportState.sentMemberIds = itemReportState.sentMemberIds.filter((id) => id !== memberId);
-          row.classList.remove('row-sent');
+          set.delete(memberId);
+          cell.classList.remove('row-sent');
         }
         toast(err.message);
       }
@@ -132,7 +148,6 @@ function renderItemReportMenu() {
       renderItemReportMenu();
       renderItemReportTrigger();
       renderItemReportView();
-      loadSentStatusForSelectedItem().catch((err) => toast(err.message));
     });
   });
 }
