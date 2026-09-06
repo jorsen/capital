@@ -7,7 +7,6 @@ async function loadItemCategories() {
 
 function refreshItemDatalist() {
   document.getElementById('itemCategoriesList').innerHTML = itemCategoriesState.list
-    .filter((c) => !c.hidden)
     .map((c) => `<option value="${escapeHtml(c.name)}">`)
     .join('');
 }

@@ -13,9 +13,13 @@ function formatShortDate(dateStr) {
 async function loadItemReportData() {
   const [loot, categories] = await Promise.all([api('/api/loot'), api('/api/item-categories')]);
   itemReportState.loot = loot;
-  itemReportState.categories = categories;
+  // Only Morion/Frozen Tear/Orb of Winds get a report right now -- everything
+  // else stays in the catalog (for the loot picker and historical records)
+  // but is left out of this selector via the same hidden flag Manage Items
+  // exposes, rather than a separate report-specific list to maintain.
+  itemReportState.categories = categories.filter((c) => !c.hidden);
 
-  const names = categories.map((c) => c.name);
+  const names = itemReportState.categories.map((c) => c.name);
   if (!itemReportState.selectedItem || !names.includes(itemReportState.selectedItem)) {
     itemReportState.selectedItem = names.find((n) => n.toLowerCase() === 'morion') || names[0] || '';
   }

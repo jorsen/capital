@@ -137,7 +137,6 @@ function wireItemDropdown({ inputId, menuId, iconId, iconSize }) {
   function renderMenu() {
     const query = input.value.trim().toLowerCase();
     const matches = itemCategoriesState.list
-      .filter((c) => !c.hidden)
       .filter((c) => !query || c.name.toLowerCase().includes(query))
       .sort((a, b) => a.name.localeCompare(b.name));
 
