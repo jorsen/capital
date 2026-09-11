@@ -11,6 +11,9 @@ const itemReportState = {
 // than whatever order Manage Items happens to list them in.
 const ITEM_REPORT_ORDER = ['morion', 'frozen tear', 'orb of winds'];
 const ITEM_REPORT_QUANTITY = { morion: 100, 'frozen tear': 10, 'orb of winds': 20 };
+// Excluded from the Top 20 checklist specifically -- these still show up
+// everywhere else (loot picker, item selector) via the normal hidden flag.
+const ITEM_REPORT_TOP20_EXCLUDE = ['burgundy helmet', 'bracelet of acclaim'];
 
 function formatShortDate(dateStr) {
   const [, m, d] = dateStr.split('-');
@@ -80,12 +83,13 @@ function renderItemReportTop20() {
   const body = document.getElementById('itemReportTop20Body');
   if (!head || !body) return;
   const ranked = getTop20MembersByGrowth();
+  const columns = itemReportState.categories.filter((c) => !ITEM_REPORT_TOP20_EXCLUDE.includes(c.name.toLowerCase()));
 
   head.innerHTML = `
     <th>#</th>
     <th>Member</th>
     <th>Growth Rate</th>
-    ${itemReportState.categories
+    ${columns
       .map((c) => {
         const qty = ITEM_REPORT_QUANTITY[c.name.toLowerCase()];
         return `<th class="col-right">${escapeHtml(c.name)}${qty !== undefined ? ` (${qty} each)` : ''}</th>`;
@@ -95,7 +99,7 @@ function renderItemReportTop20() {
 
   body.innerHTML = ranked
     .map(({ member, growthRate }, i) => {
-      const cells = itemReportState.categories
+      const cells = columns
         .map((c) => {
           const sent = itemReportState.sentByItem.get(c.name)?.has(member.id) || false;
           return `<td class="col-right ${sent ? 'row-sent' : ''}"><input type="checkbox" class="item-report-sent-check admin-disable" data-member-id="${member.id}" data-item-name="${escapeHtml(c.name)}" ${sent ? 'checked' : ''}></td>`;
