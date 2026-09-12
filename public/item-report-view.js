@@ -55,6 +55,47 @@ async function loadItemReportData() {
   renderItemReportTrigger();
   renderItemReportView();
   await loadAllSentStatus();
+  await autoCheckTop20FromLoot();
+}
+
+// Once a Top 20 member shows up as the recipient of a loot record for one of
+// these items, they've already gotten their share -- check them off in the
+// distribution checklist automatically instead of making an admin re-click
+// every box by hand after recording the loot.
+async function autoCheckTop20FromLoot() {
+  const columns = itemReportState.categories.filter((c) => !isTop20Excluded(c.name));
+  const top20Ids = new Set(getTop20MembersByGrowth().map(({ member }) => member.id));
+  const toMark = [];
+
+  columns.forEach((c) => {
+    const itemName = c.name;
+    const alreadySent = itemReportState.sentByItem.get(itemName) || new Set();
+    const recipientIds = new Set();
+    itemReportState.loot.forEach((session) => {
+      session.records.forEach((record) => {
+        if (record.item.toLowerCase() !== itemName.toLowerCase()) return;
+        if (record.recipientId) recipientIds.add(record.recipientId);
+      });
+    });
+    recipientIds.forEach((memberId) => {
+      if (!top20Ids.has(memberId) || alreadySent.has(memberId)) return;
+      toMark.push({ itemName, memberId });
+    });
+  });
+
+  if (!toMark.length) return;
+  await Promise.all(
+    toMark.map(({ itemName, memberId }) =>
+      api('/api/item-send-status', { method: 'POST', body: JSON.stringify({ itemName, memberId }) })
+        .then(() => {
+          const set = itemReportState.sentByItem.get(itemName) || new Set();
+          set.add(memberId);
+          itemReportState.sentByItem.set(itemName, set);
+        })
+        .catch(() => {})
+    )
+  );
+  renderItemReportTop20();
 }
 
 // The top 20 by Growth Rate are the only members these three items are meant
