@@ -155,12 +155,24 @@ function renderItemReportTop20() {
       return `
       <tr data-member-id="${member.id}">
         <td>${i + 1}</td>
-        <td>${escapeHtml(member.alias ? `${member.name} (${member.alias})` : member.name)}</td>
+        <td class="item-report-top20-name" data-copy-name="${escapeHtml(member.name)}" title="Click to copy IGN">${escapeHtml(member.alias ? `${member.name} (${member.alias})` : member.name)}</td>
         <td>${growthRate === null ? '–' : growthRate.toLocaleString()}</td>
         ${cells}
       </tr>`;
     })
     .join('');
+
+  body.querySelectorAll('.item-report-top20-name').forEach((td) => {
+    td.addEventListener('click', async () => {
+      const name = td.getAttribute('data-copy-name');
+      try {
+        await navigator.clipboard.writeText(name);
+        toast(`Copied "${name}"`);
+      } catch (err) {
+        toast('Could not copy — clipboard access denied');
+      }
+    });
+  });
 
   body.querySelectorAll('.item-report-sent-check').forEach((cb) => {
     cb.addEventListener('change', async () => {

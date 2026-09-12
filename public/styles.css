@@ -474,6 +474,8 @@ select:focus, input:focus, textarea:focus {
 }
 .item-report-member-row td:first-child { padding-left: 34px; }
 .item-report-member-row { color: var(--text-secondary); }
+.item-report-top20-name { cursor: pointer; }
+.item-report-top20-name:hover { text-decoration: underline; }
 
 .col-right { text-align: right; }
 .col-center { text-align: center; }
