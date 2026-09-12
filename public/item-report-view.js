@@ -13,7 +13,13 @@ const ITEM_REPORT_ORDER = ['morion', 'frozen tear', 'orb of winds'];
 const ITEM_REPORT_QUANTITY = { morion: 100, 'frozen tear': 10, 'orb of winds': 20 };
 // Excluded from the Top 20 checklist specifically -- these still show up
 // everywhere else (loot picker, item selector) via the normal hidden flag.
-const ITEM_REPORT_TOP20_EXCLUDE = ['burgundy helmet', 'bracelet of acclaim'];
+// Matched by substring since the exact item name in Manage Items may vary
+// ("Burgundy Helm" vs "Burgundy Helmet", etc).
+const ITEM_REPORT_TOP20_EXCLUDE = ['burgundy', 'acclaim'];
+function isTop20Excluded(name) {
+  const lower = name.toLowerCase();
+  return ITEM_REPORT_TOP20_EXCLUDE.some((term) => lower.includes(term));
+}
 
 function formatShortDate(dateStr) {
   const [, m, d] = dateStr.split('-');
@@ -83,7 +89,7 @@ function renderItemReportTop20() {
   const body = document.getElementById('itemReportTop20Body');
   if (!head || !body) return;
   const ranked = getTop20MembersByGrowth();
-  const columns = itemReportState.categories.filter((c) => !ITEM_REPORT_TOP20_EXCLUDE.includes(c.name.toLowerCase()));
+  const columns = itemReportState.categories.filter((c) => !isTop20Excluded(c.name));
 
   head.innerHTML = `
     <th>#</th>
