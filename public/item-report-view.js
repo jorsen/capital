@@ -120,7 +120,7 @@ function renderItemReportTop20() {
       return `
       <tr data-member-id="${member.id}">
         <td>${i + 1}</td>
-        <td class="item-report-top20-name" data-copy-name="${escapeHtml(member.name)}" title="Click to copy IGN">${escapeHtml(member.alias ? `${member.name} (${member.alias})` : member.name)}</td>
+        <td class="item-report-top20-name" data-copy-name="${escapeHtml(stripGuildTag(member.name))}" title="Click to copy IGN">${escapeHtml(member.alias ? `${member.name} (${member.alias})` : member.name)}</td>
         <td>${growthRate === null ? '–' : growthRate.toLocaleString()}</td>
         ${cells}
       </tr>`;
@@ -276,7 +276,7 @@ function renderItemReportView() {
       const date = btn.getAttribute('data-copy-date');
       const group = groups.find((g) => g.date === date);
       if (!group) return;
-      const text = group.entries.map((entry, i) => `${i + 1}. ${entry.member}`).join('\n');
+      const text = group.entries.map((entry, i) => `${i + 1}. ${stripGuildTag(entry.member)}`).join('\n');
       try {
         await navigator.clipboard.writeText(text);
         toast(`Copied ${group.entries.length} name${group.entries.length === 1 ? '' : 's'}`);

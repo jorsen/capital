@@ -69,6 +69,13 @@ function memberDisplayName(member) {
   return member.alias ? `${member.name} (${member.alias})` : member.name;
 }
 
+// "CAP | Name" -> "Name" -- the guild-tag prefix isn't part of the in-game
+// name, so it's stripped when copying names for pasting into the game.
+function stripGuildTag(name) {
+  const parts = (name || '').split('|');
+  return parts[parts.length - 1].trim();
+}
+
 // "2026-08-10" -> "August 10, 2026" — used wherever a cave-attendance date
 // is displayed to a person, rather than typed into a date input.
 function formatLongDate(dateStr) {
