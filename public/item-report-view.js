@@ -90,10 +90,10 @@ async function autoCheckTop20FromLoot() {
   if (!toMark.length) return;
   await Promise.all(
     toMark.map(({ itemName, memberId }) =>
-      api('/api/item-send-status', { method: 'POST', body: JSON.stringify({ itemName, memberId }) })
-        .then((res) => {
+      api('/api/item-send-status', { method: 'POST', body: JSON.stringify({ itemName, memberId, auto: true }) })
+        .then(() => {
           const sent = itemReportState.sentByItem.get(itemName) || new Map();
-          sent.set(memberId, res?.sentAt || new Date().toISOString());
+          sent.set(memberId, null);
           itemReportState.sentByItem.set(itemName, sent);
         })
         .catch(() => {})
