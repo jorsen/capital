@@ -60,6 +60,7 @@ async function loadItemReportData() {
   renderItemReportView();
   await loadAllSentStatus();
 }
+
 // The top 20 by Growth Rate are the only members these three items are meant
 // for, and it's the same ranking World Dungeon Salary already uses (latest
 // recorded growth_entries rate, nulls sorted last since an ungraded member
