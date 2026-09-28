@@ -4,26 +4,30 @@ const itemReportState = {
   selectedItem: '',
   expandedDates: new Set(),
   members: [],
-  sentByItem: new Map(), // itemName -> Set(memberId)
+  sentByItem: new Map(), // itemName -> Map(memberId -> sentAt)
 };
 
 // Fixed display order + the amount each of the top 20 gets per item, rather
 // than whatever order Manage Items happens to list them in.
 const ITEM_REPORT_ORDER = ['morion', 'frozen tear', 'orb of winds'];
 const ITEM_REPORT_QUANTITY = { morion: 100, 'frozen tear': 10, 'orb of winds': 20 };
-// Excluded from the Top 20 checklist specifically -- these still show up
-// everywhere else (loot picker, item selector) via the normal hidden flag.
-// Matched by substring since the exact item name in Manage Items may vary
-// ("Burgundy Helm" vs "Burgundy Helmet", etc).
-const ITEM_REPORT_TOP20_EXCLUDE = ['burgundy', 'acclaim'];
-function isTop20Excluded(name) {
+// Only these items get a Top 20 checklist column -- everything else still
+// shows up in the item selector. Matched by substring since the exact item
+// name in Manage Items may vary ("Frozen Tear" vs "Frozen Tears", etc).
+function isTop20Item(name) {
   const lower = name.toLowerCase();
-  return ITEM_REPORT_TOP20_EXCLUDE.some((term) => lower.includes(term));
+  return ITEM_REPORT_ORDER.some((term) => lower.includes(term));
 }
 
 function formatShortDate(dateStr) {
   const [, m, d] = dateStr.split('-');
   return `${Number(m)}/${Number(d)}`;
+}
+
+function formatSentDate(sentAt) {
+  if (!sentAt) return '';
+  const d = new Date(sentAt);
+  return `${d.getMonth() + 1}/${d.getDate()}`;
 }
 
 async function loadItemReportData() {
@@ -63,13 +67,13 @@ async function loadItemReportData() {
 // distribution checklist automatically instead of making an admin re-click
 // every box by hand after recording the loot.
 async function autoCheckTop20FromLoot() {
-  const columns = itemReportState.categories.filter((c) => !isTop20Excluded(c.name));
+  const columns = itemReportState.categories.filter((c) => isTop20Item(c.name));
   const top20Ids = new Set(getTop20MembersByGrowth().map(({ member }) => member.id));
   const toMark = [];
 
   columns.forEach((c) => {
     const itemName = c.name;
-    const alreadySent = itemReportState.sentByItem.get(itemName) || new Set();
+    const alreadySent = itemReportState.sentByItem.get(itemName) || new Map();
     const recipientIds = new Set();
     itemReportState.loot.forEach((session) => {
       session.records.forEach((record) => {
@@ -87,10 +91,10 @@ async function autoCheckTop20FromLoot() {
   await Promise.all(
     toMark.map(({ itemName, memberId }) =>
       api('/api/item-send-status', { method: 'POST', body: JSON.stringify({ itemName, memberId }) })
-        .then(() => {
-          const set = itemReportState.sentByItem.get(itemName) || new Set();
-          set.add(memberId);
-          itemReportState.sentByItem.set(itemName, set);
+        .then((res) => {
+          const sent = itemReportState.sentByItem.get(itemName) || new Map();
+          sent.set(memberId, res?.sentAt || new Date().toISOString());
+          itemReportState.sentByItem.set(itemName, sent);
         })
         .catch(() => {})
     )
@@ -117,9 +121,9 @@ function getTop20MembersByGrowth() {
 async function loadAllSentStatus() {
   const rows = await api('/api/item-send-status');
   const byItem = new Map();
-  rows.forEach(({ itemName, memberId }) => {
-    if (!byItem.has(itemName)) byItem.set(itemName, new Set());
-    byItem.get(itemName).add(memberId);
+  rows.forEach(({ itemName, memberId, sentAt }) => {
+    if (!byItem.has(itemName)) byItem.set(itemName, new Map());
+    byItem.get(itemName).set(memberId, sentAt);
   });
   itemReportState.sentByItem = byItem;
   renderItemReportTop20();
@@ -130,7 +134,7 @@ function renderItemReportTop20() {
   const body = document.getElementById('itemReportTop20Body');
   if (!head || !body) return;
   const ranked = getTop20MembersByGrowth();
-  const columns = itemReportState.categories.filter((c) => !isTop20Excluded(c.name));
+  const columns = itemReportState.categories.filter((c) => isTop20Item(c.name));
 
   head.innerHTML = `
     <th>#</th>
@@ -148,8 +152,10 @@ function renderItemReportTop20() {
     .map(({ member, growthRate }, i) => {
       const cells = columns
         .map((c) => {
-          const sent = itemReportState.sentByItem.get(c.name)?.has(member.id) || false;
-          return `<td class="col-right ${sent ? 'row-sent' : ''}"><input type="checkbox" class="item-report-sent-check admin-disable" data-member-id="${member.id}" data-item-name="${escapeHtml(c.name)}" ${sent ? 'checked' : ''}></td>`;
+          const sentMap = itemReportState.sentByItem.get(c.name);
+          const sent = sentMap?.has(member.id) || false;
+          const dateText = sent ? formatSentDate(sentMap.get(member.id)) : '';
+          return `<td class="col-right ${sent ? 'row-sent' : ''}"><span class="item-report-sent-date">${dateText}</span> <input type="checkbox" class="item-report-sent-check admin-disable" data-member-id="${member.id}" data-item-name="${escapeHtml(c.name)}" ${sent ? 'checked' : ''}></td>`;
         })
         .join('');
       return `
@@ -179,31 +185,30 @@ function renderItemReportTop20() {
       const memberId = cb.getAttribute('data-member-id');
       const itemName = cb.getAttribute('data-item-name');
       const cell = cb.closest('td');
-      const set = itemReportState.sentByItem.get(itemName) || new Set();
-      itemReportState.sentByItem.set(itemName, set);
-      const wasSent = set.has(memberId);
-      if (cb.checked) {
-        set.add(memberId);
-        cell.classList.add('row-sent');
-      } else {
-        set.delete(memberId);
-        cell.classList.remove('row-sent');
-      }
+      const dateEl = cell.querySelector('.item-report-sent-date');
+      const sentMap = itemReportState.sentByItem.get(itemName) || new Map();
+      itemReportState.sentByItem.set(itemName, sentMap);
+      const wasSent = sentMap.has(memberId);
+      const prevSentAt = sentMap.get(memberId);
+      const apply = (sent, sentAt) => {
+        cb.checked = sent;
+        cell.classList.toggle('row-sent', sent);
+        if (sent) sentMap.set(memberId, sentAt);
+        else sentMap.delete(memberId);
+        dateEl.textContent = sent ? formatSentDate(sentAt) : '';
+      };
+      // Show the date right away so the click registers immediately, then
+      // swap in the server's timestamp once the save lands.
+      apply(cb.checked, new Date().toISOString());
       try {
         if (cb.checked) {
-          await api('/api/item-send-status', { method: 'POST', body: JSON.stringify({ itemName, memberId }) });
+          const res = await api('/api/item-send-status', { method: 'POST', body: JSON.stringify({ itemName, memberId }) });
+          if (res?.sentAt) apply(true, res.sentAt);
         } else {
           await api(`/api/item-send-status?itemName=${encodeURIComponent(itemName)}&memberId=${encodeURIComponent(memberId)}`, { method: 'DELETE' });
         }
       } catch (err) {
-        cb.checked = !cb.checked;
-        if (wasSent) {
-          set.add(memberId);
-          cell.classList.add('row-sent');
-        } else {
-          set.delete(memberId);
-          cell.classList.remove('row-sent');
-        }
+        apply(wasSent, prevSentAt);
         toast(err.message);
       }
     });

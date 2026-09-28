@@ -408,6 +408,7 @@ select:focus, input:focus, textarea:focus {
    others in the same row. */
 .members-table tbody td.row-sent { background: rgba(74,222,128,0.14); color: var(--good); }
 .members-table tbody td.row-sent input[type="checkbox"] { accent-color: var(--good); }
+.item-report-sent-date { font-size: 12px; margin-right: 6px; vertical-align: middle; }
 .members-table th:hover { color: var(--text-secondary); }
 .sort-icon {
   display: inline-block;
