@@ -1,11 +1,10 @@
-const CAVE_PAGE_SIZE = 15;
 const caveState = {
   caves: [],
   members: [],
   bosses: [],
   search: '',
   sortDir: -1,
-  page: 1,
+  month: null, // "YYYY-MM" -- the list shows one month at a time
 };
 
 async function loadCaveData() {
@@ -13,6 +12,8 @@ async function loadCaveData() {
   caveState.caves = caves;
   caveState.members = members;
   caveState.bosses = bosses;
+  if (!caveState.month) caveState.month = currentMonthValue();
+  document.getElementById('caveMonthInput').value = caveState.month;
   renderCaveView();
 }
 
@@ -29,6 +30,7 @@ function getCaveDateGroups() {
   const q = caveState.search.toLowerCase();
   const byDate = new Map();
   caveState.caves.forEach((s) => {
+    if (s.date.slice(0, 7) !== caveState.month) return;
     if (!byDate.has(s.date)) byDate.set(s.date, []);
     byDate.get(s.date).push(s);
   });
@@ -56,17 +58,16 @@ function getCaveDateGroups() {
 
 function renderCaveView() {
   const groups = getCaveDateGroups();
-  const pageCount = Math.max(1, Math.ceil(groups.length / CAVE_PAGE_SIZE));
-  caveState.page = Math.min(Math.max(1, caveState.page), pageCount);
-  const start = (caveState.page - 1) * CAVE_PAGE_SIZE;
-  const pageGroups = groups.slice(start, start + CAVE_PAGE_SIZE);
-
   const body = document.getElementById('caveSessionsBody');
   body.innerHTML = '';
   document.getElementById('caveEmptyState').classList.toggle('hidden', caveState.caves.length !== 0);
-  renderCavePagination(pageCount);
+  renderCaveMonthNav();
 
-  pageGroups.forEach((g) => {
+  if (caveState.caves.length && !groups.length) {
+    body.innerHTML = `<tr><td colspan="6" class="empty-state">No dates logged in ${escapeHtml(formatMonthYear(caveState.month))}.</td></tr>`;
+  }
+
+  groups.forEach((g) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td style="font-weight:600;">${escapeHtml(formatLongDate(g.date))}</td>
@@ -93,22 +94,27 @@ function renderCaveView() {
   });
 }
 
-function renderCavePagination(pageCount) {
+function shiftMonth(monthStr, delta) {
+  const [y, m] = monthStr.split('-').map(Number);
+  const d = new Date(y, m - 1 + delta, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function setCaveMonth(month) {
+  caveState.month = month;
+  document.getElementById('caveMonthInput').value = month;
+  renderCaveView();
+}
+
+function renderCaveMonthNav() {
   const el = document.getElementById('cavePagination');
-  if (pageCount <= 1) {
-    el.innerHTML = '';
-    return;
-  }
-  const { page } = caveState;
   el.innerHTML = `
-    <button type="button" class="btn small" id="cavePrevBtn" ${page <= 1 ? 'disabled' : ''}>‹ Prev</button>
-    <span class="pagination-status">Page ${page} of ${pageCount}</span>
-    <button type="button" class="btn small" id="caveNextBtn" ${page >= pageCount ? 'disabled' : ''}>Next ›</button>
+    <button type="button" class="btn small" id="cavePrevMonthBtn">‹ Prev</button>
+    <span class="pagination-status">${escapeHtml(formatMonthYear(caveState.month))}</span>
+    <button type="button" class="btn small" id="caveNextMonthBtn">Next ›</button>
   `;
-  const prevBtn = document.getElementById('cavePrevBtn');
-  const nextBtn = document.getElementById('caveNextBtn');
-  if (prevBtn) prevBtn.addEventListener('click', () => { caveState.page -= 1; renderCaveView(); });
-  if (nextBtn) nextBtn.addEventListener('click', () => { caveState.page += 1; renderCaveView(); });
+  document.getElementById('cavePrevMonthBtn').addEventListener('click', () => setCaveMonth(shiftMonth(caveState.month, -1)));
+  document.getElementById('caveNextMonthBtn').addEventListener('click', () => setCaveMonth(shiftMonth(caveState.month, 1)));
 }
 
 // ---------- Add cave date ----------
@@ -152,14 +158,16 @@ addCaveForm.addEventListener('submit', async (e) => {
 
 document.getElementById('caveSearchInput').addEventListener('input', (e) => {
   caveState.search = e.target.value;
-  caveState.page = 1;
   renderCaveView();
+});
+
+document.getElementById('caveMonthInput').addEventListener('change', (e) => {
+  if (e.target.value) setCaveMonth(e.target.value);
 });
 
 document.querySelectorAll('#view-caves th[data-sort]').forEach((th) => {
   th.addEventListener('click', () => {
     caveState.sortDir *= -1;
-    caveState.page = 1;
     renderCaveView();
   });
 });
