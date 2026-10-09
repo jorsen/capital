@@ -1,9 +1,11 @@
+const CAVE_PAGE_SIZE = 15;
 const caveState = {
   caves: [],
   members: [],
   bosses: [],
   search: '',
   sortDir: -1,
+  page: 1,
 };
 
 async function loadCaveData() {
@@ -54,11 +56,17 @@ function getCaveDateGroups() {
 
 function renderCaveView() {
   const groups = getCaveDateGroups();
+  const pageCount = Math.max(1, Math.ceil(groups.length / CAVE_PAGE_SIZE));
+  caveState.page = Math.min(Math.max(1, caveState.page), pageCount);
+  const start = (caveState.page - 1) * CAVE_PAGE_SIZE;
+  const pageGroups = groups.slice(start, start + CAVE_PAGE_SIZE);
+
   const body = document.getElementById('caveSessionsBody');
   body.innerHTML = '';
   document.getElementById('caveEmptyState').classList.toggle('hidden', caveState.caves.length !== 0);
+  renderCavePagination(pageCount);
 
-  groups.forEach((g) => {
+  pageGroups.forEach((g) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td style="font-weight:600;">${escapeHtml(formatLongDate(g.date))}</td>
@@ -83,6 +91,24 @@ function renderCaveView() {
     });
     body.appendChild(tr);
   });
+}
+
+function renderCavePagination(pageCount) {
+  const el = document.getElementById('cavePagination');
+  if (pageCount <= 1) {
+    el.innerHTML = '';
+    return;
+  }
+  const { page } = caveState;
+  el.innerHTML = `
+    <button type="button" class="btn small" id="cavePrevBtn" ${page <= 1 ? 'disabled' : ''}>‹ Prev</button>
+    <span class="pagination-status">Page ${page} of ${pageCount}</span>
+    <button type="button" class="btn small" id="caveNextBtn" ${page >= pageCount ? 'disabled' : ''}>Next ›</button>
+  `;
+  const prevBtn = document.getElementById('cavePrevBtn');
+  const nextBtn = document.getElementById('caveNextBtn');
+  if (prevBtn) prevBtn.addEventListener('click', () => { caveState.page -= 1; renderCaveView(); });
+  if (nextBtn) nextBtn.addEventListener('click', () => { caveState.page += 1; renderCaveView(); });
 }
 
 // ---------- Add cave date ----------
@@ -126,12 +152,14 @@ addCaveForm.addEventListener('submit', async (e) => {
 
 document.getElementById('caveSearchInput').addEventListener('input', (e) => {
   caveState.search = e.target.value;
+  caveState.page = 1;
   renderCaveView();
 });
 
 document.querySelectorAll('#view-caves th[data-sort]').forEach((th) => {
   th.addEventListener('click', () => {
     caveState.sortDir *= -1;
+    caveState.page = 1;
     renderCaveView();
   });
 });

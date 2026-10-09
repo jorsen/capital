@@ -1,9 +1,11 @@
+const LOOT_PAGE_SIZE = 15;
 const lootState = {
   loot: [],
   members: [],
   search: '',
   sortKey: 'date',
   sortDir: -1,
+  page: 1,
 };
 
 async function loadLootData() {
@@ -37,11 +39,17 @@ function getFilteredSortedLoot() {
 
 function renderLootView() {
   const list = getFilteredSortedLoot();
+  const pageCount = Math.max(1, Math.ceil(list.length / LOOT_PAGE_SIZE));
+  lootState.page = Math.min(Math.max(1, lootState.page), pageCount);
+  const start = (lootState.page - 1) * LOOT_PAGE_SIZE;
+  const pageList = list.slice(start, start + LOOT_PAGE_SIZE);
+
   const body = document.getElementById('sessionsBody');
   body.innerHTML = '';
   document.getElementById('lootEmptyState').classList.toggle('hidden', lootState.loot.length !== 0);
+  renderLootPagination(pageCount);
 
-  list.forEach((sess) => {
+  pageList.forEach((sess) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td style="font-weight:600;">${escapeHtml(sess.date)}</td>
@@ -64,6 +72,24 @@ function renderLootView() {
     });
     body.appendChild(tr);
   });
+}
+
+function renderLootPagination(pageCount) {
+  const el = document.getElementById('lootPagination');
+  if (pageCount <= 1) {
+    el.innerHTML = '';
+    return;
+  }
+  const { page } = lootState;
+  el.innerHTML = `
+    <button type="button" class="btn small" id="lootPrevBtn" ${page <= 1 ? 'disabled' : ''}>‹ Prev</button>
+    <span class="pagination-status">Page ${page} of ${pageCount}</span>
+    <button type="button" class="btn small" id="lootNextBtn" ${page >= pageCount ? 'disabled' : ''}>Next ›</button>
+  `;
+  const prevBtn = document.getElementById('lootPrevBtn');
+  const nextBtn = document.getElementById('lootNextBtn');
+  if (prevBtn) prevBtn.addEventListener('click', () => { lootState.page -= 1; renderLootView(); });
+  if (nextBtn) nextBtn.addEventListener('click', () => { lootState.page += 1; renderLootView(); });
 }
 
 // ---------- Add session ----------
@@ -100,6 +126,7 @@ addSessionForm.addEventListener('submit', async (e) => {
 
 document.getElementById('lootSearchInput').addEventListener('input', (e) => {
   lootState.search = e.target.value;
+  lootState.page = 1;
   renderLootView();
 });
 
@@ -112,6 +139,7 @@ document.querySelectorAll('#view-loot th[data-sort]').forEach((th) => {
       lootState.sortKey = key;
       lootState.sortDir = 1;
     }
+    lootState.page = 1;
     renderLootView();
   });
 });
