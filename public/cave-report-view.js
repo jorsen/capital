@@ -1,13 +1,14 @@
-const caveReportState = { sessions: [], members: [], from: '', to: '' };
+const caveReportState = { sessions: [], members: [], month: '' };
 
-// Sessions within the From/To range (inclusive). Dates are YYYY-MM-DD, so
-// plain string comparison orders them correctly; an empty bound is open.
-function caveReportSessionsInRange() {
-  const { from, to } = caveReportState;
-  return caveReportState.sessions.filter((s) => (!from || s.date >= from) && (!to || s.date <= to));
+// Sessions in the selected month. Dates are YYYY-MM-DD and months YYYY-MM,
+// so a prefix match is enough.
+function caveReportSessionsInMonth() {
+  return caveReportState.sessions.filter((s) => s.date.startsWith(`${caveReportState.month}-`));
 }
 
 async function loadCaveReportData() {
+  if (!caveReportState.month) caveReportState.month = currentMonthValue();
+  document.getElementById('caveReportMonthInput').value = caveReportState.month;
   const [sessions, members] = await Promise.all([api('/api/caves'), api('/api/members')]);
   caveReportState.sessions = sessions;
   caveReportState.members = members;
@@ -23,14 +24,15 @@ function renderCaveReport() {
   const body = document.getElementById('caveReportBody');
   const table = document.getElementById('caveReportTable');
   const empty = document.getElementById('caveReportEmptyState');
-  const rangeEmpty = document.getElementById('caveReportRangeEmptyState');
+  const monthEmpty = document.getElementById('caveReportMonthEmptyState');
+  document.getElementById('caveReportMonthLabel').textContent = formatMonthYear(caveReportState.month);
 
-  const sessions = caveReportSessionsInRange()
+  const sessions = caveReportSessionsInMonth()
     .sort((a, b) => a.date.localeCompare(b.date) || new Date(a.createdAt) - new Date(b.createdAt));
 
   const noneLogged = caveReportState.sessions.length === 0;
   empty.classList.toggle('hidden', !noneLogged);
-  rangeEmpty.classList.toggle('hidden', noneLogged || sessions.length !== 0);
+  monthEmpty.classList.toggle('hidden', noneLogged || sessions.length !== 0);
   table.classList.toggle('hidden', sessions.length === 0);
   if (!sessions.length) {
     head.innerHTML = '';
@@ -102,7 +104,7 @@ function renderCaveReport() {
         session.attendees = updated.attendees;
         const row = body.querySelector(`tr[data-member-id="${memberId}"]`);
         if (row) {
-          const total = caveReportSessionsInRange().filter((s) => s.attendees.includes(memberId)).length;
+          const total = caveReportSessionsInMonth().filter((s) => s.attendees.includes(memberId)).length;
           row.querySelector('[data-total-cell]').textContent = total;
         }
       } catch (err) {
@@ -113,19 +115,14 @@ function renderCaveReport() {
   });
 }
 
-const caveReportFromInput = document.getElementById('caveReportFromInput');
-const caveReportToInput = document.getElementById('caveReportToInput');
-
-function onCaveReportRangeChange() {
-  caveReportState.from = caveReportFromInput.value;
-  caveReportState.to = caveReportToInput.value;
+function setCaveReportMonth(month) {
+  caveReportState.month = month;
+  document.getElementById('caveReportMonthInput').value = month;
   renderCaveReport();
 }
 
-caveReportFromInput.addEventListener('change', onCaveReportRangeChange);
-caveReportToInput.addEventListener('change', onCaveReportRangeChange);
-document.getElementById('caveReportClearRangeBtn').addEventListener('click', () => {
-  caveReportFromInput.value = '';
-  caveReportToInput.value = '';
-  onCaveReportRangeChange();
+document.getElementById('caveReportPrevMonthBtn').addEventListener('click', () => setCaveReportMonth(shiftMonth(caveReportState.month, -1)));
+document.getElementById('caveReportNextMonthBtn').addEventListener('click', () => setCaveReportMonth(shiftMonth(caveReportState.month, 1)));
+document.getElementById('caveReportMonthInput').addEventListener('change', (e) => {
+  if (e.target.value) setCaveReportMonth(e.target.value);
 });
