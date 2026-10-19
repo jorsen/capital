@@ -84,6 +84,10 @@ const TRANSLATIONS = {
     'caveDate.emptyState': 'No boss logs for this date yet — click "Log a Boss" to add one.',
 
     'caveReport.emptyState': 'No cave dates logged yet.',
+    'caveReport.from': 'From',
+    'caveReport.to': 'To',
+    'caveReport.clearRange': 'Clear',
+    'caveReport.rangeEmptyState': 'No cave dates in this range.',
 
     'caveLootList.thAttendees': 'Attendees',
     'caveLootList.thLoot': 'Loot',
@@ -487,6 +491,10 @@ const TRANSLATIONS = {
     'caveDate.emptyState': '该日期尚无Boss记录——点击"记录Boss"添加一个。',
 
     'caveReport.emptyState': '尚未记录洞穴日期。',
+    'caveReport.from': '从',
+    'caveReport.to': '至',
+    'caveReport.clearRange': '清除',
+    'caveReport.rangeEmptyState': '此日期范围内没有洞穴记录。',
 
     'caveLootList.thAttendees': '出勤者',
     'caveLootList.thLoot': '战利品',
@@ -836,6 +844,10 @@ const TRANSLATIONS = {
     'caveDate.emptyState': '이 날짜에 대한 보스 기록이 없습니다 — "보스 기록"을 클릭하여 추가하세요.',
 
     'caveReport.emptyState': '아직 기록된 동굴 날짜가 없습니다.',
+    'caveReport.from': '시작',
+    'caveReport.to': '종료',
+    'caveReport.clearRange': '초기화',
+    'caveReport.rangeEmptyState': '이 기간에 기록된 동굴 날짜가 없습니다.',
 
     'caveLootList.thAttendees': '참석자',
     'caveLootList.thLoot': '전리품',
@@ -1185,6 +1197,10 @@ const TRANSLATIONS = {
     'caveDate.emptyState': 'ยังไม่มีบันทึกบอสสำหรับวันที่นี้ — คลิก "บันทึกบอส" เพื่อเพิ่ม',
 
     'caveReport.emptyState': 'ยังไม่มีการบันทึกวันที่ลงถ้ำ',
+    'caveReport.from': 'ตั้งแต่',
+    'caveReport.to': 'ถึง',
+    'caveReport.clearRange': 'ล้าง',
+    'caveReport.rangeEmptyState': 'ไม่มีวันที่ลงถ้ำในช่วงนี้',
 
     'caveLootList.thAttendees': 'ผู้เข้าร่วม',
     'caveLootList.thLoot': 'ของรางวัล',

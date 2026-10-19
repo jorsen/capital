@@ -1198,6 +1198,8 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
 .cave-report-table .cave-report-total-col { left: 150px; min-width: 90px; }
 .cave-report-table tbody tr:hover td { background: var(--surface-2); }
 .cave-report-table input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--good); }
+.cave-report-range { align-items: center; }
+.cave-report-range label { display: flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: 13px; }
 
 .raffle-log-list {
   display: block;

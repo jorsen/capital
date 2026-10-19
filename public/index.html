@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=94">
+  <link rel="stylesheet" href="styles.css?v=95">
 </head>
 <body>
   <div class="app viz-root">
@@ -279,6 +279,11 @@
       </div>
 
       <section class="panel">
+        <div class="table-toolbar cave-report-range">
+          <label><span data-i18n="caveReport.from">From</span><input type="date" id="caveReportFromInput"></label>
+          <label><span data-i18n="caveReport.to">To</span><input type="date" id="caveReportToInput"></label>
+          <button id="caveReportClearRangeBtn" class="btn small" data-i18n="caveReport.clearRange">Clear</button>
+        </div>
         <div class="table-scroll">
           <table class="cave-report-table" id="caveReportTable">
             <thead id="caveReportHead"></thead>
@@ -286,6 +291,7 @@
           </table>
         </div>
         <p id="caveReportEmptyState" class="empty-state hidden" data-i18n="caveReport.emptyState">No cave dates logged yet.</p>
+        <p id="caveReportRangeEmptyState" class="empty-state hidden" data-i18n="caveReport.rangeEmptyState">No cave dates in this range.</p>
       </section>
     </div>
 
@@ -999,7 +1005,7 @@
   <script src="cave-discord-sync.js?v=4"></script>
   <script src="cave-date-view.js?v=4"></script>
   <script src="cave-session-view.js?v=11"></script>
-  <script src="cave-report-view.js?v=3"></script>
+  <script src="cave-report-view.js?v=4"></script>
   <script src="cave-loot-list-view.js?v=9"></script>
   <script src="cave-salary-view.js?v=8"></script>
   <script src="cave-schedule-view.js?v=5"></script>
@@ -1011,7 +1017,7 @@
   <script src="users-view.js?v=3"></script>
   <script src="activity-log-view.js?v=5"></script>
   <script src="auth.js?v=29"></script>
-  <script src="i18n.js?v=9"></script>
+  <script src="i18n.js?v=10"></script>
   <script src="router.js?v=37"></script>
 </body>
 </html>
