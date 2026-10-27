@@ -1,4 +1,6 @@
-const caveSalaryState = { month: null, sessions: [], members: [], fees: [], paidMemberIds: [] };
+// expandedLootKey: which This Month's Loot item row is open, kept outside the
+// render so editing inside its breakdown doesn't collapse it.
+const caveSalaryState = { month: null, sessions: [], members: [], fees: [], paidMemberIds: [], expandedLootKey: null };
 
 // Tier breakpoints matched against each member's latest growth rate —
 // highest qualifying tier wins. Below the lowest named breakpoint falls
@@ -193,9 +195,10 @@ function renderCaveSalaryLoot() {
       const price = Number(r.soldPrice) || 0;
       if (!name || !quantity) return;
       const key = name.toLowerCase();
-      if (!byItem.has(key)) byItem.set(key, { item: name, quantity: 0, soldQuantity: 0, diamonds: null });
+      if (!byItem.has(key)) byItem.set(key, { key, item: name, quantity: 0, soldQuantity: 0, diamonds: null, sources: [] });
       const g = byItem.get(key);
       g.quantity += quantity;
+      g.sources.push({ sessionId: s.id, recordId: r.id, date: s.date, boss: s.run, quantity, price, buyer: r.buyer });
       if (price > 0) {
         g.soldQuantity += quantity;
         g.diamonds = (g.diamonds || 0) + quantity * price;
@@ -215,17 +218,28 @@ function renderCaveSalaryLoot() {
   document.getElementById('caveSalaryLootEmptyState').classList.toggle('hidden', rows.length !== 0);
   document.getElementById('caveSalaryLootNoMatchState').classList.toggle('hidden', rows.length === 0 || displayRows.length !== 0);
 
-  document.getElementById('caveSalaryLootBody').innerHTML = displayRows
-    .map(
-      (r) => `
-    <tr>
-      <td><span class="cave-loot-item-badge">${caveLootListItemIcon(r.item)}${escapeHtml(r.item)}</span></td>
+  const lootBody = document.getElementById('caveSalaryLootBody');
+  lootBody.innerHTML = displayRows
+    .map((r) => {
+      const isExpanded = r.key === caveSalaryState.expandedLootKey;
+      return `
+    <tr class="cave-loot-clickable-row ${isExpanded ? 'is-expanded' : ''}" data-loot-key="${escapeHtml(r.key)}" title="Click to see each drop">
+      <td><span class="cave-loot-chevron">${isExpanded ? '▾' : '▸'}</span><span class="cave-loot-item-badge">${caveLootListItemIcon(r.item)}${escapeHtml(r.item)}</span></td>
       <td class="cave-loot-num">${r.quantity.toLocaleString()}</td>
       <td class="cave-loot-num">${r.diamonds === null ? '<span class="cave-loot-dash">—</span>' : `<span class="cave-loot-currency diamonds">💎 ${caveSalaryFormatAmount(r.diamonds)}</span>`}</td>
       <td class="cave-loot-num"><span class="cave-loot-sold-ratio ${['is-unsold', 'is-partially-sold', 'is-fully-sold'][caveSalaryLootSoldRank(r)]}">${r.soldQuantity.toLocaleString()} / ${r.quantity.toLocaleString()}</span></td>
-    </tr>`
-    )
+    </tr>${isExpanded ? caveSalaryLootBreakdownHtml(r) : ''}`;
+    })
     .join('');
+
+  lootBody.querySelectorAll('tr[data-loot-key]').forEach((tr) => {
+    tr.addEventListener('click', () => {
+      const key = tr.getAttribute('data-loot-key');
+      caveSalaryState.expandedLootKey = caveSalaryState.expandedLootKey === key ? null : key;
+      renderCaveSalaryLoot();
+    });
+  });
+  wireCaveSalaryLootBreakdownInputs(lootBody);
 
   const totalQuantity = rows.reduce((sum, r) => sum + r.quantity, 0);
   const totalDiamonds = rows.reduce((sum, r) => sum + (r.diamonds || 0), 0);
@@ -244,6 +258,85 @@ function renderCaveSalaryLoot() {
     <span class="cave-loot-chip">${rows.length} ${escapeHtml(t('caveSalary.lootItemsChip'))}</span>
     <span class="cave-loot-chip diamonds">💎 ${caveSalaryFormatAmount(totalDiamonds)}</span>`
     : '';
+}
+
+// Every individual drop that rolled up into one item row, oldest first --
+// editable in place (same fields as the Loot List) for admins.
+function caveSalaryLootBreakdownHtml(r) {
+  const sources = r.sources.slice().sort((a, b) => a.date.localeCompare(b.date));
+  return `
+    <tr class="cave-loot-breakdown-row">
+      <td colspan="4">
+        <div class="cave-loot-breakdown">
+          <table class="cave-loot-breakdown-table">
+            <thead>
+              <tr>
+                <th>${escapeHtml(t('common.date'))}</th>
+                <th>${escapeHtml(t('common.boss'))}</th>
+                <th>${escapeHtml(t('common.qty'))}</th>
+                <th>${escapeHtml(t('caveLootList.thPrice'))}</th>
+                <th>${escapeHtml(t('caveLootList.thTotalPrice'))}</th>
+                <th>${escapeHtml(t('caveLootList.thBuyer'))}</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${sources
+                .map(
+                  (s) => `
+              <tr>
+                <td><a href="#/cave-date/${s.date}" class="cave-date-link">${escapeHtml(formatLongDate(s.date))}</a></td>
+                <td>${escapeHtml(s.boss || '(No boss)')}</td>
+                <td class="cave-loot-num"><input type="number" class="admin-disable" data-loot-field="quantity" data-session-id="${s.sessionId}" data-record-id="${s.recordId}" value="${s.quantity}" min="1" step="1"></td>
+                <td class="cave-loot-num">💎 <input type="number" class="admin-disable" data-loot-field="soldPrice" data-session-id="${s.sessionId}" data-record-id="${s.recordId}" value="${s.price}" min="0" step="0.01"></td>
+                <td class="cave-loot-num">${s.price > 0 ? `<span class="cave-loot-currency diamonds">💎 ${caveSalaryFormatAmount(s.quantity * s.price)}</span>` : '<span class="cave-loot-dash">—</span>'}</td>
+                <td><input type="text" class="admin-disable cave-loot-buyer-input" data-loot-field="buyer" data-session-id="${s.sessionId}" data-record-id="${s.recordId}" value="${escapeHtml(s.buyer || '')}" placeholder="(optional)"></td>
+              </tr>`
+                )
+                .join('')}
+            </tbody>
+          </table>
+        </div>
+      </td>
+    </tr>`;
+}
+
+// Saves one breakdown field, then re-renders the whole page -- a price or
+// quantity change moves the Salary Pool and everyone's salary with it.
+function wireCaveSalaryLootBreakdownInputs(root) {
+  const parsers = {
+    quantity: (v) => {
+      const n = Number(v);
+      return Number.isInteger(n) && n >= 1 ? n : undefined;
+    },
+    soldPrice: (v) => {
+      const n = Number(v);
+      return Number.isFinite(n) && n >= 0 ? n : undefined;
+    },
+    buyer: (v) => v.trim(),
+  };
+  root.querySelectorAll('.cave-loot-breakdown-table input[data-loot-field]').forEach((input) => {
+    input.addEventListener('click', (e) => e.stopPropagation());
+    input.addEventListener('change', async () => {
+      const field = input.getAttribute('data-loot-field');
+      const sessionId = input.getAttribute('data-session-id');
+      const recordId = input.getAttribute('data-record-id');
+      const value = parsers[field](input.value);
+      if (value === undefined) {
+        toast(`${field} is invalid`);
+        renderCaveSalary();
+        return;
+      }
+      try {
+        await api(`/api/caves/${sessionId}/records/${recordId}`, { method: 'PUT', body: JSON.stringify({ [field]: value }) });
+        const session = caveSalaryState.sessions.find((s) => s.id === sessionId);
+        const record = session?.records.find((r) => r.id === recordId);
+        if (record) record[field] = value;
+      } catch (err) {
+        toast(err.message);
+      }
+      renderCaveSalary();
+    });
+  });
 }
 
 // 0 = nothing sold yet, 1 = partially sold, 2 = fully sold.
