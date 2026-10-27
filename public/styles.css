@@ -1814,3 +1814,60 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
 .boss-timer-card.boss-timer-spawned .boss-timer-countdown { color: var(--bad); }
 .boss-timer-card.boss-timer-unset { border-left-color: var(--text-muted); }
 .boss-timer-card.boss-timer-unset .boss-timer-countdown { color: var(--text-muted); font-size: 16px; }
+
+/* Cave Salary "This Month's Loot" -- same layout as Sovereign's World Boss loot panel. */
+.cave-loot-panel-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px 16px;
+  margin-bottom: 12px;
+}
+.cave-loot-panel-month { color: var(--text-muted); font-size: 13px; margin: 2px 0 0; }
+.cave-loot-summary-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.cave-loot-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.cave-loot-chip.diamonds { color: #6dd3f0; border-color: rgba(109,211,240,0.35); }
+.cave-loot-filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.cave-loot-filters input { flex: 1; min-width: 160px; }
+.cave-loot-filters select { min-width: 140px; }
+.cave-loot-table .cave-loot-item-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  font-weight: 500;
+}
+.cave-loot-table .cave-loot-num { text-align: right; font-variant-numeric: tabular-nums; }
+.cave-loot-table th:nth-child(n+2) { text-align: right; }
+.cave-loot-table .cave-loot-dash { color: var(--text-muted); }
+.cave-loot-currency { white-space: nowrap; font-weight: 600; }
+.cave-loot-currency.diamonds { color: #6dd3f0; }
+.cave-loot-sold-ratio { font-weight: 600; }
+.cave-loot-sold-ratio.is-unsold { color: var(--bad); }
+.cave-loot-sold-ratio.is-partially-sold { color: var(--gold); }
+.cave-loot-sold-ratio.is-fully-sold { color: var(--good); }
+.cave-loot-table tfoot tr { background: var(--surface-2); border-top: 2px solid var(--border); }
+.cave-loot-table tfoot td { border-bottom: none; padding: 10px; }
+.cave-loot-table .cave-loot-total-label {
+  text-align: right;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.03em;
+}
+.cave-loot-table .cave-loot-total-value { font-weight: 700; }

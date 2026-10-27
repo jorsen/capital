@@ -103,7 +103,7 @@ function renderCaveSalary() {
   document.getElementById('caveSalaryFeesValue').textContent = caveSalaryFormatMoney(totalFeeAmount);
   document.getElementById('caveSalaryFinalPoolValue').textContent = caveSalaryFormatMoney(finalPool);
 
-  renderCaveSalarySoldItems(rawPool);
+  renderCaveSalaryLoot();
 
   const feesBody = document.getElementById('caveSalaryFeesBody');
   feesBody.innerHTML = caveSalaryState.fees
@@ -180,54 +180,84 @@ function renderCaveSalary() {
   });
 }
 
-// Every sold record this month grouped by item name, so the Salary Pool can
-// be traced back to what made it up -- the Total row matches the pool.
-// An item that sold at different prices shows its lowest–highest range.
-function renderCaveSalarySoldItems(rawPool) {
+// This month's loot grouped by item name (case/spacing-insensitive), same
+// layout as Sovereign's World Boss "This Month's Loot". A record counts as
+// sold once it has a sold price; Diamonds is what the sold ones brought in,
+// so the Total row matches the Salary Pool.
+function renderCaveSalaryLoot() {
   const byItem = new Map();
   sessionsForMonth().forEach((s) => {
     s.records.forEach((r) => {
+      const name = (r.item || '').trim().replace(/\s+/g, ' ');
       const quantity = Number(r.quantity) || 0;
       const price = Number(r.soldPrice) || 0;
-      if (!quantity || !price) return;
-      const key = (r.item || '').trim().toLowerCase();
-      if (!byItem.has(key)) byItem.set(key, { item: r.item, quantity: 0, total: 0, minPrice: price, maxPrice: price });
+      if (!name || !quantity) return;
+      const key = name.toLowerCase();
+      if (!byItem.has(key)) byItem.set(key, { item: name, quantity: 0, soldQuantity: 0, diamonds: null });
       const g = byItem.get(key);
       g.quantity += quantity;
-      g.total += quantity * price;
-      g.minPrice = Math.min(g.minPrice, price);
-      g.maxPrice = Math.max(g.maxPrice, price);
+      if (price > 0) {
+        g.soldQuantity += quantity;
+        g.diamonds = (g.diamonds || 0) + quantity * price;
+      }
     });
   });
-  const items = Array.from(byItem.values()).sort((a, b) => b.total - a.total || a.item.localeCompare(b.item));
+  const rows = Array.from(byItem.values()).sort((a, b) => b.quantity - a.quantity || a.item.localeCompare(b.item));
 
-  const body = document.getElementById('caveSalarySoldItemsBody');
-  const foot = document.getElementById('caveSalarySoldItemsFoot');
-  document.getElementById('caveSalarySoldItemsEmptyState').classList.toggle('hidden', items.length !== 0);
+  document.getElementById('caveSalaryLootMonthLabel').textContent = formatMonthYear(caveSalaryState.month);
 
-  body.innerHTML = items
+  const search = document.getElementById('caveSalaryLootSearchInput').value.trim().toLowerCase();
+  const sortMode = document.getElementById('caveSalaryLootSortSelect').value;
+  let displayRows = rows.filter((r) => !search || r.item.toLowerCase().includes(search));
+  if (sortMode === 'unsold') displayRows = displayRows.slice().sort((a, b) => caveSalaryLootSoldRank(a) - caveSalaryLootSoldRank(b));
+  if (sortMode === 'sold') displayRows = displayRows.slice().sort((a, b) => caveSalaryLootSoldRank(b) - caveSalaryLootSoldRank(a));
+
+  document.getElementById('caveSalaryLootEmptyState').classList.toggle('hidden', rows.length !== 0);
+  document.getElementById('caveSalaryLootNoMatchState').classList.toggle('hidden', rows.length === 0 || displayRows.length !== 0);
+
+  document.getElementById('caveSalaryLootBody').innerHTML = displayRows
     .map(
-      (g) => `
+      (r) => `
     <tr>
-      <td>${caveLootListItemIcon(g.item)}${escapeHtml(g.item)}</td>
-      <td>${g.quantity.toLocaleString()}</td>
-      <td>${g.minPrice === g.maxPrice ? caveSalaryFormatMoney(g.minPrice) : `${caveSalaryFormatMoney(g.minPrice)} – ${caveSalaryFormatMoney(g.maxPrice)}`}</td>
-      <td>${caveSalaryFormatMoney(g.total)}</td>
+      <td><span class="cave-loot-item-badge">${caveLootListItemIcon(r.item)}${escapeHtml(r.item)}</span></td>
+      <td class="cave-loot-num">${r.quantity.toLocaleString()}</td>
+      <td class="cave-loot-num">${r.diamonds === null ? '<span class="cave-loot-dash">—</span>' : `<span class="cave-loot-currency diamonds">💎 ${caveSalaryFormatAmount(r.diamonds)}</span>`}</td>
+      <td class="cave-loot-num"><span class="cave-loot-sold-ratio ${['is-unsold', 'is-partially-sold', 'is-fully-sold'][caveSalaryLootSoldRank(r)]}">${r.soldQuantity.toLocaleString()} / ${r.quantity.toLocaleString()}</span></td>
     </tr>`
     )
     .join('');
 
-  const totalQuantity = items.reduce((sum, g) => sum + g.quantity, 0);
-  foot.innerHTML = items.length
+  const totalQuantity = rows.reduce((sum, r) => sum + r.quantity, 0);
+  const totalDiamonds = rows.reduce((sum, r) => sum + (r.diamonds || 0), 0);
+  const totalsRow = document.getElementById('caveSalaryLootTotals');
+  totalsRow.classList.toggle('hidden', rows.length === 0);
+  totalsRow.innerHTML = rows.length
     ? `
-    <tr style="font-weight:600;">
-      <td>${escapeHtml(t('caveSalary.soldItemsTotal'))}</td>
-      <td>${totalQuantity.toLocaleString()}</td>
-      <td></td>
-      <td>${caveSalaryFormatMoney(rawPool)}</td>
-    </tr>`
+    <td class="cave-loot-total-label">${escapeHtml(t('caveSalary.soldItemsTotal'))}</td>
+    <td class="cave-loot-num cave-loot-total-value">${totalQuantity.toLocaleString()}</td>
+    <td class="cave-loot-num cave-loot-total-value"><span class="cave-loot-currency diamonds">💎 ${caveSalaryFormatAmount(totalDiamonds)}</span></td>
+    <td></td>`
+    : '';
+
+  document.getElementById('caveSalaryLootChips').innerHTML = rows.length
+    ? `
+    <span class="cave-loot-chip">${rows.length} ${escapeHtml(t('caveSalary.lootItemsChip'))}</span>
+    <span class="cave-loot-chip diamonds">💎 ${caveSalaryFormatAmount(totalDiamonds)}</span>`
     : '';
 }
+
+// 0 = nothing sold yet, 1 = partially sold, 2 = fully sold.
+function caveSalaryLootSoldRank(r) {
+  if (r.soldQuantity <= 0) return 0;
+  return r.soldQuantity >= r.quantity ? 2 : 1;
+}
+
+function caveSalaryFormatAmount(amount) {
+  return (amount || 0).toLocaleString(undefined, { maximumFractionDigits: 2 });
+}
+
+document.getElementById('caveSalaryLootSearchInput').addEventListener('input', renderCaveSalaryLoot);
+document.getElementById('caveSalaryLootSortSelect').addEventListener('change', renderCaveSalaryLoot);
 
 document.getElementById('caveSalaryMonthInput').addEventListener('change', async (e) => {
   caveSalaryState.month = e.target.value;
