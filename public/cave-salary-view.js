@@ -1,6 +1,6 @@
 // expandedLootKey: which This Month's Loot item row is open, kept outside the
 // render so editing inside its breakdown doesn't collapse it.
-const caveSalaryState = { month: null, sessions: [], members: [], fees: [], paidMemberIds: [], expandedLootKey: null };
+const caveSalaryState = { month: null, sessions: [], members: [], fees: [], paidMemberIds: [], sales: [], expandedLootKey: null };
 
 // Tier breakpoints matched against each member's latest growth rate —
 // highest qualifying tier wins. Below the lowest named breakpoint falls
@@ -37,12 +37,14 @@ async function loadCaveSalaryData() {
 }
 
 async function loadCaveSalaryMonthData() {
-  const [fees, paidMemberIds] = await Promise.all([
+  const [fees, paidMemberIds, sales] = await Promise.all([
     api(`/api/salary-fees?month=${encodeURIComponent(caveSalaryState.month)}`),
     api(`/api/salary-paid?month=${encodeURIComponent(caveSalaryState.month)}`),
+    api(`/api/cave-sales?month=${encodeURIComponent(caveSalaryState.month)}`),
   ]);
   caveSalaryState.fees = fees;
   caveSalaryState.paidMemberIds = paidMemberIds;
+  caveSalaryState.sales = sales;
   renderCaveSalary();
 }
 
@@ -240,6 +242,7 @@ function renderCaveSalaryLoot() {
     });
   });
   wireCaveSalaryLootBreakdownInputs(lootBody);
+  wireCaveSalaryLootSales(lootBody);
 
   const totalQuantity = rows.reduce((sum, r) => sum + r.quantity, 0);
   const totalDiamonds = rows.reduce((sum, r) => sum + (r.diamonds || 0), 0);
@@ -298,8 +301,102 @@ function caveSalaryLootBreakdownHtml(r) {
             </tbody>
           </table>
         </div>
+        ${caveSalaryLootSalesHtml(r)}
       </td>
     </tr>`;
+}
+
+// The Sales box under an open item, like Sovereign's: record "sold N for X
+// 💎" and the server fills the oldest unsold drops at X / N each.
+function caveSalaryLootSalesHtml(r) {
+  const sales = caveSalaryState.sales.filter((b) => b.itemKey === r.key);
+  return `
+        <div class="cave-loot-sales">
+          <h4>${escapeHtml(t('caveSalary.salesHeading'))}</h4>
+          <div class="cave-loot-sales-summary">
+            <span>${escapeHtml(t('caveSalary.salesTotalQty'))}: <strong>${r.quantity.toLocaleString()}</strong></span>
+            <span>${escapeHtml(t('caveSalary.lootStatusSold'))}: <strong>${r.soldQuantity.toLocaleString()}</strong></span>
+            <span>${escapeHtml(t('caveSalary.salesRemaining'))}: <strong>${(r.quantity - r.soldQuantity).toLocaleString()}</strong></span>
+          </div>
+          ${
+            sales.length
+              ? `<table class="cave-loot-sales-table">
+            <thead><tr><th>${escapeHtml(t('caveSalary.salesDate'))}</th><th>${escapeHtml(t('caveSalary.lootThQuantity'))}</th><th>${escapeHtml(t('caveSalary.lootThDiamonds'))}</th><th>${escapeHtml(t('caveSalary.salesEach'))}</th><th></th></tr></thead>
+            <tbody>
+              ${sales
+                .map(
+                  (b) => `
+              <tr>
+                <td class="cave-loot-date">${escapeHtml(new Date(b.soldAt).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' }))}, ${escapeHtml(formatTimeOfDay(b.soldAt))}</td>
+                <td class="cave-loot-num">${b.quantity.toLocaleString()}</td>
+                <td class="cave-loot-num"><span class="cave-loot-currency diamonds">💎 ${caveSalaryFormatAmount(b.diamonds)}</span></td>
+                <td class="cave-loot-num">💎 ${caveSalaryFormatAmount(b.diamonds / b.quantity)}</td>
+                <td><button type="button" class="cave-loot-sale-delete admin-disable" data-delete-sale="${b.id}" title="Remove this sale">✕</button></td>
+              </tr>`
+                )
+                .join('')}
+            </tbody>
+          </table>`
+              : `<p class="cave-loot-sales-empty">${escapeHtml(t('caveSalary.salesEmpty'))}</p>`
+          }
+          <form class="cave-loot-sale-add-form admin-disable" data-sale-item="${escapeHtml(r.item)}">
+            <input type="number" name="quantity" min="1" max="${r.quantity - r.soldQuantity}" step="1" placeholder="${escapeHtml(t('caveSalary.salesQtyPlaceholder'))}" required>
+            <input type="number" name="diamonds" min="0.01" step="0.01" placeholder="💎" required>
+            <button type="submit" class="btn small">${escapeHtml(t('caveSalary.salesAdd'))}</button>
+            <span class="cave-loot-sale-preview"></span>
+          </form>
+        </div>`;
+}
+
+function wireCaveSalaryLootSales(root) {
+  root.querySelectorAll('.cave-loot-sale-add-form').forEach((form) => {
+    const preview = form.querySelector('.cave-loot-sale-preview');
+    // Shows the per-item price the sale will be spread at as you type.
+    form.addEventListener('input', () => {
+      const qty = Number(form.elements.quantity.value);
+      const dias = Number(form.elements.diamonds.value);
+      preview.textContent = qty > 0 && dias > 0 ? `= 💎 ${caveSalaryFormatAmount(dias / qty)} ${t('caveSalary.salesEach').toLowerCase()}` : '';
+    });
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        await api('/api/cave-sales', {
+          method: 'POST',
+          body: JSON.stringify({
+            month: caveSalaryState.month,
+            item: form.getAttribute('data-sale-item'),
+            quantity: Number(form.elements.quantity.value),
+            diamonds: Number(form.elements.diamonds.value),
+          }),
+        });
+        await reloadCaveSalaryAfterSale();
+        toast('Sale recorded');
+      } catch (err) {
+        toast(err.message);
+      }
+    });
+  });
+  root.querySelectorAll('[data-delete-sale]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Remove this sale? The drops it covered go back to Not Sold.')) return;
+      try {
+        await api(`/api/cave-sales/${btn.getAttribute('data-delete-sale')}`, { method: 'DELETE' });
+        await reloadCaveSalaryAfterSale();
+        toast('Sale removed');
+      } catch (err) {
+        toast(err.message);
+      }
+    });
+  });
+}
+
+// A sale rewrites (and can split) loot records server-side, so re-fetch the
+// cave data along with this month's sales rather than patching it locally.
+async function reloadCaveSalaryAfterSale() {
+  const [sessions, sales] = await Promise.all([api('/api/caves'), api(`/api/cave-sales?month=${encodeURIComponent(caveSalaryState.month)}`)]);
+  caveSalaryState.sessions = sessions;
+  caveSalaryState.sales = sales;
+  renderCaveSalary();
 }
 
 // Saves one breakdown field, then re-renders the whole page -- a price or

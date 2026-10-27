@@ -1924,3 +1924,31 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
 }
 .cave-loot-status.is-sold { color: var(--good); border-color: rgba(74,222,128,0.35); }
 .cave-loot-status.is-unsold { color: var(--bad); border-color: rgba(239,68,68,0.35); }
+.cave-loot-sales { margin: 0 0 8px; border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
+.cave-loot-sales h4 {
+  margin: 0 0 8px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+}
+.cave-loot-sales-summary { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+.cave-loot-sales-summary strong { color: var(--text-secondary); font-weight: 600; }
+.cave-loot-sales-empty { font-size: 12px; color: var(--text-muted); margin: 0 0 8px; }
+.cave-loot-sales-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 8px; }
+.cave-loot-sales-table th {
+  text-align: left;
+  padding: 4px 8px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.03em;
+}
+.cave-loot-sales-table td { padding: 4px 8px; border-top: 1px solid var(--gridline); }
+.cave-loot-sales-table th:nth-child(n+2):not(:last-child) { text-align: right; }
+.cave-loot-sales-table .cave-loot-date { color: var(--text-muted); white-space: nowrap; }
+.cave-loot-sale-delete { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 12px; padding: 0 4px; }
+.cave-loot-sale-delete:hover { color: var(--bad); }
+.cave-loot-sale-add-form { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.cave-loot-sale-add-form input { width: 100px; font-size: 12px; padding: 6px 8px; }
+.cave-loot-sale-preview { font-size: 12px; color: #6dd3f0; font-weight: 600; }
