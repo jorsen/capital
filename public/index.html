@@ -365,6 +365,25 @@
       </section>
 
       <section class="panel">
+        <h2 data-i18n="caveSalary.soldItemsHeading">Sold Items</h2>
+        <div class="table-scroll">
+          <table class="members-table">
+            <thead>
+              <tr>
+                <th data-i18n="caveLootList.thLoot">Loot</th>
+                <th data-i18n="common.qty">Qty</th>
+                <th data-i18n="caveLootList.thPrice">Price</th>
+                <th data-i18n="caveLootList.thTotalPrice">Total Price</th>
+              </tr>
+            </thead>
+            <tbody id="caveSalarySoldItemsBody"></tbody>
+            <tfoot id="caveSalarySoldItemsFoot"></tfoot>
+          </table>
+        </div>
+        <p id="caveSalarySoldItemsEmptyState" class="empty-state hidden" data-i18n="caveSalary.soldItemsEmpty">No items sold this month yet.</p>
+      </section>
+
+      <section class="panel">
         <h2 data-i18n="caveSalary.feesHeading">Accounting Fees</h2>
         <p style="color:var(--text-muted); font-size:13px; margin-top:-8px;" data-i18n="caveSalary.feesHint">
           Each entry takes a flat % of the raw Salary Pool off the top, then that amount is added back on top of the recipient's own distributed share.
@@ -1008,7 +1027,7 @@
   <script src="cave-session-view.js?v=11"></script>
   <script src="cave-report-view.js?v=5"></script>
   <script src="cave-loot-list-view.js?v=9"></script>
-  <script src="cave-salary-view.js?v=8"></script>
+  <script src="cave-salary-view.js?v=9"></script>
   <script src="cave-schedule-view.js?v=5"></script>
   <script src="item-report-view.js?v=38"></script>
   <script src="boss-timer-view.js?v=35"></script>
@@ -1018,7 +1037,7 @@
   <script src="users-view.js?v=3"></script>
   <script src="activity-log-view.js?v=5"></script>
   <script src="auth.js?v=29"></script>
-  <script src="i18n.js?v=11"></script>
+  <script src="i18n.js?v=12"></script>
   <script src="router.js?v=37"></script>
 </body>
 </html>
