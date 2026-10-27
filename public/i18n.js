@@ -78,6 +78,8 @@ const TRANSLATIONS = {
     'caves.syncFromDiscord': '🔗 Sync from Discord',
     'caves.searchPlaceholder': 'Search by date, boss, or item…',
     'caves.thBossLogs': 'Boss Logs',
+    'caves.logHeading': 'Attendance Log',
+    'caves.today': 'Today',
     'caves.emptyState': 'No dates logged yet — click "Log a Date" to start recording cave runs.',
 
     'caveDate.logABoss': '+ Log a Boss',
@@ -506,6 +508,8 @@ const TRANSLATIONS = {
     'caves.syncFromDiscord': '🔗 从Discord同步',
     'caves.searchPlaceholder': '按日期、Boss或物品搜索…',
     'caves.thBossLogs': 'Boss记录',
+    'caves.logHeading': '出勤记录',
+    'caves.today': '今天',
     'caves.emptyState': '尚未记录日期——点击"记录日期"开始记录洞穴。',
 
     'caveDate.logABoss': '+ 记录Boss',
@@ -880,6 +884,8 @@ const TRANSLATIONS = {
     'caves.syncFromDiscord': '🔗 디스코드에서 동기화',
     'caves.searchPlaceholder': '날짜, 보스 또는 아이템으로 검색…',
     'caves.thBossLogs': '보스 기록',
+    'caves.logHeading': '출석 기록',
+    'caves.today': '오늘',
     'caves.emptyState': '아직 기록된 날짜가 없습니다 — "날짜 기록"을 클릭하여 동굴 기록을 시작하세요.',
 
     'caveDate.logABoss': '+ 보스 기록',
@@ -1254,6 +1260,8 @@ const TRANSLATIONS = {
     'caves.syncFromDiscord': '🔗 ซิงค์จาก Discord',
     'caves.searchPlaceholder': 'ค้นหาตามวันที่ บอส หรือไอเท็ม…',
     'caves.thBossLogs': 'บันทึกบอส',
+    'caves.logHeading': 'บันทึกการเข้าร่วม',
+    'caves.today': 'วันนี้',
     'caves.emptyState': 'ยังไม่มีการบันทึกวันที่ — คลิก "บันทึกวันที่" เพื่อเริ่มบันทึกการลงถ้ำ',
 
     'caveDate.logABoss': '+ บันทึกบอส',

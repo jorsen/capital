@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=100">
+  <link rel="stylesheet" href="styles.css?v=101">
 </head>
 <body>
   <div class="app viz-root">
@@ -187,27 +187,20 @@
       </div>
 
       <section class="panel">
-        <div class="table-toolbar">
-          <input id="caveSearchInput" type="search" placeholder="Search by date, boss, or item…" data-i18n-placeholder="caves.searchPlaceholder">
-          <input type="month" id="caveMonthInput" aria-label="Month">
-        </div>
-        <div class="table-scroll">
-          <table class="members-table">
-            <thead>
-              <tr>
-                <th data-sort="date" data-i18n="common.date">Date</th>
-                <th data-i18n="caves.thBossLogs">Boss Logs</th>
-                <th data-i18n="common.totalAttendees">Total Attendees</th>
-                <th data-i18n="common.records">Records</th>
-                <th data-i18n="common.totalQty">Total Qty</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody id="caveSessionsBody"></tbody>
-          </table>
+        <div class="cave-calendar-toolbar">
+          <h2 style="margin:0;" data-i18n="caves.logHeading">Attendance Log</h2>
+          <div class="cave-calendar-nav">
+            <button type="button" id="cavePrevMonthBtn" class="icon-btn" title="Previous month">‹</button>
+            <span id="caveMonthLabel" class="cave-calendar-month-label"></span>
+            <button type="button" id="caveNextMonthBtn" class="icon-btn" title="Next month">›</button>
+            <button type="button" id="caveTodayBtn" class="btn small" data-i18n="caves.today">Today</button>
+          </div>
         </div>
         <p id="caveEmptyState" class="empty-state hidden" data-i18n="caves.emptyState">No dates logged yet — click "Log a Date" to start recording cave runs.</p>
-        <div id="cavePagination" class="pagination"></div>
+        <div class="cave-calendar-layout">
+          <div id="caveCalendarGrid" class="cave-calendar-grid"></div>
+          <div id="caveCalendarDayDetail" class="cave-calendar-day-detail"></div>
+        </div>
       </section>
     </div>
 
@@ -1036,7 +1029,7 @@
   <script src="queue-view.js?v=30"></script>
   <script src="loot-view.js?v=31"></script>
   <script src="loot-session-view.js?v=35"></script>
-  <script src="cave-view.js?v=11"></script>
+  <script src="cave-view.js?v=12"></script>
   <script src="cave-discord-sync.js?v=4"></script>
   <script src="cave-date-view.js?v=4"></script>
   <script src="cave-session-view.js?v=11"></script>
@@ -1052,7 +1045,7 @@
   <script src="users-view.js?v=3"></script>
   <script src="activity-log-view.js?v=5"></script>
   <script src="auth.js?v=29"></script>
-  <script src="i18n.js?v=15"></script>
+  <script src="i18n.js?v=16"></script>
   <script src="router.js?v=37"></script>
 </body>
 </html>

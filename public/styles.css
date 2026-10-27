@@ -1952,3 +1952,107 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
 .cave-loot-sale-add-form { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .cave-loot-sale-add-form input { width: 100px; font-size: 12px; padding: 6px 8px; }
 .cave-loot-sale-preview { font-size: 12px; color: #6dd3f0; font-weight: 600; }
+
+/* ---------- Caves Attendance Log: month calendar (as Sovereign's) ---------- */
+.cave-calendar-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
+.cave-calendar-nav { display: flex; align-items: center; gap: 6px; }
+.cave-calendar-nav .icon-btn { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; border-radius: 999px; }
+.cave-calendar-month-label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  min-width: 150px;
+  text-align: center;
+  color: var(--text-primary);
+}
+#caveTodayBtn { margin-left: 6px; }
+.cave-calendar-layout { display: grid; grid-template-columns: minmax(280px, 620px) minmax(240px, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 860px) { .cave-calendar-layout { grid-template-columns: 1fr; } }
+.cave-calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+.cave-calendar-weekday { text-align: center; font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; padding-bottom: 6px; }
+.cave-calendar-cell {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+}
+.cave-calendar-cell.is-empty { visibility: hidden; }
+.cave-calendar-daynum { font-size: 16px; font-weight: 700; color: var(--text-secondary); }
+.cave-calendar-cell.is-today .cave-calendar-daynum {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--gold-soft);
+  color: var(--gold);
+}
+.cave-calendar-cell.has-events { cursor: pointer; border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
+.cave-calendar-cell.has-events:hover { background: var(--surface-2); border-color: var(--series-1); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.cave-calendar-cell.has-events:active { transform: translateY(0); }
+.cave-calendar-cell.is-selected { border-color: var(--gold); background: var(--gold-soft); box-shadow: 0 0 0 1px var(--gold) inset, var(--shadow-md); }
+.cave-calendar-cell.is-selected:hover { transform: none; }
+.cave-calendar-badge {
+  margin-top: auto;
+  align-self: stretch;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--series-1), var(--series-1-strong));
+  border-radius: 999px;
+  padding: 3px 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cave-calendar-cell.is-selected .cave-calendar-badge { background: linear-gradient(135deg, var(--gold), #d98f1f); }
+.cave-calendar-day-detail:empty { display: none; }
+.cave-calendar-day-detail { min-width: 0; padding: 4px 0 4px 20px; border-left: 1px solid var(--border); }
+@media (max-width: 860px) {
+  .cave-calendar-day-detail { margin-top: 18px; padding: 18px 0 4px; border-left: none; border-top: 1px solid var(--border); }
+}
+.cave-calendar-day-detail .empty-state { text-align: center; padding: 18px 0 4px; }
+@media (max-width: 640px) {
+  .cave-calendar-toolbar { flex-direction: column; align-items: flex-start; }
+  .cave-calendar-grid { gap: 4px; }
+  .cave-calendar-cell { padding: 4px; border-radius: 6px; gap: 2px; }
+  .cave-calendar-daynum { font-size: 13px; }
+  .cave-calendar-cell.is-today .cave-calendar-daynum { width: 20px; height: 20px; }
+  .cave-calendar-badge { font-size: 10px; padding: 2px 3px; }
+  .cave-calendar-weekday { font-size: 10px; }
+}
+.cave-day-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; }
+.cave-day-card h3 { margin: 0 0 8px; font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.03em; }
+.cave-day-row + .cave-day-row { border-top: 1px solid var(--border); }
+.cave-day-row-header { display: flex; align-items: center; gap: 12px; padding: 10px 0; cursor: pointer; font-size: 13px; }
+.cave-attendee-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border: 1px solid var(--series-1);
+  border-radius: 999px;
+  color: var(--series-1);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.cave-loot-highlight-card {
+  margin: 4px 0 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(224,182,77,0.14), rgba(109,211,240,0.08));
+  border: 1px solid rgba(224,182,77,0.35);
+}
+.cave-loot-highlight-heading { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #e0b64d; margin-bottom: 6px; }
+.cave-loot-highlight-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 3px 0; font-size: 14px; }
+.cave-loot-highlight-item { font-weight: 600; }
