@@ -1876,7 +1876,7 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
 .cave-loot-table tbody tr.cave-loot-clickable-row.is-expanded { background: rgba(255,255,255,0.04); }
 .cave-loot-chevron { display: inline-block; width: 14px; margin-right: 4px; color: var(--text-muted); font-size: 11px; }
 .cave-loot-table tbody tr.cave-loot-breakdown-row:hover td { background: transparent; }
-.cave-loot-breakdown { margin: 2px 0 6px 18px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.cave-loot-breakdown { margin: 2px 0 8px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
 .cave-loot-breakdown-table { width: 100%; border-collapse: collapse; font-size: 12px; }
 .cave-loot-breakdown-table th {
   text-align: left;
@@ -1904,3 +1904,23 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
 .cave-loot-breakdown-table input.cave-loot-buyer-input { width: 130px; text-align: left; }
 .cave-loot-breakdown-table input:hover { border-color: var(--border); }
 .cave-loot-breakdown-table input:focus { outline: none; border-color: var(--gold); background: var(--surface-1); }
+.cave-loot-table tbody tr.cave-loot-clickable-row.is-expanded td:first-child,
+.cave-loot-table tbody tr.cave-loot-breakdown-row td:first-child { box-shadow: inset 3px 0 0 var(--good); }
+.cave-loot-table tbody tr.cave-loot-breakdown-row td { background: rgba(255,255,255,0.04); }
+.cave-loot-breakdown-table .cave-loot-boss { font-weight: 600; white-space: nowrap; }
+.cave-loot-breakdown-table .cave-loot-date { color: var(--text-muted); white-space: nowrap; }
+.cave-loot-breakdown-table .cave-loot-date a { color: inherit; }
+.cave-loot-breakdown-table th:last-child, .cave-loot-breakdown-table .cave-loot-status-cell { text-align: right; }
+.cave-loot-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.cave-loot-status.is-sold { color: var(--good); border-color: rgba(74,222,128,0.35); }
+.cave-loot-status.is-unsold { color: var(--bad); border-color: rgba(239,68,68,0.35); }
