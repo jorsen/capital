@@ -238,7 +238,13 @@ function renderCaveSalaryLoot() {
     tr.addEventListener('click', () => {
       const key = tr.getAttribute('data-loot-key');
       caveSalaryState.expandedLootKey = caveSalaryState.expandedLootKey === key ? null : key;
+      // Opening one item closes whichever was open above it, which would
+      // shift this row up out from under the cursor -- scroll by however far
+      // it moved so it stays anchored where it was clicked.
+      const topBefore = tr.getBoundingClientRect().top;
       renderCaveSalaryLoot();
+      const clicked = lootBody.querySelector(`tr[data-loot-key="${CSS.escape(key)}"]`);
+      if (clicked) window.scrollBy({ top: clicked.getBoundingClientRect().top - topBefore, behavior: 'instant' });
     });
   });
   wireCaveSalaryLootBreakdownInputs(lootBody);
