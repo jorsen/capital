@@ -1516,13 +1516,10 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
   color: var(--text-secondary);
 }
 
-/* Grid (not flex + horizontal scroll) so columns divide up the available
-   width and fit on one screen on wide viewports. auto-fit + a minimum
-   track width means it wraps to fewer per row instead of squeezing all 8
-   into unreadable slivers on narrower/mobile screens. */
+/* Two slots per row, so each slot's list gets half the panel's width. */
 .queue-columns {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 .queue-col {
@@ -1613,7 +1610,7 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
 
 .queue-history-columns {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 .queue-history-col {
