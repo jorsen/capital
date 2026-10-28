@@ -1516,10 +1516,10 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
   color: var(--text-secondary);
 }
 
-/* Four slots per row. */
+/* Five slots per row. */
 .queue-columns {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 8px;
 }
 .queue-col {
@@ -1610,7 +1610,7 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color:
 
 .queue-history-columns {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 8px;
 }
 .queue-history-col {
